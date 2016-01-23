@@ -1,0 +1,28 @@
+#ifndef GLOBALHOTKEYPLUGIN_H
+#define GLOBALHOTKEYPLUGIN_H
+
+#include "adamantplugin.h"
+#include "qxt/qxtglobalshortcut.h"
+#include <memory>
+class PluginManager;
+
+class GlobalHotkeyPlugin : public AdamantPlugin
+{
+    Q_OBJECT
+    Q_PLUGIN_METADATA(IID "com.adamant.plugin.globalhotkey" FILE "globalhotkey.json")
+    Q_INTERFACES(AdamantPlugin)
+
+public slots:
+    void OnLoad() {
+         shortcut = std::make_unique<QxtGlobalShortcut>(QKeySequence("Ctrl+X, Ctrl+C"));
+         shortcut->setEnabled(true);
+         connect(shortcut.get(), &QxtGlobalShortcut::activated, [this]() {
+             Log("Global hotkeys??!!?!?!?!!?!?!");
+         });
+    }
+private:
+    std::unique_ptr<QxtGlobalShortcut> shortcut;
+};
+
+#endif // GLOBALHOTKEYPLUGIN_H
+

@@ -1,0 +1,11 @@
+{
+    "name" : "AdamantShop",
+    "version" : "0.0.1",
+    "compatVersion" : "0.0.1",
+    "vendor" : "Novynn",
+    "copyright" : "(C) Novynn",
+    "license" : "",
+    "description" : "Used alongside StashViewer to create and maintain shops on the official Path of Exile forums.",
+    "url" : "http://poe.rory.io",
+    "role" : "service"
+}
