@@ -15,6 +15,7 @@ struct ItemManagerInstanceTab {
     int tabIndex;
     StashItemLocation* location;
     ItemManagerInstance* instance;
+    bool error;
 };
 
 struct ItemManagerInstance {

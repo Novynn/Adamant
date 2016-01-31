@@ -37,15 +37,29 @@ void ItemManager::FetchStashTabs(const QString &league, const QString &filter) {
 
 void ItemManager::OnStashTabResult(QString league, QByteArray json, QVariant data) {
     ItemManagerInstance* instance = _fetchingInstances.value(league, nullptr);
-    if (!instance) return;
+    if (!instance) {
+        qDebug() << "Failed to fetch instance for " << league;
+        return;
+    }
     QJsonDocument doc = QJsonDocument::fromJson(json);
-    if (doc.isEmpty() || !doc.isObject()) {
+    bool error = false;
+    if (doc.isEmpty() || !doc.isObject() || doc.object().contains("error")) {
         // TODO(rory): Log error
         qDebug() << "Failed to retrieve stash tabs (throttled?)";
         // TODO(rory): Handle throttling
         // {"error":{"message":"You are requesting your stash too frequently. Please try again later."}}
         qDebug() << qPrintable(json);
-        return;
+
+        if (!instance->firstTabReceived) {
+            // We failed to get the first tab (uh oh).
+            qWarning() << qPrintable("Failed to get the first tab.");
+            _fetchingInstances.remove(instance->league);
+            emit OnStashTabUpdateProgress(instance->league, 0, 0);
+            emit OnStashTabUpdateAvailable(instance->league);
+            return;
+        }
+
+        error = true;
     }
     if (doc.object().contains("tabs") && !instance->firstTabReceived) {
         // This means it was a initial request, future requests for tab items should not have "tabs" set.
@@ -77,6 +91,7 @@ void ItemManager::OnStashTabResult(QString league, QByteArray json, QVariant dat
             wrapper->tabIndex = i;
             wrapper->location = location;
             wrapper->instance = instance;
+            wrapper->error = false;
             instance->tabs.insert(i, wrapper);
             const QString accountName = _core->Session()->AccountName();
 
@@ -97,6 +112,7 @@ void ItemManager::OnStashTabResult(QString league, QByteArray json, QVariant dat
         ItemManagerInstanceTab* wrapper = instance->tabs.value(tabIndex, nullptr);
         if (wrapper != nullptr) {
             // Add items data to some sort of container
+            // Potientially this is empty, as an error will come through here
             QJsonArray items = doc.object().value("items").toArray();
             ItemList itemObjects;
             for (QJsonValue itemVal : items) {
@@ -105,12 +121,25 @@ void ItemManager::OnStashTabResult(QString league, QByteArray json, QVariant dat
             }
             wrapper->location->AddItems(itemObjects);
 
+            // Mark error
+            wrapper->error = error;
+
             instance->receivedTabs++;
             emit OnStashTabUpdateProgress(instance->league, instance->receivedTabs, instance->totalTabs);
 
             if (instance->receivedTabs == instance->totalTabs) {
                 // We're done!
                 _fetchingInstances.remove(instance->league);
+
+                ItemManagerInstance* in = _currentInstances.take(league);
+                if (in) {
+                    for (ItemManagerInstanceTab* tab : in->tabs) {
+                        delete tab->location;
+                        delete tab;
+                    }
+                    in->tabs.clear();
+                    delete in;
+                }
                 _currentInstances[league] = instance;
                 emit OnStashTabUpdateAvailable(instance->league);
             }
