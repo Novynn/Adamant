@@ -20,14 +20,15 @@ CoreService::CoreService()
     connect(_pluginManager, &PluginManager::PluginMessage, [this] (QString message, QtMsgType type) {
         emit Message(message, type);
     });
-
-    connect(_session, &PSession::ProfileData, this, ProfileLoaded);
 }
 
 void CoreService::Load() {
     SensitiveSettings()->beginGroup("session");
     QString sessionId = SensitiveSettings()->value("id").toString();
     SensitiveSettings()->endGroup();
+
+    // Required here so that the setup dialog also gets this palette
+    Interface()->SetPalette();
 
     if (sessionId.isEmpty()) {
         // Oh no, run setup.
@@ -47,6 +48,9 @@ void CoreService::Load() {
         sessionId = SensitiveSettings()->value("id").toString();
         SensitiveSettings()->endGroup();
     }
+
+    // Load the main application!
+    connect(_session, &PSession::ProfileData, this, ProfileLoaded);
     Session()->LoginWithSessionId(sessionId);
     Interface()->OnLoad();
 }
