@@ -62,8 +62,6 @@ void UI::SetPalette() {
 }
 
 void UI::OnLoad() {
-    SetPalette();
-
     _window->show();
 }
 

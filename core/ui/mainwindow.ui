@@ -385,7 +385,7 @@
                </font>
               </property>
               <property name="text">
-               <string>Welcome back, Novynn</string>
+               <string>Welcome to Adamant</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
