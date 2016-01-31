@@ -9,11 +9,20 @@ class Item;
 class GraphicItem : public QGraphicsPixmapItem
 {
 public:
-    enum ShowLinkReason {
+    enum class ShowLinkReason {
         None,
         Hover,
         Alt,
         Always
+    };
+
+    enum class FrameType {
+        Normal      = 0,
+        Magic       = 1,
+        Rare        = 2,
+        Unique      = 3,
+        Gem         = 4,
+        Currency    = 5
     };
 
     GraphicItem(QGraphicsItem* parent, const Item *item, const QString &imagePath);
@@ -22,8 +31,17 @@ public:
     void SetImage(QImage image);
 
     static QPixmap GenerateLinksOverlay(const Item* item);
+    static QPair<QPixmap, QString> GenerateItemTooltip(const Item* item);
 
     bool IsFilteredBy(QString text);
+
+    QString Tooltip() const {
+        return _tooltipText;
+    }
+
+    void GenerateItemTooltip();
+
+    const Item* GetItem() const;
 
     void ShowLinks(bool show=true, ShowLinkReason reason=ShowLinkReason::Hover);
 protected:
@@ -37,6 +55,8 @@ private:
 
     QGraphicsPixmapItem* _linkOverlay;
     QStack<ShowLinkReason> _linkReason;
+    QGraphicsPixmapItem* _tooltip;
+    QString _tooltipText;
 
     const Item* _item;
 };

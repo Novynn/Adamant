@@ -22,13 +22,13 @@ StashViewer::StashViewer(QWidget *parent, QString league)
     , _currentLeague(league)
 {
     ui->setupUi(this);
+    ui->splitter->setStretchFactor(0, 5);
+    ui->splitter->setStretchFactor(1, 1);
 
     _imageCache->moveToThread(_imageThread);
     connect(_imageCache, &ImageCache::OnImage, this, &StashViewer::OnImage);
     connect(_imageCache, &ImageCache::destroyed, _imageThread, &QThread::deleteLater);
     _imageThread->start();
-
-
 
     connect(_leagueDialog, &LeagueDialog::RequestStashTabList, [this] (QString league) {
         emit RequestStashTabList(league);
@@ -39,6 +39,21 @@ StashViewer::StashViewer(QWidget *parent, QString league)
     ui->graphicsView->setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
     ui->graphicsView->setOptimizationFlags(QGraphicsView::DontAdjustForAntialiasing | QGraphicsView::IndirectPainting);
     ui->graphicsView->setScene(_scene);
+
+    connect(_scene, &StashScene::selectionChanged, [this] () {
+        QStringList selection;
+        for (QGraphicsItem* i : _scene->selectedItems()) {
+            GraphicItem* item = dynamic_cast<GraphicItem*>(i);
+            if (item) {
+                if (item->Tooltip().isEmpty()) {
+                    item->GenerateItemTooltip();
+                }
+                selection << item->Tooltip();
+            }
+        }
+
+        ui->plainTextEdit->setPlainText(selection.join("\n\n"));
+    });
 }
 
 void StashViewer::OnImage(const QString &path, QImage image) {
@@ -156,7 +171,7 @@ void StashViewer::on_listWidget_itemSelectionChanged() {
 
                     GraphicItem* gItem = new GraphicItem(gridItem, item, path);
                     // Set to always show links
-                    gItem->ShowLinks(true, GraphicItem::Always);
+                    gItem->ShowLinks(true, GraphicItem::ShowLinkReason::Always);
 
                     images.insert(icon);
                 }

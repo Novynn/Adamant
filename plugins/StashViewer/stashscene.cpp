@@ -14,7 +14,7 @@ void StashScene::keyPressEvent(QKeyEvent *event) {
         for (QGraphicsItem* item : this->items()) {
             GraphicItem* gItem = dynamic_cast<GraphicItem*>(item);
             if (gItem) {
-                gItem->ShowLinks(true, GraphicItem::Alt);
+                gItem->ShowLinks(true, GraphicItem::ShowLinkReason::Alt);
             }
         }
     }
@@ -27,7 +27,7 @@ void StashScene::keyReleaseEvent(QKeyEvent *event) {
         for (QGraphicsItem* item : this->items()) {
             GraphicItem* gItem = dynamic_cast<GraphicItem*>(item);
             if (gItem) {
-                gItem->ShowLinks(false, GraphicItem::Alt);
+                gItem->ShowLinks(false, GraphicItem::ShowLinkReason::Alt);
             }
         }
 
@@ -48,7 +48,7 @@ void StashScene::focusOutEvent(QFocusEvent *event) {
     for (QGraphicsItem* item : this->items()) {
         GraphicItem* gItem = dynamic_cast<GraphicItem*>(item);
         if (gItem) {
-            gItem->ShowLinks(false, GraphicItem::Alt);
+            gItem->ShowLinks(false, GraphicItem::ShowLinkReason::Alt);
         }
     }
     QGraphicsScene::focusOutEvent(event);
