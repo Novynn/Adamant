@@ -11,4 +11,10 @@
         <file alias="linkV.png">images/Socket_Link_Vertical.png</file>
         <file alias="S.png">images/Socket_S.png</file>
     </qresource>
+    <qresource prefix="/headers">
+        <file alias="nl.png">images/ItemsHeaderWhiteLeft.png</file>
+        <file alias="nm.png">images/ItemsHeaderWhiteMiddle.png</file>
+        <file alias="nr.png">images/ItemsHeaderWhiteRight.png</file>
+        <file alias="ns.png">images/ItemsSeparatorWhite.png</file>
+    </qresource>
 </RCC>
