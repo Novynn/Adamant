@@ -27,6 +27,8 @@ public:
         return _currentFilter;
     }
 
+    void Clear();
+
 private slots:
     void on_checkBox_toggled(bool checked);
 

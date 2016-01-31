@@ -35,6 +35,10 @@ void LeagueDialog::SetLeagueTabs(QString league, QStringList tabs) {
     }
 }
 
+void LeagueDialog::Clear() {
+    ui->leaguesListWidget->setEnabled(true);
+}
+
 void LeagueDialog::on_checkBox_toggled(bool checked) {
     static const Qt::ItemFlags DefaultFlags = Qt::ItemIsSelectable |
                                               Qt::ItemIsUserCheckable |

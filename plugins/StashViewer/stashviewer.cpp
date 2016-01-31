@@ -82,10 +82,10 @@ void StashViewer::ShowLeagueSelectionDialog() {
         _currentLeague = _leagueDialog->GetChosenLeague();
         emit LeagueDetailsChanged(_currentLeague, _leagueDialog->GetFilter());
     }
+    _leagueDialog->Clear();
 }
 
-StashViewer::~StashViewer()
-{
+StashViewer::~StashViewer() {
     delete ui;
 }
 
