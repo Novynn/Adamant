@@ -150,7 +150,7 @@
         </widget>
        </item>
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_3">
+        <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="1,2">
          <property name="spacing">
           <number>0</number>
          </property>
@@ -237,11 +237,6 @@
               <horstretch>0</horstretch>
               <verstretch>0</verstretch>
              </sizepolicy>
-            </property>
-            <property name="font">
-             <font>
-              <family>Fontin SmallCaps</family>
-             </font>
             </property>
             <property name="text">
              <string>Change League and Filter Options...</string>
