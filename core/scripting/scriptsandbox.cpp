@@ -100,6 +100,13 @@ ScriptSandbox::ScriptSandbox(const PluginManager *parent, const QString &script,
     qRegisterMetaType<PSession*>("PSession");
     qRegisterMetaType<UI*>("UI");
     qRegisterMetaType<ItemManager*>("ItemManager");
+    qRegisterMetaType<UI::ApplicationTheme>("ApplicationTheme");
+
+//    qScriptRegisterMetaType<UI::ApplicationTheme>(&_engine, [](QScriptEngine *engine, const UI::ApplicationTheme &t) -> QScriptValue {
+//        return QScriptValue(static_cast<int>(t));
+//    }, [](const QScriptValue &obj, UI::ApplicationTheme &t) {
+//        t = static_cast<UI::ApplicationTheme>(obj.toInt32());
+//    });
 
 
     QScriptSyntaxCheckResult syntax = _engine.checkSyntax(_script);
@@ -111,6 +118,7 @@ ScriptSandbox::ScriptSandbox(const PluginManager *parent, const QString &script,
         AddGlobalObject("manager", (QObject*)_manager);
         AddGlobalObject("script", this);
         AddGlobalObject("core", _manager->Core());
+        AddGlobalObject("app", qApp);
     }
 
     {

@@ -44,6 +44,10 @@ public:
         return _owner;
     }
 
+    QScriptEngine* Engine() {
+        return &_engine;
+    }
+
     bool AddLine(const QString &script);
 public slots:
     void EvaluateProgram();

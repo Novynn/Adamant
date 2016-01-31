@@ -15,11 +15,16 @@
   </property>
   <property name="styleSheet">
    <string notr="true">#MainWindow {
-    border-image: url(:/images/background3.jpg);
+    
+	border-image: url(:/images/light_background.jpg);
 }
 
 #sidebarWidget {
     background-color: rgba(20, 20, 20, 200);
+}
+
+#statusBar {
+    background-color: #222;
 }</string>
   </property>
   <widget class="QWidget" name="centralwidget">
@@ -49,6 +54,9 @@
         <horstretch>0</horstretch>
         <verstretch>0</verstretch>
        </sizepolicy>
+      </property>
+      <property name="autoFillBackground">
+       <bool>true</bool>
       </property>
       <layout class="QVBoxLayout" name="sidebarContainerLayout">
        <property name="leftMargin">
@@ -153,7 +161,7 @@
               <number>0</number>
              </property>
              <property name="topMargin">
-              <number>8</number>
+              <number>0</number>
              </property>
              <property name="rightMargin">
               <number>0</number>
@@ -685,8 +693,11 @@
    </layout>
   </widget>
   <widget class="QStatusBar" name="statusbar">
+   <property name="autoFillBackground">
+    <bool>true</bool>
+   </property>
    <property name="styleSheet">
-    <string notr="true">background-color: #222;</string>
+    <string notr="true"/>
    </property>
    <property name="sizeGripEnabled">
     <bool>true</bool>
