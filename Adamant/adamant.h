@@ -11,6 +11,7 @@ class Adamant : public QObject
     Q_OBJECT
 public:
     explicit Adamant(QObject *parent = 0);
+    ~Adamant();
 
     void start();
 

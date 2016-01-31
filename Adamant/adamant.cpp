@@ -13,6 +13,10 @@ Adamant::Adamant(QObject *parent)
     connect(_loggingSystem, &LoggingSystem::OnMessage, _core, &CoreService::LoggedMessage);
 }
 
+Adamant::~Adamant() {
+    delete _core;
+}
+
 bool Adamant::RequestApplicationExit() const {
     // Invoke the exit rather than straight out quit, to allow other actions to complete.
     return QMetaObject::invokeMethod(qApp, "quit", Qt::QueuedConnection);

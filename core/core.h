@@ -22,6 +22,7 @@ class CORE_EXTERN CoreService : public QObject
     Q_PROPERTY(ItemManager* item_manager MEMBER _itemManager)
 public:
     CoreService();
+    ~CoreService();
 
     static QDir applicationPath();
 

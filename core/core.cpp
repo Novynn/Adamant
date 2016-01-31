@@ -22,6 +22,9 @@ CoreService::CoreService()
     });
 }
 
+CoreService::~CoreService() {
+}
+
 void CoreService::Load() {
     SensitiveSettings()->beginGroup("session");
     QString sessionId = SensitiveSettings()->value("id").toString();

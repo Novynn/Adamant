@@ -16,6 +16,7 @@ class CORE_EXTERN UI : public QObject
     Q_OBJECT
 public:
     UI(CoreService* parent);
+    ~UI();
     Q_PROPERTY(SetupDialog* SetupDialog MEMBER _setupDialog)
     Q_PROPERTY(MainWindow* MainWindow MEMBER _window)
     Q_PROPERTY(ApplicationTheme Theme MEMBER _theme NOTIFY ApplicationThemeChanged)

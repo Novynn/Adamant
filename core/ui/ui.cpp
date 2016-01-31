@@ -61,6 +61,11 @@ UI::UI(CoreService *parent)
     qApp->setPalette(_lightPalette);
 }
 
+UI::~UI() {
+    _window->deleteLater();
+    _setupDialog->deleteLater();
+}
+
 void UI::SetPalette(ApplicationTheme theme) {
     if (theme == _theme) return;
     ApplicationTheme old = _theme;

@@ -13,6 +13,11 @@ public:
         CharacterLocation
     };
 
+    ~ItemLocation() {
+        qDeleteAll(_items);
+        _items.clear();
+    }
+
     virtual LocationType Location() const = 0;
     virtual QString Header() const = 0;
     virtual QString Hash() const = 0;
