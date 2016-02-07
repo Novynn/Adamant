@@ -12,18 +12,24 @@ HEADERS += stashviewerplugin.h \
     stashviewer.h \
     graphicitem.h \
     stashscene.h \
-    dialogs/leaguedialog.h
+    dialogs/leaguedialog.h \
+    characterviewer.h \
+    dialogs/itemtooltip.h
 
 FORMS += \
     stashviewer.ui \
-    dialogs/leaguedialog.ui
+    dialogs/leaguedialog.ui \
+    characterviewer.ui \
+    dialogs/itemtooltip.ui
 
 SOURCES += \
     stashviewer.cpp \
     stashviewerplugin.cpp \
     graphicitem.cpp \
     stashscene.cpp \
-    dialogs/leaguedialog.cpp
+    dialogs/leaguedialog.cpp \
+    characterviewer.cpp \
+    dialogs/itemtooltip.cpp
 
 RESOURCES += \
     res.qrc

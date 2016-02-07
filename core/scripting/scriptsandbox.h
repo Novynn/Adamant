@@ -17,7 +17,7 @@ public:
     QScriptValue thisObject;
     QScriptValue value;
 
-    Q_INVOKABLE void Execute() {
+    Q_INVOKABLE void execute() {
         value.call(thisObject);
         deleteLater();
     }
@@ -30,31 +30,31 @@ public:
     explicit ScriptSandbox(const PluginManager *manager, const QString &script, AdamantPlugin *owner = 0);
     ~ScriptSandbox();
 
-    QScriptValue AddGlobalObject(const QString &name, QObject *object);
-    Q_INVOKABLE bool IsValid() const {
+    QScriptValue addGlobalObject(const QString &name, QObject *object);
+    Q_INVOKABLE bool isValid() const {
         return _errorString.isEmpty();
     }
-    Q_INVOKABLE const QString ErrorString() const {
+    Q_INVOKABLE const QString errorString() const {
         return _errorString;
     }
 
-    Q_PROPERTY(AdamantPlugin* Owner MEMBER _owner READ GetOwner)
+    Q_PROPERTY(AdamantPlugin* Owner MEMBER _owner READ getOwner)
 
-    AdamantPlugin* GetOwner() const {
+    AdamantPlugin* getOwner() const {
         return _owner;
     }
 
-    QScriptEngine* Engine() {
+    QScriptEngine* engine() {
         return &_engine;
     }
 
-    bool AddLine(const QString &script);
+    bool addLine(const QString &script);
 public slots:
-    void EvaluateProgram();
-    void Terminate();
+    void evaluateProgram();
+    void terminate();
 signals:
     void terminating();
-    void ScriptOutput(const QString &output);
+    void scriptOutput(const QString &output);
 private:
     const PluginManager* _manager;
     QString _script;

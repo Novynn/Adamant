@@ -12,17 +12,20 @@ MainWindow::MainWindow(CoreService *core, QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
     , _core(core)
-    , _script(new ScriptSandbox(_core->GetPluginManager(), ""))
+    , _mode(InvalidMode)
+    , _script(new ScriptSandbox(_core->getPluginManager(), ""))
+    , _loadingImage(new QMovie(":/images/loading_dark.gif"))
 {
     ui->setupUi(this);
+    ui->loadingLabel->setMovie(_loadingImage);
+    ui->consoleButton->click();
+
+    setMode(LoadingMode);
 
     _buttonForPage.insert(0, ui->homeButton);
 
-    ui->consoleButton->click();
-    setPageIndex(0);
-
-    connect(_script, &ScriptSandbox::ScriptOutput, [this] (const QString &message) {
-        AppendScriptOutput(message, "===");
+    connect(_script, &ScriptSandbox::scriptOutput, [this] (const QString &message) {
+        appendScriptOutput(message, "===");
     });
 
     _statusBarLabel = new QLabel(statusBar());
@@ -36,13 +39,13 @@ MainWindow::MainWindow(CoreService *core, QWidget *parent)
     statusBar()->addPermanentWidget(_statusBarProgress);
     _statusBarProgress->hide();
 
-    connect(_core->GetItemManager(), &ItemManager::OnStashTabUpdateBegin, [this](QString league) {
+    connect(_core->getItemManager(), &ItemManager::onStashTabUpdateBegin, [this](QString league) {
         const QString message = QString("Loading %1 stash tabs...").arg(league);
         _statusBarLabel->setText(message);
-        emit _core->Message(message, QtInfoMsg);
+        emit _core->message(message, QtInfoMsg);
     });
 
-    connect(_core->GetItemManager(), &ItemManager::OnStashTabUpdateProgress, [this](QString league, int r, int m) {
+    connect(_core->getItemManager(), &ItemManager::onStashTabUpdateProgress, [this](QString league, int r, int m) {
         _statusBarProgress->show();
         _statusBarProgress->setValue(r);
         _statusBarProgress->setMaximum(m);
@@ -50,24 +53,24 @@ MainWindow::MainWindow(CoreService *core, QWidget *parent)
         _statusBarLabel->setText(message);
     });
 
-    connect(_core->GetItemManager(), &ItemManager::OnStashTabUpdateAvailable, [this] (QString league) {
+    connect(_core->getItemManager(), &ItemManager::onStashTabUpdateAvailable, [this] (QString league) {
         _statusBarProgress->setValue(0);
         _statusBarProgress->setMaximum(100);
         _statusBarProgress->hide();
         const QString message = QString("%1 stash tabs loaded!").arg(league);
         _statusBarLabel->setText(message);
-        emit _core->Message(message, QtInfoMsg);
+        emit _core->message(message, QtInfoMsg);
     });
 
 
-    emit Loaded();
+    emit loaded();
 }
 
 MainWindow::~MainWindow() {
     delete ui;
 }
 
-void MainWindow::AppendScriptOutput(const QString &output, const QString &type) {
+void MainWindow::appendScriptOutput(const QString &output, const QString &type) {
     const QString chopped = QString("%1").arg(type, 3, QChar('-'));
     QString pre = output.toHtmlEscaped();
     pre.replace(" ", "&nbsp;");
@@ -80,11 +83,11 @@ void MainWindow::on_lineEdit_returnPressed() {
     QString text = ui->lineEdit->text();
     ui->lineEdit->clear();
 
-    AppendScriptOutput(text, "-->");
-    _script->AddLine(text);
+    appendScriptOutput(text, "-->");
+    _script->addLine(text);
 }
 
-void MainWindow::OnProfileBadgeImage(const QString &badge, QImage image) {
+void MainWindow::onProfileBadgeImage(const QString &badge, QImage image) {
     QLabel* label;
     if (_badgeMap.contains(badge)) {
         label = _badgeMap.value(badge);
@@ -100,7 +103,7 @@ void MainWindow::OnProfileBadgeImage(const QString &badge, QImage image) {
     }
 }
 
-void MainWindow::UpdateAccountMessagesCount(int messages) {
+void MainWindow::updateAccountMessagesCount(int messages) {
     ui->messagesButton->setText(QString("Private Messages (%1 unread)").arg(messages));
     ui->messagesButton->setVisible(messages > 0);
 }
@@ -110,15 +113,15 @@ void MainWindow::on_messagesButton_clicked() {
 }
 
 void MainWindow::on_reloadScriptsButton_clicked() {
-    _core->GetPluginManager()->ReloadScripts();
-    AppendScriptOutput("Scripts reloaded!");
+    _core->getPluginManager()->reloadScripts();
+    appendScriptOutput("Scripts reloaded!");
 }
 
 void MainWindow::on_homeButton_clicked() {
     setPageIndex(0);
 }
 
-void MainWindow::SetCurrentPageButton(int index) {
+void MainWindow::setCurrentPageButton(int index) {
     for (int page : _buttonForPage.keys()) {
         CommandButton* button = _buttonForPage.value(page);
         if (button) {
@@ -132,15 +135,15 @@ void MainWindow::setPageIndex(int index) {
     if (index == 0 || index > ui->stackedWidget->count()) {
         setMode(HomeMode);
         ui->stackedWidget->setCurrentIndex(0);
-        SetCurrentPageButton(0);
+        setCurrentPageButton(0);
         return;
     }
     setMode(ElsewhereMode);
     ui->stackedWidget->setCurrentIndex(index);
-    SetCurrentPageButton(index);
+    setCurrentPageButton(index);
 }
 
-CORE_EXTERN int MainWindow::RegisterPage(const QIcon &icon, const QString &title, const QString &description,
+CORE_EXTERN int MainWindow::registerPage(const QIcon &icon, const QString &title, const QString &description,
                                          QWidget *widget, bool lower) {
     int initialCount = ui->stackedWidget->count();
     int index = ui->stackedWidget->addWidget(widget);
@@ -182,19 +185,32 @@ void MainWindow::setMode(MainWindow::Mode mode) {
     if (mode != _mode) {
         _mode = mode;
 
-        if (_mode == HomeMode) {
-            for (CommandButton* button : ui->sidebarWidget->findChildren<CommandButton*>()) {
-                button->setIconOnly(false);
-            }
-            ui->sidebarWidget->setMinimumSize(240, 0);
-            ui->sidebarWidget->setMaximumSize(240, 16777215);
-        }
-        else if (mode == ElsewhereMode) {
-            for (CommandButton* button : ui->sidebarWidget->findChildren<CommandButton*>()) {
-                button->setIconOnly(true);
-            }
-            ui->sidebarWidget->setMinimumSize(48, 0);
-            ui->sidebarWidget->setMaximumSize(48, 16777215);
+        switch (_mode) {
+            case HomeMode: {
+                ui->pagesWidget->setCurrentIndex(0);
+                _loadingImage->stop();
+                for (CommandButton* button : ui->sidebarWidget->findChildren<CommandButton*>()) {
+                    button->setIconOnly(false);
+                }
+                ui->sidebarWidget->setMinimumSize(240, 0);
+                ui->sidebarWidget->setMaximumSize(240, 16777215);
+            } break;
+            case ElsewhereMode: {
+                ui->pagesWidget->setCurrentIndex(0);
+                _loadingImage->stop();
+                for (CommandButton* button : ui->sidebarWidget->findChildren<CommandButton*>()) {
+                    button->setIconOnly(true);
+                }
+                ui->sidebarWidget->setMinimumSize(48, 0);
+                ui->sidebarWidget->setMaximumSize(48, 16777215);
+            } break;
+            case LoadingMode: {
+                ui->pagesWidget->setCurrentIndex(1);
+                _loadingImage->start();
+            } break;
+            case InvalidMode: {
+                // Do nothing?
+            } break;
         }
         updateGeometry();
     }

@@ -11,10 +11,31 @@
         <file alias="linkV.png">images/Socket_Link_Vertical.png</file>
         <file alias="S.png">images/Socket_S.png</file>
     </qresource>
-    <qresource prefix="/headers">
-        <file alias="nl.png">images/ItemsHeaderWhiteLeft.png</file>
-        <file alias="nm.png">images/ItemsHeaderWhiteMiddle.png</file>
-        <file alias="nr.png">images/ItemsHeaderWhiteRight.png</file>
-        <file alias="ns.png">images/ItemsSeparatorWhite.png</file>
+    <qresource prefix="/tooltip">
+        <file alias="SeparatorWhite.png">images/ItemsSeparatorWhite.png</file>
+        <file alias="SeparatorMagic.png">images/ItemsSeparatorMagic.png</file>
+        <file alias="SeparatorRare.png">images/ItemsSeparatorRare.png</file>
+        <file alias="SeparatorUnique.png">images/ItemsSeparatorUnique.png</file>
+        <file alias="SeparatorGem.png">images/ItemsSeparatorGem.png</file>
+        <file alias="SeparatorCurrency.png">images/ItemsSeparatorCurrency.png</file>
+
+        <file alias="ItemHeaderUniqueLeft.png">images/ItemHeaderUniqueLeft.png</file>
+        <file alias="ItemHeaderUniqueMiddle.png">images/ItemHeaderUniqueMiddle.png</file>
+        <file alias="ItemHeaderUniqueRight.png">images/ItemHeaderUniqueRight.png</file>
+        <file alias="ItemHeaderRareLeft.png">images/ItemHeaderRareLeft.png</file>
+        <file alias="ItemHeaderRareMiddle.png">images/ItemHeaderRareMiddle.png</file>
+        <file alias="ItemHeaderRareRight.png">images/ItemHeaderRareRight.png</file>
+        <file alias="ItemHeaderGemLeft.png">images/ItemHeaderGemLeft.png</file>
+        <file alias="ItemHeaderGemMiddle.png">images/ItemHeaderGemMiddle.png</file>
+        <file alias="ItemHeaderGemRight.png">images/ItemHeaderGemRight.png</file>
+        <file alias="ItemHeaderWhiteLeft.png">images/ItemHeaderWhiteLeft.png</file>
+        <file alias="ItemHeaderWhiteMiddle.png">images/ItemHeaderWhiteMiddle.png</file>
+        <file alias="ItemHeaderWhiteRight.png">images/ItemHeaderWhiteRight.png</file>
+        <file alias="ItemHeaderMagicLeft.png">images/ItemHeaderMagicLeft.png</file>
+        <file alias="ItemHeaderMagicMiddle.png">images/ItemHeaderMagicMiddle.png</file>
+        <file alias="ItemHeaderMagicRight.png">images/ItemHeaderMagicRight.png</file>
+        <file alias="ItemHeaderCurrencyLeft.png">images/ItemHeaderCurrencyLeft.png</file>
+        <file alias="ItemHeaderCurrencyMiddle.png">images/ItemHeaderCurrencyMiddle.png</file>
+        <file alias="ItemHeaderCurrencyRight.png">images/ItemHeaderCurrencyRight.png</file>
     </qresource>
 </RCC>

@@ -7,19 +7,20 @@
 #include <QAction>
 #include <QMenu>
 #include <QRegularExpression>
+#include <dialogs/itemtooltip.h>
 
 GraphicItem::GraphicItem(QGraphicsItem *parent, const Item* item, const QString &imagePath)
     : QGraphicsPixmapItem(parent)
     , _waitingForImage(true)
     , _imagePath(imagePath)
-    , _item(item)
     , _linkOverlay(nullptr)
     , _tooltip(nullptr)
-    , _tooltipText(QString()) {
-    int x = item->Data("x").toInt();
-    int y = item->Data("y").toInt();
-    int w = item->Data("w").toInt();
-    int h = item->Data("h").toInt();
+    , _tooltipText(QString())
+    , _item(item) {
+    int x = item->data("x").toInt();
+    int y = item->data("y").toInt();
+    int w = item->data("w").toInt();
+    int h = item->data("h").toInt();
 
     QPixmap pix = QPixmap(":/images/inventory_item_background.png", "png");
     pix = pix.scaled(w * 47, h * 47);
@@ -56,8 +57,8 @@ const int LINKV_HEIGHT = LINKH_WIDTH;
 const int LINKV_WIDTH = LINKH_HEIGHT;
 
 QPixmap GraphicItem::GenerateLinksOverlay(const Item *item) {
-    int height = item->Data("h").toInt();
-    int width = item->Data("w").toInt();
+    int height = item->data("h").toInt();
+    int width = item->data("w").toInt();
     int socket_rows = 0;
     int socket_columns = 0;
     // this will ensure we have enough room to draw the slots
@@ -71,7 +72,7 @@ QPixmap GraphicItem::GenerateLinksOverlay(const Item *item) {
     size_t i = 0;
 
     QList<ItemSocket> sockets;
-    for (QVariant socketObj : item->Data("sockets").toList()) {
+    for (QVariant socketObj : item->data("sockets").toList()) {
         QVariantMap socketObjMap = socketObj.toMap();
         sockets.append({socketObjMap.value("group").toInt(),
                         socketObjMap.value("attr").toString()});
@@ -151,178 +152,85 @@ qreal AddSeparator(QPainter* painter, qreal y, qreal width) {
     return Height;
 }
 
-QPair<QPixmap, QString> GraphicItem::GenerateItemTooltip(const Item *item) {
-    QString typeLineEx = item->Data("typeLine").toString();
+QPixmap GraphicItem::GenerateItemTooltip(const Item *item) {
+    QString typeLineEx = item->data("typeLine").toString();
     const QString typeLine = typeLineEx.remove(QRegularExpression("\\<.*\\>")); // Greedy
-    QString nameEx = item->Data("name").toString();
+    QString nameEx = item->data("name").toString();
     const QString name = nameEx.remove(QRegularExpression("\\<.*\\>")); // Greedy
 
-    const int talismanTier = item->Data("talismanTier").toInt();
-    const QStringList implicitMods = item->Data("implicitMods").toStringList();
-    const QStringList explicitMods = item->Data("explicitMods").toStringList();
-    const QString secDescrText = item->Data("secDescrText").toString();
-    const QString descrText = item->Data("descrText").toString();
-    const bool corrupted = item->Data("corrupted").toBool();
-    const QStringList flavourText = item->Data("flavourText").toStringList();
-    FrameType type = static_cast<FrameType>(item->Data("frameType").toInt());
+    const int talismanTier = item->data("talismanTier").toInt();
+    const QStringList implicitMods = item->data("implicitMods").toStringList();
+    const QStringList explicitMods = item->data("explicitMods").toStringList();
+    const QString secDescrText = item->data("secDescrText").toString();
+    const QString descrText = item->data("descrText").toString();
+    const bool corrupted = item->data("corrupted").toBool();
+    const QStringList flavourText = item->data("flavourText").toStringList();
+    int typeIndex = item->data("frameType").toInt();
+    FrameType type = static_cast<FrameType>(typeIndex);
 
-    const QVariantList properties = item->Data("properties").toList();
-    const QVariantList requirements = item->Data("requirements").toList();
+    const QVariantList properties = item->data("properties").toList();
+    const QVariantList requirements = item->data("requirements").toList();
 
     QString resultText;
 
-    // em calculations
-//    const qreal FontSize = 14.3;
+    ItemTooltip tooltip;
 
-//    qreal runningHeight = 0.0;
+    bool singleline = name.isEmpty();
+    QString suffix = "";
+    if (singleline && (type == FrameType::Rare || type == FrameType::Unique))
+        suffix = "SingleLine";
 
-    const int MaxHeight = 800; // This will be trimmed once the drawing is done
-    QPixmap result = QPixmap(314, MaxHeight);
-    result.fill(Qt::transparent);
-//    QPainter painter(&result);
-//    painter.setRenderHint(QPainter::HighQualityAntialiasing);
-    switch (type) {
-        case FrameType::Normal: {
-        /*
-            const int normalFrameHeaderHeight = 33;
-            const int normalFrameHeaderWidth = 314; // TODO(rory): This should be dynamic!!!
-            const QRectF headerRect = QRectF(0, 0, normalFrameHeaderWidth, normalFrameHeaderHeight);
-
-            // Draw Header Image
-            {
-                const QPixmap nl = QPixmap(":/headers/nl.png");
-                const QPixmap nm = QPixmap(":/headers/nm.png");
-                const QPixmap nr = QPixmap(":/headers/nr.png");
-                painter.save();
-                painter.drawPixmap(0, 0,
-                                   nl.width(), headerRect.height(), nl);
-                painter.drawPixmap(nl.width(), 0,
-                                   headerRect.width() - (nl.width() + nr.width()), headerRect.height(), nm);
-                painter.drawPixmap(headerRect.width() - nr.width(), 0,
-                                   nr.width(), headerRect.height(), nr);
-                painter.restore();
-            }
-            runningHeight += normalFrameHeaderHeight;
-
-            // Draw Type Line
-            {
-                painter.save();
-                painter.setPen(QColor(0xc8, 0xc8, 0xc8));
-                painter.setBrush(QBrush(Qt::transparent));
-                painter.setRenderHint(QPainter::TextAntialiasing);
-                painter.setFont(QFont("Fontin SmallCaps", FontSize, QFont::Medium));
-                painter.drawText(headerRect.adjusted(7.23428, 30, -7.23428, -30),
-                                 typeLine, QTextOption(Qt::AlignCenter));
-                painter.restore();
-            }
-
-            // Test Draw Bounds
-            {
-                painter.save();
-                QColor back(Qt::black);
-                back.setAlpha(204); // Extracted from the image pathofexile.com uses
-                painter.setBrush(back);
-                painter.drawRect(0, normalFrameHeaderHeight, normalFrameHeaderWidth, MaxHeight);
-                painter.restore();
-            }
-            runningHeight += 0.4 * FontSize; // 0.4em
-
-            // Contents
-            {
-                const qreal LineXOffset = 6.08519;
-                const qreal LineWidth = normalFrameHeaderWidth - LineXOffset;
-                // Draw Talisman Stuff
-                if (talismanTier > 0){
-                    const QString text = QString("Talisman Tier: %1").arg(talismanTier);
-                    painter.save();
-                    painter.setPen(QColor(0xc8, 0xc8, 0xc8));
-                    painter.setBrush(QBrush(Qt::transparent));
-                    painter.setRenderHint(QPainter::TextAntialiasing);
-                    painter.setFont(QFont("Fontin SmallCaps", FontSize - 3, QFont::Normal));
-                    painter.drawText(QRectF(LineXOffset, runningHeight, LineWidth, 18),
-                                     text, QTextOption(Qt::AlignCenter));
-                    painter.restore();
-                    runningHeight += 18;
-                    runningHeight += AddSeparator(&painter, runningHeight, normalFrameHeaderWidth);
-                }
-                // Draw Mods
-                for (const QString mod : implicitMods) {
-                    painter.save();
-                    painter.setPen(QColor(0x88, 0x88, 0xff));
-                    painter.setBrush(QBrush(Qt::transparent));
-                    painter.setRenderHint(QPainter::TextAntialiasing);
-                    painter.setFont(QFont("Fontin SmallCaps", FontSize - 3, QFont::Normal));
-                    painter.drawText(QRectF(LineXOffset, runningHeight, LineWidth, 18),
-                                     mod, QTextOption(Qt::AlignCenter));
-                    painter.restore();
-                    runningHeight += 18;
-                }
-
-                if (corrupted) {
-                    const QString text("Corrupted");
-                    painter.save();
-                    painter.setPen(QColor(0xd2, 0x00, 0x00));
-                    painter.setBrush(QBrush(Qt::transparent));
-                    painter.setRenderHint(QPainter::TextAntialiasing);
-                    painter.setFont(QFont("Fontin SmallCaps", FontSize - 3, QFont::Normal));
-                    painter.drawText(QRectF(LineXOffset, runningHeight, LineWidth, 18),
-                                     text, QTextOption(Qt::AlignCenter));
-                    painter.restore();
-                    runningHeight += 18;
-                }
-                if (implicitMods.count() > 0) {
-                    runningHeight += AddSeparator(&painter, runningHeight, normalFrameHeaderWidth);
-                }
-
-                // Draw Flavour Text
-                for (const QString text : flavourText) {
-                    if (text.isEmpty()) continue;
-                    painter.save();
-                    painter.setPen(QColor(0xaf, 0x60, 0x25));
-                    painter.setBrush(QBrush(Qt::transparent));
-                    painter.setRenderHint(QPainter::TextAntialiasing);
-                    painter.setFont(QFont("Fontin SmallCaps", FontSize - 4, QFont::Normal, true));
-                    painter.drawText(QRectF(LineXOffset, runningHeight, LineWidth, 18),
-                                     text, QTextOption(Qt::AlignCenter));
-                    painter.restore();
-                    runningHeight += 18;
-                }
-            }
-
-            runningHeight += 0.5 * FontSize; // 0.5em
-            painter.end();
-
-            result = result.copy(0, 0, normalFrameHeaderWidth, runningHeight);
-
-            */
-        } break;
-        case FrameType::Magic: {
-
-        } break;
-        case FrameType::Rare: {
-            resultText += (name) + "\n";
-        } break;
-        case FrameType::Unique: {
-            resultText += (name) + "\n";
-        } break;
-        case FrameType::Gem: {
-
-        } break;
-        case FrameType::Currency: {
-
-        } break;
-        default: {
-
-        } break;
+    if (singleline) {
+        tooltip.ui->itemNameFirstLine->hide();
+        tooltip.ui->itemNameSecondLine->setAlignment(Qt::AlignCenter);
+        tooltip.ui->itemNameContainerWidget->setFixedSize(16777215, 34);
+        tooltip.ui->itemHeaderLeft->setFixedSize(29, 34);
+        tooltip.ui->itemHeaderRight->setFixedSize(29, 34);
+    } else {
+        tooltip.ui->itemNameFirstLine->show();
+        tooltip.ui->itemNameFirstLine->setAlignment(Qt::AlignBottom | Qt::AlignHCenter);
+        tooltip.ui->itemNameSecondLine->setAlignment(Qt::AlignTop | Qt::AlignHCenter);
+        tooltip.ui->itemNameContainerWidget->setFixedSize(16777215, 54);
+        tooltip.ui->itemHeaderLeft->setFixedSize(44, 54);
+        tooltip.ui->itemHeaderRight->setFixedSize(44, 54);
     }
-    resultText += (typeLine) + "\n";
 
-    const QString separator = QString('-').repeated(20);
+    const QStringList FrameToKey = {
+        "White",
+        "Magic",
+        "Rare",
+        "Unique",
+        "Gem",
+        "Currency"
+    };
 
-    resultText += (QString('=').repeated(20)) + "\n";
+    if (typeIndex >= FrameToKey.count()) typeIndex = 0;
+
+    QString key = FrameToKey.at(typeIndex);
+
+    tooltip.ui->itemHeaderLeft->setStyleSheet(("border-image: url(:/tooltip/ItemHeader" + key + suffix + "Left.png);"));
+    tooltip.ui->itemNameContainerWidget->setStyleSheet(("border-image: url(:/tooltip/ItemHeader" + key + suffix + "Middle.png);"));
+    tooltip.ui->itemHeaderRight->setStyleSheet(("border-image: url(:/tooltip/ItemHeader" + key + suffix + "Right.png);"));
+
+    tooltip.ui->itemNameFirstLine->setText(name);
+    tooltip.ui->itemNameSecondLine->setText(typeLine);
+
+    const static QStringList FrameToColor = {
+        "#c8c8c8",
+        "#88f",
+        "#ff7",
+        "#af6025",
+        "#1ba29b",
+        "#aa9e82"
+    };
+
+    QString css = "border-image: none; font-size: 20px; color: " + FrameToColor[typeIndex];
+    tooltip.ui->itemNameFirstLine->setStyleSheet(css);
+    tooltip.ui->itemNameSecondLine->setStyleSheet(css);
+
+    const QString separator = "<img src=':/tooltip/Separator" + key + ".png'>";;
+
     bool firstPrinted = true;
-
-    // if (!properties.isEmpty()) qDebug() << qPrintable(separator);
     for (const QVariant property : properties) {
         QVariantMap propertyMap = property.toMap();
 
@@ -330,9 +238,9 @@ QPair<QPixmap, QString> GraphicItem::GenerateItemTooltip(const Item *item) {
         const QVariantList list = propertyMap.value("values").toList();
         const int displayMode = propertyMap.value("displayMode").toInt();
 
-        const QString text = Item::FormatProperty(name, list, displayMode);
+        const QString text = Item::formatProperty(name, list, displayMode, true);
 
-        resultText += (text) + "\n";
+        resultText += (text) + "<br>";
         firstPrinted = false;
     }
 
@@ -344,67 +252,70 @@ QPair<QPixmap, QString> GraphicItem::GenerateItemTooltip(const Item *item) {
         const QVariantList list = propertyMap.value("values").toList();
         const int displayMode = propertyMap.value("displayMode").toInt();
 
-        const QString text = Item::FormatProperty(name, list, displayMode);
+        const QString text = Item::formatProperty(name, list, displayMode, true);
         requirementItems << text;
     }
 
     if (!requirementItems.isEmpty()) {
-        if (!firstPrinted) resultText += (separator) + "\n";
-        resultText += ("Requires " + requirementItems.join(", ")) + "\n";
+        if (!firstPrinted) resultText += (separator) + "<br>";
+        QString comma = Item::formatProperty(", ", {}, -3, true);
+        resultText += (Item::formatProperty("Requires ", {}, -3, true) + requirementItems.join(comma)) + "<br>";
         firstPrinted = false;
     }
 
 
     if (talismanTier > 0) {
-        if (!firstPrinted) resultText += (separator) + "\n";
+        if (!firstPrinted) resultText += (separator) + "<br>";
         resultText += (QString("Talisman Tier: %1").arg(talismanTier)) + "\n";
         firstPrinted = false;
     }
 
     if (!secDescrText.isEmpty()) {
-        if (!firstPrinted) resultText += (separator) + "\n";
-        resultText += (secDescrText) + "\n";
+        if (!firstPrinted) resultText += (separator) + "<br>";
+        resultText += Item::formatProperty(secDescrText, {}, -4, true) + "<br>";
         firstPrinted = false;
     }
 
-    if (!implicitMods.isEmpty() && !firstPrinted) resultText += (separator) + "\n";
+    if (!implicitMods.isEmpty() && !firstPrinted) resultText += (separator) + "<br>";
     for (const QString mod : implicitMods) {
-        resultText += (mod) + "\n";
+        resultText += Item::formatProperty(mod, {}, -1, true) + "<br>";
     }
 
-    if (!explicitMods.isEmpty() && !firstPrinted) resultText += (separator) + "\n";
+    if (!explicitMods.isEmpty() && !firstPrinted) resultText += (separator) + "<br>";
     for (const QString mod : explicitMods) {
-        resultText += (mod) + "\n";
+        resultText += Item::formatProperty(mod, {}, -1, true) + "<br>";
     }
 
     if (corrupted) {
-        resultText += "Corrupted\n";
+        resultText += Item::formatProperty("Corrupted", {}, -2, true) + "<br>";
         firstPrinted = false;
     }
 
     if (!descrText.isEmpty()) {
-       if (!firstPrinted) resultText += (separator) + "\n";
-        resultText += (descrText) + "\n";
+       if (!firstPrinted) resultText += (separator) + "<br>";
+        resultText += Item::formatProperty(descrText, {}, -4, true) + "<br>";
         firstPrinted = false;
     }
 
     if (!flavourText.isEmpty()) {
-        if (!firstPrinted) resultText += (separator) + "\n";
+        if (!firstPrinted) resultText += (separator) + "<br>";
         firstPrinted = false;
     }
     for (const QString text : flavourText) {
         if (text.isEmpty()) continue;
-        resultText += (text) + "\n";
+        resultText += Item::formatProperty(text, {}, -5, true) + "<br>";
     }
 
-    return QPair<QPixmap, QString>(result, resultText);
+    tooltip.ui->propertiesLabel->setText(QString("<center>%1</center>").arg(resultText));
+
+    return tooltip.grab();
 }
 
 bool GraphicItem::IsFilteredBy(QString text) {
     if (text.isEmpty()) return false;
     QStringList searchable;
-    searchable << _item->Data("name").toString();
-    searchable << _item->Data("typeLine").toString();
+    searchable << _item->data("name").toString();
+    searchable << _item->data("typeLine").toString();
     for (QString search : searchable) {
         auto expr = QRegularExpression(text, QRegularExpression::CaseInsensitiveOption);
         if (expr.isValid() && search.contains(expr))
@@ -415,13 +326,12 @@ bool GraphicItem::IsFilteredBy(QString text) {
 
 void GraphicItem::GenerateItemTooltip() {
     if (_tooltip == nullptr) {
-        QPair<QPixmap, QString> data = GraphicItem::GenerateItemTooltip(_item);
-        if (!data.first.isNull()) {
-            _tooltip = new QGraphicsPixmapItem(data.first);
-            _tooltipText = data.second;
+        QPixmap data = GraphicItem::GenerateItemTooltip(_item);
+        if (!data.isNull()) {
+            _tooltip = new QGraphicsPixmapItem(data);
             scene()->addItem(_tooltip);
-            // const QPointF p = mapToScene(pos());
-            _tooltip->setPos(-_tooltip->boundingRect().width(), 0);
+            const QPointF p = scenePos();
+            _tooltip->setPos(p.x() - (data.width() / 2), p.y() - data.height());
         }
     }
 }
@@ -451,13 +361,13 @@ void GraphicItem::hoverEnterEvent(QGraphicsSceneHoverEvent *event) {
     ShowLinks(true, ShowLinkReason::Hover);
 
     GenerateItemTooltip();
-    _tooltip->show();
+    if (_tooltip) _tooltip->show();
 }
 
 void GraphicItem::hoverLeaveEvent(QGraphicsSceneHoverEvent *event) {
     event->accept();
     ShowLinks(false, ShowLinkReason::Hover);
-    _tooltip->hide();
+    if (_tooltip) _tooltip->hide();
 }
 
 void GraphicItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
@@ -466,6 +376,8 @@ void GraphicItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     QMenu menu;
     QAction *setAction = menu.addAction("Set Price...");
     QAction *clearAction = menu.addAction("Clear Price");
+    Q_UNUSED(setAction)
+    Q_UNUSED(clearAction)
     menu.addSeparator();
     QAction *dumpAction = menu.addAction("Dump JSON to Console");
     QAction *selectedAction = menu.exec(event->screenPos());
@@ -474,7 +386,7 @@ void GraphicItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
         scene()->clearSelection();
 
         if (selectedAction == dumpAction) {
-            qInfo() << qPrintable(_item->Dump());
+            qInfo() << qPrintable(_item->dump());
         }
     }
 }

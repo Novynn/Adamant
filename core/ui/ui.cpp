@@ -1,6 +1,10 @@
 #include "ui.h"
 #include "core.h"
-#include "session/psession.h"
+#include "session/sessionrequest.h"
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonValue>
+#include <QJsonArray>
 #include <QStyle>
 #include <QStyleFactory>
 
@@ -11,31 +15,31 @@ UI::UI(CoreService *parent)
     _setupDialog = new SetupDialog();
     _window = new MainWindow(parent);
 
-    connect(_setupDialog, &SetupDialog::LoginByIdRequested,
-            _core->Session(), &PSession::LoginWithSessionId);
-    connect(_setupDialog, &SetupDialog::LoginRequested,
-            _core->Session(), &PSession::Login);
-    connect(this, &UI::RequestProfileData,
-            _core->Session(), &PSession::LoginWithSessionId);
+    connect(_setupDialog, &SetupDialog::loginByIdRequested,
+            _core->session(), &Session::Request::loginWithSessionId);
+    connect(_setupDialog, &SetupDialog::loginRequested,
+            _core->session(), &Session::Request::login);
+    connect(this, &UI::requestProfileData,
+            _core->session(), &Session::Request::loginWithSessionId);
 
-    connect(_core->Session(), &PSession::LoginResult,
+    connect(_core->session(), &Session::Request::loginResult,
             [this] (int result, QString resultString) {
         if (result == 0) {
-            QString sessionId = _core->Session()->property("SessionId").toString();
-            _setupDialog->LoginSuccess(sessionId);
+            QString sessionId = _core->session()->property("SessionId").toString();
+            _setupDialog->loginSuccess(sessionId);
         }
         else {
-            _setupDialog->LoginFailed(resultString);
+            _setupDialog->loginFailed(resultString);
         }
     });
 
-    connect(_core->Session(), &PSession::ProfileBadgeImage, _window, &MainWindow::OnProfileBadgeImage);
-    connect(_core->Session(), &PSession::ProfileAvatarImage, _setupDialog, &SetupDialog::UpdateAccountAvatar);
-    connect(_core->Session(), &PSession::ProfileData, [this](QString data) {
+    connect(_core->session(), &Session::Request::profileBadgeImage, _window, &MainWindow::onProfileBadgeImage);
+    connect(_core->session(), &Session::Request::profileAvatarImage, _setupDialog, &SetupDialog::updateAccountAvatar);
+    connect(_core->session(), &Session::Request::profileData, [this](QString data) {
         QJsonDocument doc = QJsonDocument::fromJson(data.toLatin1());
         if (doc.isObject() && !doc.isEmpty()) {
-            _setupDialog->UpdateAccountName(doc.object().value("name").toString());
-            _window->UpdateAccountMessagesCount(doc.object().value("messages").toInt());
+            _setupDialog->updateAccountName(doc.object().value("name").toString());
+            _window->updateAccountMessagesCount(doc.object().value("messages").toInt());
         }
     });
 
@@ -66,7 +70,7 @@ UI::~UI() {
     _setupDialog->deleteLater();
 }
 
-void UI::SetPalette(ApplicationTheme theme) {
+void UI::setTheme(ApplicationTheme theme) {
     if (theme == _theme) return;
     ApplicationTheme old = _theme;
     _theme = theme;
@@ -75,28 +79,28 @@ void UI::SetPalette(ApplicationTheme theme) {
     if (theme == ApplicationTheme::Dark)        p = _darkPalette;
     else if (theme == ApplicationTheme::Light)  p = _lightPalette;
 
-    Window()->setPalette(p);
+    window()->setPalette(p);
     {
-        QList<QWidget*> widgets = Window()->findChildren<QWidget*>();
+        QList<QWidget*> widgets = window()->findChildren<QWidget*>();
         foreach (QWidget* w, widgets)
             w->setPalette(p);
     }
 
-    GetSetupDialog()->setPalette(p);
+    getSetupDialog()->setPalette(p);
     {
-        QList<QWidget*> widgets = GetSetupDialog()->findChildren<QWidget*>();
+        QList<QWidget*> widgets = getSetupDialog()->findChildren<QWidget*>();
         foreach (QWidget* w, widgets)
             w->setPalette(p);
     }
     qApp->setPalette(p);
 
-    emit ApplicationThemeChanged(old, _theme);
+    emit applicationThemeChanged(old, _theme);
 }
 
-void UI::OnLoad() {
+void UI::start() {
     _window->show();
 }
 
-int UI::ShowSetup() {
+int UI::showSetup() {
     return _setupDialog->exec();
 }

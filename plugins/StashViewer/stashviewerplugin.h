@@ -4,10 +4,11 @@
 #include "adamantplugin.h"
 #include <QDebug>
 #include <QWidget>
+#include "characterviewer.h"
 #include "stashviewer.h"
 
 #include <QDebug>
-#include <session/psession.h>
+#include <session/sessionrequest.h>
 
 #include <core.h>
 #include <ui/ui.h>
@@ -28,6 +29,7 @@ protected:
 
 private:
     StashViewer* _viewer;
+    CharacterViewer* _characterViewer;
 };
 
 #endif // STASHVIEWERPLUGIN_H

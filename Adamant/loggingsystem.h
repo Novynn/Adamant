@@ -11,11 +11,11 @@ public:
     static LoggingSystem* Get();
 
 public slots:
-    static void QtMessage(QtMsgType type, const QMessageLogContext &context, const QString &msg);
+    static void qtMessage(QtMsgType type, const QMessageLogContext &context, const QString &msg);
 
-    void Message(const QString &message, QtMsgType type);
+    void message(const QString &message, QtMsgType type);
 signals:
-    void OnMessage(const QString &message, QtMsgType type);
+    void onMessage(const QString &message, QtMsgType type);
 private:
     explicit LoggingSystem();
     static LoggingSystem* _instance;

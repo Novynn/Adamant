@@ -150,20 +150,13 @@
         </widget>
        </item>
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="1,2">
+        <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="2">
          <property name="spacing">
           <number>0</number>
          </property>
          <property name="bottomMargin">
           <number>0</number>
          </property>
-         <item>
-          <widget class="QPlainTextEdit" name="plainTextEdit">
-           <property name="readOnly">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
          <item>
           <widget class="QGraphicsView" name="graphicsView"/>
          </item>

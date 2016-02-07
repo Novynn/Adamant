@@ -1,80 +1,81 @@
 #include "core.h"
 #include "pluginmanager.h"
-#include "session/psession.h"
 #include "ui/ui.h"
 #include <items/itemmanager.h>
 #include <ui/pages/pluginpage.h>
+#include "session/sessionrequest.h"
 
 CoreService::CoreService()
     : QObject()
     , _pluginManager(new PluginManager(this))
     , _settings("plugins.ini", QSettings::IniFormat)
     , _sensitiveSettings("sensitive.ini", QSettings::IniFormat)
-    , _session(new PSession(this,
-                            _sensitiveSettings.value("account").toString(),
-                            _sensitiveSettings.value("id").toString()))
     , _itemManager(new ItemManager(this)) {
+    Session::SetCoreService(this);
 
     _ui = new UI(this);
 
-    connect(_pluginManager, &PluginManager::PluginMessage, [this] (QString message, QtMsgType type) {
-        emit Message(message, type);
+    connect(_pluginManager, &PluginManager::pluginMessage, [this] (QString msg, QtMsgType type) {
+        emit message(msg, type);
     });
 }
 
 CoreService::~CoreService() {
 }
 
-void CoreService::Load() {
-    SensitiveSettings()->beginGroup("session");
-    QString sessionId = SensitiveSettings()->value("id").toString();
-    SensitiveSettings()->endGroup();
+void CoreService::load() {
+    sensitiveSettings()->beginGroup("session");
+    QString sessionId = sensitiveSettings()->value("id").toString();
+    sensitiveSettings()->endGroup();
 
     // Required here so that the setup dialog also gets this palette
-    Interface()->SetPalette();
+    interface()->setTheme();
 
-    if (sessionId.isEmpty()) {
+    while (sessionId.isEmpty()) {
         // Oh no, run setup.
-        int result = Interface()->ShowSetup(); // Blocking
+        int result = interface()->showSetup(); // Blocking
         if (result != 0x0) {
             qApp->quit();
             return;
         }
 
-        QVariantMap map = Interface()->GetSetupDialog()->GetData();
+        QVariantMap map = interface()->getSetupDialog()->getData();
 
         // Setup completed, we should have valid data
-        SensitiveSettings()->beginGroup("session");
+        sensitiveSettings()->beginGroup("session");
         for (QString key : map.uniqueKeys()) {
-            SensitiveSettings()->setValue(key, map.value(key));
+            sensitiveSettings()->setValue(key, map.value(key));
         }
-        sessionId = SensitiveSettings()->value("id").toString();
-        SensitiveSettings()->endGroup();
+        sessionId = sensitiveSettings()->value("id").toString();
+        sensitiveSettings()->endGroup();
     }
 
     // Load the main application!
-    connect(_session, &PSession::ProfileData, this, ProfileLoaded);
-    Session()->LoginWithSessionId(sessionId);
-    Interface()->OnLoad();
-}
-
-void CoreService::ProfileLoaded(QString profileData) {
-    Q_UNUSED(profileData)
-    // We only care about this once...
-    disconnect(_session, &PSession::ProfileData, this, &CoreService::ProfileLoaded);
+    connect(session(), &Session::Request::profileData, this, profileLoaded);
+    session()->loginWithSessionId(sessionId);
+    interface()->start();
 
     // Load Plugins
-    GetPluginManager()->ScanPlugins(true);
-    GetPluginManager()->VerifyPlugins();
-    GetPluginManager()->PreparePlugins();
-    GetPluginManager()->LoadPlugins();
-
-    emit Message("Adamant Started!", QtInfoMsg);
-
-    Interface()->RegisterPages();
+    getPluginManager()->scanPlugins(true);
+    getPluginManager()->verifyPlugins();
+    getPluginManager()->preparePlugins();
 }
 
-void CoreService::LoggedMessage(const QString &message, QtMsgType type) {
+void CoreService::profileLoaded(QString profileData) {
+    Q_UNUSED(profileData)
+    // We only care about this once...
+    disconnect(session(), &Session::Request::profileData, this, &CoreService::profileLoaded);
+
+    getPluginManager()->loadPlugins();
+
+    emit message("Adamant Started!", QtInfoMsg);
+    interface()->registerPages();
+
+    // Set page to home
+    interface()->window()->setPageIndex(0);
+}
+
+void CoreService::loggedMessage(const QString &message, QtMsgType type) {
     QString sType;
     switch (type) {
         case QtDebugMsg:      sType = "DEB"; break;
@@ -84,7 +85,7 @@ void CoreService::LoggedMessage(const QString &message, QtMsgType type) {
         case QtFatalMsg:      sType = "FAT"; break;
     }
 
-    Interface()->Window()->AppendScriptOutput(message, sType);
+    interface()->window()->appendScriptOutput(message, sType);
 }
 
 QDir CoreService::applicationPath() {

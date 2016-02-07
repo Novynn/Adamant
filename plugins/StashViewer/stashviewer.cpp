@@ -26,7 +26,7 @@ StashViewer::StashViewer(QWidget *parent, QString league)
     ui->splitter->setStretchFactor(1, 1);
 
     _imageCache->moveToThread(_imageThread);
-    connect(_imageCache, &ImageCache::OnImage, this, &StashViewer::OnImage);
+    connect(_imageCache, &ImageCache::onImage, this, &StashViewer::OnImage);
     connect(_imageCache, &ImageCache::destroyed, _imageThread, &QThread::deleteLater);
     _imageThread->start();
 
@@ -40,20 +40,20 @@ StashViewer::StashViewer(QWidget *parent, QString league)
     ui->graphicsView->setOptimizationFlags(QGraphicsView::DontAdjustForAntialiasing | QGraphicsView::IndirectPainting);
     ui->graphicsView->setScene(_scene);
 
-    connect(_scene, &StashScene::selectionChanged, [this] () {
-        QStringList selection;
-        for (QGraphicsItem* i : _scene->selectedItems()) {
-            GraphicItem* item = dynamic_cast<GraphicItem*>(i);
-            if (item) {
-                if (item->Tooltip().isEmpty()) {
-                    item->GenerateItemTooltip();
-                }
-                selection << item->Tooltip();
-            }
-        }
+//    connect(_scene, &StashScene::selectionChanged, [this] () {
+//        QStringList selection;
+//        for (QGraphicsItem* i : _scene->selectedItems()) {
+//            GraphicItem* item = dynamic_cast<GraphicItem*>(i);
+//            if (item) {
+//                if (item->Tooltip().isEmpty()) {
+//                    item->GenerateItemTooltip();
+//                }
+//                selection << item->Tooltip();
+//            }
+//        }
 
-        ui->plainTextEdit->setPlainText(selection.join("\n\n"));
-    });
+//        ui->textEdit->setHtml(selection.join("<br><br>"));
+//    });
 }
 
 void StashViewer::OnImage(const QString &path, QImage image) {
@@ -99,9 +99,9 @@ void StashViewer::SetTabs(QList<StashItemLocation*> tabs) {
 
     // Load new tabs
     for (StashItemLocation* tab : tabs) {
-        QString header = dynamic_cast<ItemLocation*>(tab)->Header();
+        QString header = dynamic_cast<ItemLocation*>(tab)->header();
         QListWidgetItem* item = new QListWidgetItem(header, ui->listWidget);
-        QColor background = tab->TabColor();
+        QColor background = tab->tabColor();
         QColor foreground;
         item->setBackgroundColor(background);
         if (background.lightnessF() > 0.5)
@@ -161,19 +161,24 @@ void StashViewer::on_listWidget_itemSelectionChanged() {
             // Gather Items, and Display
             StashItemLocation* tab = _tabs.value(item->text());
             if (tab) {
-                for (const Item* item : tab->Items()) {
-                    QString icon = item->Data("icon").toString();
+                for (const Item* item : tab->items()) {
+                    QString icon = item->data("icon").toString();
 
                     if (icon.startsWith("/")) {
                         icon.prepend("https://www.pathofexile.com");
                     }
-                    QString path = _imageCache->GenerateFileName(icon);
+                    QString path = _imageCache->generateFileName(icon);
 
                     GraphicItem* gItem = new GraphicItem(gridItem, item, path);
                     // Set to always show links
                     gItem->ShowLinks(true, GraphicItem::ShowLinkReason::Always);
 
-                    images.insert(icon);
+                    if (_imageCache->hasLocalImage(icon)) {
+                        gItem->SetImage(_imageCache->getImage(icon));
+                    }
+                    else {
+                        images.insert(icon);
+                    }
                 }
             }
             gridItem->setData(HasLoaded, true);
@@ -182,8 +187,8 @@ void StashViewer::on_listWidget_itemSelectionChanged() {
     }
 
     // Request Images
-    for (QString image : images) {
-        _imageCache->GetImage(image);
+    for (QString imageUrl : images) {
+        _imageCache->fetchImage(imageUrl);
     }
 
     // Set up other stuff

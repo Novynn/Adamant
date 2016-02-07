@@ -5,6 +5,7 @@
 #include <QMainWindow>
 #include <QMap>
 #include <QProgressBar>
+#include <QMovie>
 
 namespace Ui {
 class MainWindow;
@@ -20,6 +21,8 @@ class CORE_EXTERN MainWindow : public QMainWindow
     Q_OBJECT
 
     enum Mode {
+        InvalidMode,
+        LoadingMode,
         HomeMode,
         ElsewhereMode
     };
@@ -30,20 +33,20 @@ public:
 
     void setPageIndex(int index);
 
-    Q_INVOKABLE int RegisterPage(const QIcon &icon, const QString &title, const QString &description,
+    Q_INVOKABLE int registerPage(const QIcon &icon, const QString &title, const QString &description,
                                  QWidget* widget, bool lower = false);
-    void SetCurrentPageButton(int index);
+    void setCurrentPageButton(int index);
 public slots:
-    void OnProfileBadgeImage(const QString &badge, QImage image);
-    void UpdateAccountMessagesCount(int messages);
-    void AppendScriptOutput(const QString &output, const QString &type = "LOG");
+    void onProfileBadgeImage(const QString &badge, QImage image);
+    void updateAccountMessagesCount(int messages);
+    void appendScriptOutput(const QString &output, const QString &type = "LOG");
 private slots:
     void on_lineEdit_returnPressed();
     void on_messagesButton_clicked();
     void on_reloadScriptsButton_clicked();
     void on_homeButton_clicked();
 signals:
-    void Loaded();
+    void loaded();
 private:
     Ui::MainWindow *ui;
     CoreService* _core;
@@ -60,6 +63,8 @@ private:
 
     QLabel* _statusBarLabel;
     QProgressBar* _statusBarProgress;
+
+    QMovie* _loadingImage;
 };
 Q_DECLARE_METATYPE(MainWindow*)
 

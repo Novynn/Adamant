@@ -147,8 +147,7 @@
           </property>
           <property name="icon">
            <iconset theme="go-previous">
-            <normaloff/>
-           </iconset>
+            <normaloff>.</normaloff>.</iconset>
           </property>
           <property name="iconSize">
            <size>
@@ -188,7 +187,7 @@
       <number>0</number>
      </property>
      <property name="currentIndex">
-      <number>6</number>
+      <number>4</number>
      </property>
      <widget class="QWidget" name="loginPage">
       <layout class="QHBoxLayout" name="horizontalLayout">

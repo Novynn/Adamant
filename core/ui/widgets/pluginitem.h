@@ -16,10 +16,10 @@ public:
     explicit PluginItem(QWidget *parent = 0);
     ~PluginItem();
 
-    void SetVersionString(const QString &version);
-    void SetState(PluginState state);
-    void SetText(const QString &text);
-    void SetSelected(bool selected = true);
+    void setVersionString(const QString &version);
+    void setState(PluginState state);
+    void setText(const QString &text);
+    void setSelected(bool selected = true);
 private:
     Ui::PluginItem *ui;
 };

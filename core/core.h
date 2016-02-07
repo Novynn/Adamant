@@ -8,7 +8,7 @@
 #include <QStandardPaths>
 #include <QSettings>
 
-class PSession;
+#include "session/session.h"
 class UI;
 class Adamant;
 class PluginManager;
@@ -17,7 +17,6 @@ class ItemManager;
 class CORE_EXTERN CoreService : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(PSession* session MEMBER _session)
     Q_PROPERTY(UI* ui MEMBER _ui)
     Q_PROPERTY(ItemManager* item_manager MEMBER _itemManager)
 public:
@@ -30,42 +29,41 @@ public:
         return QDir(QStandardPaths::writableLocation(QStandardPaths::DataLocation));
     }
 
-    void Load();
+    void load();
 
-    UI* Interface() {
+    UI* interface() {
         return _ui;
     }
 
-    PSession* Session() {
-        return _session;
+    Session::Request* session() {
+        return Session::Global();
     }
 
-    Q_INVOKABLE QSettings* Settings() {
+    Q_INVOKABLE QSettings* settings() {
         return &_settings;
     }
 
-    Q_INVOKABLE QSettings* SensitiveSettings() {
+    Q_INVOKABLE QSettings* sensitiveSettings() {
         return &_sensitiveSettings;
     }
 
-    Q_INVOKABLE PluginManager* GetPluginManager() {
+    Q_INVOKABLE PluginManager* getPluginManager() {
         return _pluginManager;
     }
 
-    Q_INVOKABLE ItemManager* GetItemManager() {
+    Q_INVOKABLE ItemManager* getItemManager() {
         return _itemManager;
     }
 signals:
-    void Message(const QString &message, QtMsgType type);
+    void message(const QString &message, QtMsgType type);
 private slots:
-    void ProfileLoaded(QString profileData);
+    void profileLoaded(QString profileData);
 public slots:
-    void LoggedMessage(const QString &message, QtMsgType type);
+    void loggedMessage(const QString &message, QtMsgType type);
 private:
     PluginManager* _pluginManager;
     QSettings _settings;
     QSettings _sensitiveSettings;
-    PSession* _session;
     ItemManager* _itemManager;
     UI* _ui;
 };

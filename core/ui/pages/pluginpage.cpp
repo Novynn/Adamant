@@ -24,7 +24,7 @@ PluginPage::PluginPage(CoreService *core, QWidget *parent)
         ui->listWidget->addItem(item);
     }
 
-    QList<AdamantPluginInfo*> containers = _core->GetPluginManager()->GetPluginContainers();
+    QList<AdamantPluginInfo*> containers = _core->getPluginManager()->getPluginContainers();
 
     for (AdamantPluginInfo* container : containers) {
         QListWidgetItem* item = new QListWidgetItem(container->name, ui->listWidget);

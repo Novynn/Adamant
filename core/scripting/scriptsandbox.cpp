@@ -3,7 +3,7 @@
 #include <pluginmanager.h>
 #include <QRegularExpression>
 #include <core.h>
-#include <session/psession.h>
+#include <session/sessionrequest.h>
 #include <ui/ui.h>
 #include <items/itemmanager.h>
 
@@ -36,7 +36,7 @@ QScriptValue ScriptSandbox::importFunc(QScriptContext *context , QScriptEngine *
             return context->throwError(QScriptContext::SyntaxError, "import takes 1 argument");
         }
         QString import = context->argument(0).toString();
-        AdamantPlugin* plugin = instance->_manager->GetPluginByIID(import);
+        AdamantPlugin* plugin = instance->_manager->getPluginByIID(import);
         if (plugin) {
             QScriptValue value = engine->newQObject(plugin, QScriptEngine::QtOwnership, QScriptEngine::ExcludeDeleteLater);
             plugin->SetupEngine(engine, &value);
@@ -75,7 +75,7 @@ QScriptValue ScriptSandbox::printFunc(QScriptContext *context , QScriptEngine *e
             instance->_owner->Log(result, type);
         }
         else {
-            instance->_manager->OnPluginMessage(nullptr, result, type);
+            instance->_manager->onPluginMessage(nullptr, result, type);
         }
 
         return engine->undefinedValue();
@@ -97,7 +97,7 @@ ScriptSandbox::ScriptSandbox(const PluginManager *parent, const QString &script,
     _program = QScriptProgram(_script, "internal.qs");
 
     // Register MetaTypes, sometimes Q_DECL doesn't seem to cut it...
-    qRegisterMetaType<PSession*>("PSession");
+    qRegisterMetaType<Session::Request*>("Session::Request");
     qRegisterMetaType<UI*>("UI");
     qRegisterMetaType<ItemManager*>("ItemManager");
     qRegisterMetaType<UI::ApplicationTheme>("ApplicationTheme");
@@ -115,10 +115,10 @@ ScriptSandbox::ScriptSandbox(const PluginManager *parent, const QString &script,
     }
     else {
         // Default Globals
-        AddGlobalObject("manager", (QObject*)_manager);
-        AddGlobalObject("script", this);
-        AddGlobalObject("core", _manager->Core());
-        AddGlobalObject("app", qApp);
+        addGlobalObject("manager", (QObject*)_manager);
+        addGlobalObject("script", this);
+        addGlobalObject("core", _manager->core());
+        addGlobalObject("app", qApp);
     }
 
     {
@@ -143,37 +143,38 @@ ScriptSandbox::~ScriptSandbox() {
     }
 }
 
-QScriptValue ScriptSandbox::AddGlobalObject(const QString &name, QObject* object) {
+QScriptValue ScriptSandbox::addGlobalObject(const QString &name, QObject* object) {
     QScriptValue value = _engine.newQObject(object, QScriptEngine::QtOwnership, QScriptEngine::ExcludeDeleteLater);
     _engine.globalObject().setProperty(name, value);
     return value;
 }
 
-void ScriptSandbox::EvaluateProgram() {
+void ScriptSandbox::evaluateProgram() {
     QScriptValue val = _engine.evaluate(_program);
     if (val.isError()) {
     }
     else if (_engine.hasUncaughtException()) {
         int line = _engine.uncaughtExceptionLineNumber();
+        Q_UNUSED(line)
     }
     else if (!val.isUndefined()) {
     }
     _script = QString();
 }
 
-bool ScriptSandbox::AddLine(const QString &script) {
+bool ScriptSandbox::addLine(const QString &script) {
     _script.append(script).append("\n");
     if (_engine.canEvaluate(_script)) {
         QScriptValue val = _engine.evaluate(_script);
         if (val.isError()) {
-            emit ScriptOutput(val.toString());
+            emit scriptOutput(val.toString());
         }
         else if (_engine.hasUncaughtException()) {
             int line = _engine.uncaughtExceptionLineNumber();
-            emit ScriptOutput("Uncaught exception at line " + QString::number(line) + ":" + val.toString());
+            emit scriptOutput("Uncaught exception at line " + QString::number(line) + ":" + val.toString());
         }
         else if (!val.isUndefined()) {
-            emit ScriptOutput(val.toString());
+            emit scriptOutput(val.toString());
         }
         _script = QString();
         return true;
@@ -181,7 +182,7 @@ bool ScriptSandbox::AddLine(const QString &script) {
     return false;
 }
 
-void ScriptSandbox::Terminate()
+void ScriptSandbox::terminate()
 {
     // Give the script a chance to clean up...
     emit terminating();

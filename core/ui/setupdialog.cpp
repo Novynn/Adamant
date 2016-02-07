@@ -47,27 +47,27 @@ void SetupDialog::setPage(SetupDialog::Page p) {
     ui->backButton->setHidden(p == 0);
 
     if (p == SetupDialog::LoginPage) {
-        UpdateLoginInput("");
+        updateLoginInput("");
     }
 }
 
-void SetupDialog::LoginSuccess(const QString &sessionId) {
-    UpdateLoginInput("Login Successful", true);
+void SetupDialog::loginSuccess(const QString &sessionId) {
+    updateLoginInput("Login Successful", true);
     ui->sessionIdEdit->clear();
     setPage(SetupDialog::AccountPage);
     _sessionId = sessionId;
 }
 
-void SetupDialog::LoginFailed(const QString &message) {
-    UpdateLoginInput("Login Failed: " + message, true);
+void SetupDialog::loginFailed(const QString &message) {
+    updateLoginInput("Login Failed: " + message, true);
 }
 
-void SetupDialog::UpdateAccountAvatar(QImage image) {
+void SetupDialog::updateAccountAvatar(QImage image) {
     QPixmap pixmap = QPixmap::fromImage(image);
     ui->accountAvatar->setPixmap(pixmap);
 }
 
-void SetupDialog::UpdateAccountName(const QString &name) {
+void SetupDialog::updateAccountName(const QString &name) {
     _accountName = name;
     ui->welcomeLabel->setText(QString("Welcome %1").arg(_accountName));
 }
@@ -94,13 +94,13 @@ void SetupDialog::on_loginButton_clicked() {
 
             if (!email.isEmpty() && !password.isEmpty()) {
                 _email = email;
-                UpdateLoginInput("Logging In...", false);
+                updateLoginInput("Logging In...", false);
 
-                emit LoginRequested(email, password);
+                emit loginRequested(email, password);
                 ui->passwordEdit->clear();
             }
             else {
-                UpdateLoginInput("Please enter your email and your password.", true);
+                updateLoginInput("Please enter your email and your password.", true);
             }
         } break;
         case LoginSessionId: {
@@ -108,12 +108,12 @@ void SetupDialog::on_loginButton_clicked() {
 
             if (!id.isEmpty() && id.length() == 32) {
                 _email.clear();
-                UpdateLoginInput("Logging In...", false);
+                updateLoginInput("Logging In...", false);
 
-                emit LoginByIdRequested(id);
+                emit loginByIdRequested(id);
             }
             else {
-                UpdateLoginInput("Your session ID is invalid.", true);
+                updateLoginInput("Your session ID is invalid.", true);
             }
         } break;
     }
@@ -143,7 +143,7 @@ void SetupDialog::on_backButton_clicked() {
     setPage((SetupDialog::Page) (ui->stackWidget->currentIndex() - 1));
 }
 
-void SetupDialog::UpdateLoginInput(const QString &message, bool enable) {
+void SetupDialog::updateLoginInput(const QString &message, bool enable) {
     ui->loginStatusLabel->setText(message);
     ui->emailEdit->setEnabled(enable);
     ui->passwordEdit->setEnabled(enable);
@@ -165,7 +165,7 @@ void SetupDialog::on_changeNameButton_clicked(){
                                         "Account Name:", QLineEdit::Normal,
                                         _accountName, &ok);
    if (ok && !text.isEmpty()) {
-       UpdateAccountName(text);
+       updateAccountName(text);
    }
 }
 

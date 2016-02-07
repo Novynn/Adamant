@@ -31,7 +31,7 @@ public:
     void SetImage(QImage image);
 
     static QPixmap GenerateLinksOverlay(const Item* item);
-    static QPair<QPixmap, QString> GenerateItemTooltip(const Item* item);
+    static QPixmap GenerateItemTooltip(const Item* item);
 
     bool IsFilteredBy(QString text);
 

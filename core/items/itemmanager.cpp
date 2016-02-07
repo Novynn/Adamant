@@ -2,21 +2,21 @@
 #include "core.h"
 #include "stashitemlocation.h"
 #include "item.h"
-#include <session/psession.h>
+#include <session/sessionrequest.h>
 
 ItemManager::ItemManager(CoreService *parent)
     : QObject(parent)
     , _core(parent)
 {
-    connect(_core->Session(), &PSession::AccountStashTabs, this, &ItemManager::OnStashTabResult);
+    connect(_core->session(), &Session::Request::accountStashTabs, this, &ItemManager::onStashTabResult);
 }
 
-void ItemManager::FetchStashTabs(const QString &league, const QString &filter) {
+void ItemManager::fetchStashTabs(const QString &league, const QString &filter) {
     if (_fetchingInstances.contains(league)) {
         qDebug() << "Already fetching from " << league;
         return;
     }
-    const QString accountName = _core->Session()->AccountName();
+    const QString accountName = _core->session()->accountName();
     ItemManagerInstance* instance = new ItemManagerInstance;
     instance->league = league;
     instance->filter = QRegularExpression(filter, QRegularExpression::CaseInsensitiveOption);
@@ -31,11 +31,11 @@ void ItemManager::FetchStashTabs(const QString &league, const QString &filter) {
 
     _fetchingInstances.insert(league, instance);
 
-    _core->Session()->FetchAccountStashTabs(accountName, league, 0, true);
-    emit OnStashTabUpdateBegin(league);
+    _core->session()->fetchAccountStashTabs(accountName, league, 0, true);
+    emit onStashTabUpdateBegin(league);
 }
 
-void ItemManager::OnStashTabResult(QString league, QByteArray json, QVariant data) {
+void ItemManager::onStashTabResult(QString league, QByteArray json, QVariant data) {
     ItemManagerInstance* instance = _fetchingInstances.value(league, nullptr);
     if (!instance) {
         qDebug() << "Failed to fetch instance for " << league;
@@ -54,8 +54,8 @@ void ItemManager::OnStashTabResult(QString league, QByteArray json, QVariant dat
             // We failed to get the first tab (uh oh).
             qWarning() << qPrintable("Failed to get the first tab.");
             _fetchingInstances.remove(instance->league);
-            emit OnStashTabUpdateProgress(instance->league, 0, 0);
-            emit OnStashTabUpdateAvailable(instance->league);
+            emit onStashTabUpdateProgress(instance->league, 0, 0);
+            emit onStashTabUpdateAvailable(instance->league);
             return;
         }
 
@@ -93,18 +93,18 @@ void ItemManager::OnStashTabResult(QString league, QByteArray json, QVariant dat
             wrapper->instance = instance;
             wrapper->error = false;
             instance->tabs.insert(i, wrapper);
-            const QString accountName = _core->Session()->AccountName();
+            const QString accountName = _core->session()->accountName();
 
-            _core->Session()->FetchAccountStashTabs(accountName, instance->league, i, false, i);
+            _core->session()->fetchAccountStashTabs(accountName, instance->league, i, false, i);
         }
 
         instance->totalTabs = chosenIndicies.count();
 
-        emit OnStashTabUpdateProgress(instance->league, instance->receivedTabs, instance->totalTabs);
+        emit onStashTabUpdateProgress(instance->league, instance->receivedTabs, instance->totalTabs);
 
         if (instance->totalTabs == 0) {
             // TODO(rory): Notify the user that no tabs were returned...
-            emit OnStashTabUpdateAvailable(instance->league);
+            emit onStashTabUpdateAvailable(instance->league);
         }
     }
     else {
@@ -119,13 +119,13 @@ void ItemManager::OnStashTabResult(QString league, QByteArray json, QVariant dat
                 QJsonObject item = itemVal.toObject();
                 itemObjects.append(new Item(item));
             }
-            wrapper->location->AddItems(itemObjects);
+            wrapper->location->addItems(itemObjects);
 
             // Mark error
             wrapper->error = error;
 
             instance->receivedTabs++;
-            emit OnStashTabUpdateProgress(instance->league, instance->receivedTabs, instance->totalTabs);
+            emit onStashTabUpdateProgress(instance->league, instance->receivedTabs, instance->totalTabs);
 
             if (instance->receivedTabs == instance->totalTabs) {
                 // We're done!
@@ -141,7 +141,7 @@ void ItemManager::OnStashTabResult(QString league, QByteArray json, QVariant dat
                     delete in;
                 }
                 _currentInstances[league] = instance;
-                emit OnStashTabUpdateAvailable(instance->league);
+                emit onStashTabUpdateAvailable(instance->league);
             }
         }
     }

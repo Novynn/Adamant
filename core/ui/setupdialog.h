@@ -34,7 +34,7 @@ public:
 
     void setPage(Page p);
 
-    QVariantMap GetData() const {
+    QVariantMap getData() const {
         QVariantMap map;
         map.insert("id", _sessionId);
         map.insert("email", _email);
@@ -47,10 +47,10 @@ public:
     }
 
 public slots:
-    void LoginSuccess(const QString &sessionId);
-    void LoginFailed(const QString &message);
-    void UpdateAccountAvatar(QImage image);
-    void UpdateAccountName(const QString &name);
+    void loginSuccess(const QString &sessionId);
+    void loginFailed(const QString &message);
+    void updateAccountAvatar(QImage image);
+    void updateAccountName(const QString &name);
 protected:
     void closeEvent(QCloseEvent *event);
 private slots:
@@ -79,8 +79,8 @@ private slots:
     void on_sessionIdEdit_editingFinished();
 
 signals:
-    void LoginRequested(const QString &username, const QString &password);
-    void LoginByIdRequested(const QString &sessionId);
+    void loginRequested(const QString &username, const QString &password);
+    void loginByIdRequested(const QString &sessionId);
 private:
     Ui::SetupDialog *ui;
 
@@ -92,7 +92,7 @@ private:
     QString _poeConfigPath;
     bool _analytics;
 
-    void UpdateLoginInput(const QString &message, bool enable=true);
+    void updateLoginInput(const QString &message, bool enable=true);
 };
 Q_DECLARE_METATYPE(SetupDialog*)
 

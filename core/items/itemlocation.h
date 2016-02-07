@@ -3,7 +3,7 @@
 
 #include <core_global.h>
 #include <QList>
-class Item;
+#include "item.h"
 typedef QList<const Item*> ItemList;
 
 class CORE_EXTERN ItemLocation {
@@ -13,20 +13,20 @@ public:
         CharacterLocation
     };
 
-    ~ItemLocation() {
+    virtual ~ItemLocation() {
         qDeleteAll(_items);
         _items.clear();
     }
 
-    virtual LocationType Location() const = 0;
-    virtual QString Header() const = 0;
-    virtual QString Hash() const = 0;
-    virtual QString ForumCode(const QString &league, const Item *item) const = 0;
+    virtual LocationType location() const = 0;
+    virtual QString header() const = 0;
+    virtual QString hash() const = 0;
+    virtual QString forumCode(const QString &league, const Item *item) const = 0;
     virtual bool operator<(const ItemLocation &other) const = 0;
     virtual bool operator==(const ItemLocation &other) const = 0;
 
-    virtual void AddItems(ItemList items) = 0;
-    const ItemList Items() const {
+    virtual void addItems(ItemList items) = 0;
+    const ItemList items() const {
         return _items;
     }
 

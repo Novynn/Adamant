@@ -13,20 +13,20 @@ PluginItem::~PluginItem()
     delete ui;
 }
 
-void PluginItem::SetVersionString(const QString &version) {
+void PluginItem::setVersionString(const QString &version) {
     ui->versionLabel->setText(version);
 }
 
-void PluginItem::SetText(const QString &text) {
+void PluginItem::setText(const QString &text) {
     ui->nameLabel->setText(text);
 }
 
-void PluginItem::SetSelected(bool selected) {
+void PluginItem::setSelected(bool selected) {
     setBackgroundRole(selected ? QPalette::Highlight : QPalette::Background);
     setForegroundRole(selected ? QPalette::HighlightedText : QPalette::Text);
 }
 
-void PluginItem::SetState(PluginState state) {
+void PluginItem::setState(PluginState state) {
     setStyleSheet("");
     switch(state) {
         case PluginState::Unknown: {

@@ -10,38 +10,38 @@ StashItemLocation::StashItemLocation(const QJsonObject &tabData)
                              color.value("b").toInt());
 }
 
-ItemLocation::LocationType StashItemLocation::Location() const {
+ItemLocation::LocationType StashItemLocation::location() const {
     return StashLocation;
 }
 
-QString StashItemLocation::Header() const {
+QString StashItemLocation::header() const {
     return QString("#%1: %2").arg(tabIndex).arg(tabLabel);
 }
 
-QString StashItemLocation::ForumCode(const QString &league, const Item *item) const {
+QString StashItemLocation::forumCode(const QString &league, const Item *item) const {
     Q_UNUSED(item)
     // TODO(rory): implement item location gathering
     QString format("[linkItem location=\"Stash%1\" league=\"%2\" x=\"%3\" y=\"%4\"]");
     return format.arg(tabIndex + 1).arg(league).arg(0).arg(0);
 }
 
-QString StashItemLocation::Hash() const {
+QString StashItemLocation::hash() const {
     QString format("stash:%1:%2");
     return format.arg(tabIndex).arg(tabLabel);
 }
 
 bool StashItemLocation::operator<(const ItemLocation &other) const {
-    if (Location() != other.Location())
-        return Location() < other.Location();
+    if (location() != other.location())
+        return location() < other.location();
     return tabIndex < dynamic_cast<const StashItemLocation&>(other).tabIndex;
 }
 
 bool StashItemLocation::operator==(const ItemLocation &other) const {
-    if (Location() != other.Location())
+    if (location() != other.location())
         return false;
     return tabIndex == dynamic_cast<const StashItemLocation&>(other).tabIndex;
 }
 
-void StashItemLocation::AddItems(ItemList items) {
+void StashItemLocation::addItems(ItemList items) {
     _items.append(items);
 }

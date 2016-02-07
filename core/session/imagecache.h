@@ -12,16 +12,18 @@ class CORE_EXTERN ImageCache : public QObject
     Q_OBJECT
 public:
     explicit ImageCache(QObject *parent = 0);
+    bool hasLocalImage(QString path);
 public slots:
-    QDir CacheDir() const;
-    void GetImage(QString path);
-    QString GenerateFileName(const QString &path);
+    QDir cacheDir() const;
+    void fetchImage(QString path);
+    QImage getImage(QString path);
+    QString generateFileName(const QString &path);
 signals:
-    void OnImage(const QString &path, QImage image);
+    void onImage(const QString &path, QImage image);
 private slots:
-    void OnImageResult();
+    void onImageResult();
 private:
-    void Save(const QString &path, const QImage &image);
+    void save(const QString &path, const QImage &image);
     QNetworkAccessManager* _manager;
 
     QHash<QString, QImage> _cache;

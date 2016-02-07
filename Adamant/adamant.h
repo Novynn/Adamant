@@ -15,11 +15,11 @@ public:
 
     void start();
 
-    Q_INVOKABLE CoreService* Core() {
+    Q_INVOKABLE CoreService* core() {
         return _core;
     }
 public slots:
-    bool RequestApplicationExit() const;
+    bool requestApplicationExit() const;
 private:
     LoggingSystem* _loggingSystem;
     CoreService* _core;

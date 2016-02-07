@@ -992,5 +992,7 @@
         <file>images/light_background.jpg</file>
         <file>images/background2.jpg</file>
         <file>images/background3.jpg</file>
+        <file>images/loading_light.gif</file>
+        <file>images/loading_dark.gif</file>
     </qresource>
 </RCC>

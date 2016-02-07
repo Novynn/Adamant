@@ -33,11 +33,11 @@ class CORE_EXTERN ItemManager : public QObject
 public:
     explicit ItemManager(CoreService *parent);
 
-    Q_INVOKABLE void GetCharacter(const QString &characterName) {
+    Q_INVOKABLE void getCharacter(const QString &characterName) {
         Q_UNUSED(characterName)
     }
 
-    Q_INVOKABLE void FetchStashTabs(const QString &league, const QString &filter = QString());
+    Q_INVOKABLE void fetchStashTabs(const QString &league, const QString &filter = QString());
     Q_INVOKABLE QList<StashItemLocation*> GetStashTabs(const QString &league) {
         QList<StashItemLocation*> stash;
         if (_currentInstances.contains(league)) {
@@ -49,16 +49,16 @@ public:
     }
 
 signals:
-    void OnCharacterUpdateAvailable(QString characterName);
-    void OnStashTabUpdateBegin(QString league);
-    void OnStashTabUpdateProgress(QString league, int received, int total);
-    void OnStashTabUpdateAvailable(QString league);
+    void onCharacterUpdateAvailable(QString characterName);
+    void onStashTabUpdateBegin(QString league);
+    void onStashTabUpdateProgress(QString league, int received, int total);
+    void onStashTabUpdateAvailable(QString league);
 public slots:
-    void UpdateStashTabs(){}
-    void UpdateCharacters(){}
-    void UpdateCharacter(QString characterName){}
+    void updateStashTabs(){}
+    void updateCharacters(){}
+    void updateCharacter(QString characterName){Q_UNUSED(characterName)}
 private slots:
-    void OnStashTabResult(QString league, QByteArray json, QVariant data);
+    void onStashTabResult(QString league, QByteArray json, QVariant data);
 private:
     CoreService* _core;
 

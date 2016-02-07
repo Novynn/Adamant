@@ -25,15 +25,15 @@ class CORE_EXTERN PluginManager : public QObject
 public:
     explicit PluginManager(CoreService *parent = 0);
 
-    const QDir PluginsPath() const;
+    const QDir pluginsPath() const;
 
-    void ScanPlugins(bool initialScan = true);
-    void VerifyPlugins();
-    void PreparePlugins();
-    bool InjectPluginData(AdamantPluginInfo *plugin);
-    void LoadPlugins();
+    void scanPlugins(bool initialScan = true);
+    void verifyPlugins();
+    void preparePlugins();
+    bool injectPluginData(AdamantPluginInfo *plugin);
+    void loadPlugins();
 
-    AdamantPlugin* GetPluginByIID(const QString &iid) const {
+    AdamantPlugin* getPluginByIID(const QString &iid) const {
         for (const AdamantPluginInfo* data : _plugins) {
             QString pIid = data->metaData.value("IID").toString();
             if (pIid.compare(iid, Qt::CaseInsensitive) == 0 &&
@@ -44,11 +44,11 @@ public:
         return 0;
     }
 
-    QList<AdamantPluginInfo*> GetPluginContainers() const {
+    QList<AdamantPluginInfo*> getPluginContainers() const {
         return _plugins;
     }
 
-    PluginList GetPlugins() const {
+    PluginList getPlugins() const {
         QList<const AdamantPlugin*> plugins;
         for (const AdamantPluginInfo* data : _plugins) {
             if (data->instance != 0)
@@ -57,37 +57,37 @@ public:
         return plugins;
     }
 
-    CoreService* Core() const {
+    CoreService* core() const {
         return _parent;
     }
 
-    const QJsonObject GetPluginMetaData(const AdamantPlugin *plugin) const;
-    AdamantPluginInfo* GetPluginData(const AdamantPlugin *plugin) const;
+    const QJsonObject getPluginMetaData(const AdamantPlugin *plugin) const;
+    AdamantPluginInfo* getPluginData(const AdamantPlugin *plugin) const;
 
-    void Finish();
-    void VerifyPlugin(AdamantPluginInfo *plugin);
+    void finish();
+    void verifyPlugin(AdamantPluginInfo *plugin);
 
-    void LoadAndExecuteScripts();
-    void LoadScripts();
+    void loadAndExecuteScripts();
+    void loadScripts();
 signals:
-    void PluginDiscovered(QString);
+    void pluginDiscovered(QString);
 
-    void BeginningPluginVerification();
-    void PluginStateChanged(QString, PluginState);
-    void PluginOutdated(QString, QString, QString);
-    void FinishingPluginVerification();
+    void beginningPluginVerification();
+    void pluginStateChanged(QString, PluginState);
+    void pluginOutdated(QString, QString, QString);
+    void finishingPluginVerification();
 
-    void PluginLoadStarted(QString);
-    void PluginLoadingFinished();
+    void pluginLoadStarted(QString);
+    void pluginLoadingFinished();
 
-    void PluginMessage(QString, QtMsgType) const;
+    void pluginMessage(QString, QtMsgType) const;
 public slots:
-    ScriptSandbox* AddScript(const QString &script, AdamantPlugin *owner = 0);
-    void ReloadScripts();
-    void OnPluginMessage(const AdamantPlugin* plugin, QString message, QtMsgType type) const;
+    ScriptSandbox* addScript(const QString &script, AdamantPlugin *owner = 0);
+    void reloadScripts();
+    void onPluginMessage(const AdamantPlugin* plugin, QString message, QtMsgType type) const;
 private slots:
     void onScriptFinished(ScriptSandbox *s);
-    void OnScriptOutput(const QString &output);
+    void onScriptOutput(const QString &output);
 private:
     CoreService* _parent;
     QDir _pluginPath;

@@ -11,17 +11,17 @@ class StashItemLocation : public ItemLocation
 public:
     StashItemLocation(const QJsonObject &tabData);
 
-    QColor TabColor() const {
+    QColor tabColor() const {
         return _color;
     }
 
-    LocationType Location() const final;
-    QString Header() const final;
-    QString Hash() const final;
-    QString ForumCode(const QString &league, const Item* item) const final;
+    LocationType location() const final;
+    QString header() const final;
+    QString hash() const final;
+    QString forumCode(const QString &league, const Item* item) const final;
     bool operator<(const ItemLocation &other) const final;
     bool operator==(const ItemLocation &other) const final;
-    void AddItems(ItemList items) final;
+    void addItems(ItemList items) final;
 private:
     int tabIndex;
     QString tabLabel;

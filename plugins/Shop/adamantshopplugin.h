@@ -15,8 +15,11 @@ class AdamantShopPlugin : public AdamantPlugin
 
 public slots:
     void OnLoad() {
-        AdamantPlugin* plugin = Core()->GetPluginManager()->GetPluginByIID("com.adamant.plugin.stashviewer");
+        AdamantPlugin* plugin = Core()->getPluginManager()->getPluginByIID("com.adamant.plugin.stashviewer");
         StashViewerPlugin* sPlugin = dynamic_cast<StashViewerPlugin*>(plugin);
+
+        Core()->interface()->window()->registerPage(QIcon(":/icons/dark/cart.png"), "Shops", "Manage shop threads.",
+                                    new QWidget(), true);
 
         if (sPlugin) {
 

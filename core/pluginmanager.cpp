@@ -60,11 +60,11 @@ PluginManager::PluginManager(CoreService *parent)
 //    });
 }
 
-const QDir PluginManager::PluginsPath() const {
+const QDir PluginManager::pluginsPath() const {
     return _pluginPath;
 }
 
-void PluginManager::ScanPlugins(bool initialScan) {
+void PluginManager::scanPlugins(bool initialScan) {
     if (initialScan) {
         QFileInfoList list = _pluginPath.entryInfoList();
         for (QFileInfo info : list) {
@@ -89,23 +89,23 @@ void PluginManager::ScanPlugins(bool initialScan) {
             data->lastModified = info.lastModified();
             _pluginsByRole.insertMulti(role, data);
 
-            emit PluginDiscovered(name);
+            emit pluginDiscovered(name);
 
             loader->deleteLater();
         }
     }
 }
 
-void PluginManager::VerifyPlugins() {
-    emit BeginningPluginVerification();
+void PluginManager::verifyPlugins() {
+    emit beginningPluginVerification();
     for (AdamantPluginInfo* data : _pluginsByRole.values()) {
         //VerifyPlugin(data);
         data->state = PluginState::UpToDate;
-        emit PluginStateChanged(data->name, data->state);
+        emit pluginStateChanged(data->name, data->state);
     }
 }
 
-void PluginManager::VerifyPlugin(AdamantPluginInfo* plugin) {
+void PluginManager::verifyPlugin(AdamantPluginInfo* plugin) {
     QNetworkRequest request;
     QString url = "http://poe.rory.io/api/v1/plugin/%1/is_latest/%2";
     QString ver = plugin->metaData.value("version").toString();
@@ -122,38 +122,38 @@ void PluginManager::VerifyPlugin(AdamantPluginInfo* plugin) {
     _networkManager->get(request);
 }
 
-void PluginManager::LoadAndExecuteScripts() {
+void PluginManager::loadAndExecuteScripts() {
     // Load plugin scripts first
     for (AdamantPluginInfo* container : _plugins) {
         if (container->script != nullptr) {
             // TODO(rory): Is invoke necessary here? Ref. Multithreading
-            container->script->EvaluateProgram();
+            container->script->evaluateProgram();
         }
     }
 
-    LoadScripts();
+    loadScripts();
 }
 
-void PluginManager::LoadScripts() {
+void PluginManager::loadScripts() {
     QFileInfoList list = _scriptPath.entryInfoList();
     for (QFileInfo info : list) {
         QFile file(info.absoluteFilePath());
         if (file.open(QFile::ReadOnly | QFile::Text)) {
             QString script = file.readAll();
-            ScriptSandbox* s = AddScript(script);
-            if (s) s->EvaluateProgram();
+            ScriptSandbox* s = addScript(script);
+            if (s) s->evaluateProgram();
             file.close();
         }
     }
 }
 
-ScriptSandbox* PluginManager::AddScript(const QString &script, AdamantPlugin* owner) {
+ScriptSandbox* PluginManager::addScript(const QString &script, AdamantPlugin* owner) {
     ScriptSandbox* s = new ScriptSandbox(this, script, owner);
-    if (s->IsValid()) {
+    if (s->isValid()) {
         connect(s, &ScriptSandbox::terminating, [this, s] () {
             onScriptFinished(s);
         });
-        connect(s, &ScriptSandbox::ScriptOutput, this, &PluginManager::OnScriptOutput);
+        connect(s, &ScriptSandbox::scriptOutput, this, &PluginManager::onScriptOutput);
         _scripts.append(s);
         return s;
     }
@@ -161,31 +161,31 @@ ScriptSandbox* PluginManager::AddScript(const QString &script, AdamantPlugin* ow
     return nullptr;
 }
 
-void PluginManager::ReloadScripts() {
+void PluginManager::reloadScripts() {
     for (ScriptSandbox* script : _scripts) {
         // We only want to reload scripts that are not owned
-        if (script->GetOwner() != nullptr) continue;
-        script->Terminate();
+        if (script->getOwner() != nullptr) continue;
+        script->terminate();
     }
 
-    LoadScripts();
+    loadScripts();
 }
 
-void PluginManager::OnPluginMessage(const AdamantPlugin* plugin, QString message, QtMsgType type) const {
+void PluginManager::onPluginMessage(const AdamantPlugin* plugin, QString message, QtMsgType type) const {
     if (plugin) {
-        AdamantPluginInfo* data = GetPluginData(plugin);
+        AdamantPluginInfo* data = getPluginData(plugin);
         if (data) {
             message.prepend(QString("[%1] ").arg(data->name));
         }
     }
-    emit PluginMessage(message, type);
+    emit pluginMessage(message, type);
 }
 
 void PluginManager::onScriptFinished(ScriptSandbox* s) {
     _scripts.removeAll(s);
 }
 
-void PluginManager::PreparePlugins() {
+void PluginManager::preparePlugins() {
     // Ordered by load priority
     QStringList knownRoles = {"core", "service", "widget", "window"};
 
@@ -218,7 +218,7 @@ void PluginManager::PreparePlugins() {
                 qDebug() << data->name << error;
 
                 // Now we inject the PluginManager
-                InjectPluginData(data);
+                injectPluginData(data);
 
                 // The plugin has been created successfully, so we can execute it's script (if it exists).
                 const QDir dir = data->file.absoluteDir();
@@ -227,7 +227,7 @@ void PluginManager::PreparePlugins() {
                     const QString script = scriptFile.readAll();
                     scriptFile.close();
 
-                    data->script = AddScript(script, data->instance);
+                    data->script = addScript(script, data->instance);
                 }
 
                 _plugins.append(data);
@@ -243,21 +243,21 @@ void PluginManager::PreparePlugins() {
 
     _pluginsByRole.clear();
 
-    LoadAndExecuteScripts();
+    loadAndExecuteScripts();
 }
 
-void PluginManager::LoadPlugins() {
+void PluginManager::loadPlugins() {
     qDebug() << "Loading plugins " << _plugins.count();
     for (const AdamantPluginInfo* data : _plugins) {
         // Invoke so we can finish triggered all loads then bail.
         QMetaObject::invokeMethod(data->instance, "OnLoad", Qt::QueuedConnection);
         qDebug() << "Loaded " << data->name;
-        emit PluginLoadStarted(data->name);
+        emit pluginLoadStarted(data->name);
     }
-    Finish();
+    finish();
 }
 
-const QJsonObject PluginManager::GetPluginMetaData(const AdamantPlugin *plugin) const {
+const QJsonObject PluginManager::getPluginMetaData(const AdamantPlugin *plugin) const {
     for (const AdamantPluginInfo* data : _plugins) {
         if (data->instance == plugin) {
             return data->loader->metaData();
@@ -266,7 +266,7 @@ const QJsonObject PluginManager::GetPluginMetaData(const AdamantPlugin *plugin) 
     return QJsonObject();
 }
 
-AdamantPluginInfo* PluginManager::GetPluginData(const AdamantPlugin *plugin) const {
+AdamantPluginInfo* PluginManager::getPluginData(const AdamantPlugin *plugin) const {
     for (AdamantPluginInfo* data : _plugins) {
         if (data->instance == plugin) {
             return data;
@@ -275,11 +275,11 @@ AdamantPluginInfo* PluginManager::GetPluginData(const AdamantPlugin *plugin) con
     return nullptr;
 }
 
-void PluginManager::Finish() {
-    emit PluginLoadingFinished();
+void PluginManager::finish() {
+    emit pluginLoadingFinished();
 }
 
-void PluginManager::OnScriptOutput(const QString &output) {
+void PluginManager::onScriptOutput(const QString &output) {
     for (const AdamantPluginInfo* data : _plugins) {
         if (data->instance != 0) {
             data->instance->OnScriptResult(output);
@@ -298,18 +298,26 @@ void PluginManager::OnScriptOutput(const QString &output) {
     } \
 }
 
-bool PluginManager::InjectPluginData(AdamantPluginInfo* plugin) {
+bool PluginManager::injectPluginData(AdamantPluginInfo* plugin) {
     // Setup Injection
     // Objects added here will be injected as long as they exist in AdamantPlugin.
     const QMetaObject* metaObject = plugin->instance->metaObject();
-    PLUGIN_INJECT_OBJECT(Settings, QSettings*, _parent->Settings())
-    PLUGIN_INJECT_OBJECT(SensitiveSettings, QSettings*, _parent->SensitiveSettings())
+
+    QSettings* pluginSettings
+            = new QSettings(pluginsPath().absoluteFilePath(plugin->file.completeBaseName() + ".ini"),
+                            QSettings::IniFormat, this);
+    QSettings* sensitivePluginSettings
+            = new QSettings(pluginsPath().absoluteFilePath(plugin->file.completeBaseName() + ".sensitive.ini"),
+                            QSettings::IniFormat, this);
+
+    PLUGIN_INJECT_OBJECT(Settings, QSettings*, pluginSettings)
+    PLUGIN_INJECT_OBJECT(SensitiveSettings, QSettings*, sensitivePluginSettings)
     PLUGIN_INJECT_OBJECT(Core, CoreService*, _parent)
 
     // Setup connections
     connect(plugin->instance, &AdamantPlugin::ApplicationExit, qApp, QApplication::quit);
-    connect(plugin->instance, &AdamantPlugin::Message, this, &PluginManager::OnPluginMessage);
-    connect(plugin->instance, &AdamantPlugin::ReloadScripts, this, &PluginManager::ReloadScripts);
+    connect(plugin->instance, &AdamantPlugin::Message, this, &PluginManager::onPluginMessage);
+    connect(plugin->instance, &AdamantPlugin::ReloadScripts, this, &PluginManager::reloadScripts);
 
     return true;
 }

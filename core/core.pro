@@ -16,7 +16,7 @@ HEADERS += \
     ui/mainwindow.h \
     ui/setupdialog.h \
     ui/ui.h \
-    session/psession.h \
+    session/session.h \
     scripting/scriptsandbox.h \
     adamantplugininfo.h \
     pluginmanager.h \
@@ -28,14 +28,15 @@ HEADERS += \
     items/item.h \
     ui/pages/pluginpage.h \
     ui/widgets/pluginitem.h \
-    ui/widgets/pluginitemdelegate.h
+    ui/widgets/pluginitemdelegate.h \
+    session/sessionrequest.h
 
 SOURCES += \
     core.cpp \
     ui/mainwindow.cpp \
     ui/setupdialog.cpp \
     ui/ui.cpp \
-    session/psession.cpp \
+    session/session.cpp \
     scripting/scriptsandbox.cpp \
     pluginmanager.cpp \
     session/imagecache.cpp \
@@ -44,7 +45,8 @@ SOURCES += \
     items/item.cpp \
     ui/pages/pluginpage.cpp \
     ui/widgets/pluginitem.cpp \
-    ui/widgets/pluginitemdelegate.cpp
+    ui/widgets/pluginitemdelegate.cpp \
+    session/sessionrequest.cpp
 
 RESOURCES += \
     ui/res.qrc

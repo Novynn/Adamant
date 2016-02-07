@@ -19,7 +19,7 @@ public:
 
 protected:
     void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const {
-        SetItemStateFromIndex(option, index);
+        setItemStateFromIndex(option, index);
         painter->save();
         _item->resize(option.rect.size());
         painter->translate(option.rect.topLeft());
@@ -28,24 +28,24 @@ protected:
     }
 
     QSize sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const {
-        SetItemStateFromIndex(option, index);
+        setItemStateFromIndex(option, index);
         return _item->size();
     }
 private:
-    void SetItemStateFromIndex(const QStyleOptionViewItem &option, const QModelIndex &index) const {
-        _item->SetSelected(option.state & QStyle::State_Selected);
+    void setItemStateFromIndex(const QStyleOptionViewItem &option, const QModelIndex &index) const {
+        _item->setSelected(option.state & QStyle::State_Selected);
 
         AdamantPluginInfo* container = index.data(Qt::UserRole).value<AdamantPluginInfo*>();
         if (container) {
-            _item->SetText(container->name);
-            _item->SetState(container->state);
-            _item->SetVersionString(container->metaData.value("version").toString());
+            _item->setText(container->name);
+            _item->setState(container->state);
+            _item->setVersionString(container->metaData.value("version").toString());
         }
         else {
             // Core Package
-            _item->SetText(index.data(Qt::DisplayRole).toString());
-            _item->SetState(PluginState::Unknown);
-            _item->SetVersionString(QApplication::applicationVersion());
+            _item->setText(index.data(Qt::DisplayRole).toString());
+            _item->setState(PluginState::Unknown);
+            _item->setVersionString(QApplication::applicationVersion());
         }
     }
 
