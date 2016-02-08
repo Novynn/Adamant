@@ -36,9 +36,11 @@ public slots:
     void ShowLeagueSelectionDialog();
 private slots:
     void on_listWidget_itemSelectionChanged();
-    void on_lineEdit_textChanged(const QString &arg1);
+    void on_lineEdit_returnPressed();
 
     void on_leagueButton_clicked();
+    void on_lineEdit_textChanged(const QString &text);
+
 signals:
     void RequestLeaguesList();
     void RequestStashTabList(QString league);

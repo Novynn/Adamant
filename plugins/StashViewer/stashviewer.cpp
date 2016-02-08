@@ -204,10 +204,11 @@ void StashViewer::on_listWidget_itemSelectionChanged() {
 //        ui->selectionLabel->setText(QString("%1 tabs selected.").arg(tabLabels.size()));
 //    }
 
-    emit ui->lineEdit->textChanged(ui->lineEdit->text());
+    emit ui->lineEdit->returnPressed();
 }
 
-void StashViewer::on_lineEdit_textChanged(const QString &text) {
+void StashViewer::on_lineEdit_returnPressed() {
+    const QString &text = ui->lineEdit->text();
     for (int i = 0; i < ui->listWidget->count(); i++) {
         QListWidgetItem* item = ui->listWidget->item(i);
         QGraphicsPixmapItem* gridItem = _tabGrids.value(item);
@@ -237,4 +238,10 @@ void StashViewer::on_lineEdit_textChanged(const QString &text) {
 
 void StashViewer::on_leagueButton_clicked() {
     ShowLeagueSelectionDialog();
+}
+
+void StashViewer::on_lineEdit_textChanged(const QString &text) {
+    if (text.isEmpty()) {
+        emit ui->lineEdit->returnPressed();
+    }
 }
