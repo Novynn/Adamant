@@ -29,7 +29,7 @@ public:
         return QDir(QStandardPaths::writableLocation(QStandardPaths::DataLocation));
     }
 
-    void load();
+    bool load();
 
     Q_INVOKABLE UI* interface() {
         return _ui;

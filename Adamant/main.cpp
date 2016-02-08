@@ -6,7 +6,9 @@ int main(int argc, char *argv[])
     QApplication a(argc, argv);
 
     Adamant app;
-    app.start();
+    if (app.start()) {
+        a.exec();
+    }
 
-    return a.exec();
+    return 0;
 }

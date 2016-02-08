@@ -13,7 +13,7 @@ public:
     explicit Adamant(QObject *parent = 0);
     ~Adamant();
 
-    void start();
+    bool start();
 
     Q_INVOKABLE CoreService* core() {
         return _core;

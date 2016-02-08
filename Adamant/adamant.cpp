@@ -22,6 +22,6 @@ bool Adamant::requestApplicationExit() const {
     return QMetaObject::invokeMethod(qApp, "quit", Qt::QueuedConnection);
 }
 
-void Adamant::start() {
-    _core->load();
+bool Adamant::start() {
+    return _core->load();
 }

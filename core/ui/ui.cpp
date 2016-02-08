@@ -12,8 +12,8 @@ UI::UI(CoreService *parent)
     : QObject(parent)
     , _core(parent)
     , _theme(ApplicationTheme::Light) {
-    _setupDialog = new SetupDialog();
     _window = new MainWindow(parent);
+    _setupDialog = new SetupDialog(_window);
 
     connect(_setupDialog, &SetupDialog::loginByIdRequested,
             _core->session(), &Session::Request::loginWithSessionId);
@@ -25,7 +25,7 @@ UI::UI(CoreService *parent)
     connect(_core->session(), &Session::Request::loginResult,
             [this] (int result, QString resultString) {
         if (result == 0) {
-            QString sessionId = _core->session()->property("SessionId").toString();
+            QString sessionId = _core->session()->sessionId();
             _setupDialog->loginSuccess(sessionId);
         }
         else {

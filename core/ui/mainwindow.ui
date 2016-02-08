@@ -103,13 +103,13 @@ QSplitter::handle, QStatusBar {
              </property>
              <property name="minimumSize">
               <size>
-               <width>200</width>
+               <width>240</width>
                <height>0</height>
               </size>
              </property>
              <property name="maximumSize">
               <size>
-               <width>200</width>
+               <width>240</width>
                <height>16777215</height>
               </size>
              </property>
@@ -762,37 +762,50 @@ QSplitter::handle, QStatusBar {
        <property name="autoFillBackground">
         <bool>true</bool>
        </property>
-       <layout class="QHBoxLayout" name="horizontalLayout_6">
+       <layout class="QVBoxLayout" name="verticalLayout_9">
         <item>
-         <spacer name="horizontalSpacer">
+         <spacer name="verticalSpacer_4">
           <property name="orientation">
-           <enum>Qt::Horizontal</enum>
+           <enum>Qt::Vertical</enum>
           </property>
           <property name="sizeHint" stdset="0">
            <size>
-            <width>512</width>
-            <height>20</height>
+            <width>20</width>
+            <height>40</height>
            </size>
           </property>
          </spacer>
         </item>
         <item>
-         <layout class="QVBoxLayout" name="verticalLayout_8">
+         <layout class="QHBoxLayout" name="horizontalLayout_6">
           <property name="spacing">
            <number>18</number>
           </property>
           <item>
-           <spacer name="verticalSpacer_4">
+           <spacer name="horizontalSpacer">
             <property name="orientation">
-             <enum>Qt::Vertical</enum>
+             <enum>Qt::Horizontal</enum>
             </property>
             <property name="sizeHint" stdset="0">
              <size>
-              <width>20</width>
-              <height>40</height>
+              <width>512</width>
+              <height>20</height>
              </size>
             </property>
            </spacer>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_2">
+            <property name="font">
+             <font>
+              <family>Fontin SmallCaps</family>
+              <pointsize>38</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string>Adamant</string>
+            </property>
+           </widget>
           </item>
           <item>
            <widget class="QLabel" name="loadingLabel">
@@ -826,24 +839,14 @@ QSplitter::handle, QStatusBar {
            </widget>
           </item>
           <item>
-           <widget class="QLabel" name="loadingLabelDetail">
-            <property name="text">
-             <string>Logging In...</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <spacer name="verticalSpacer_2">
+           <spacer name="horizontalSpacer_2">
             <property name="orientation">
-             <enum>Qt::Vertical</enum>
+             <enum>Qt::Horizontal</enum>
             </property>
             <property name="sizeHint" stdset="0">
              <size>
-              <width>20</width>
-              <height>40</height>
+              <width>512</width>
+              <height>20</height>
              </size>
             </property>
            </spacer>
@@ -851,14 +854,30 @@ QSplitter::handle, QStatusBar {
          </layout>
         </item>
         <item>
-         <spacer name="horizontalSpacer_2">
+         <widget class="QLabel" name="loadingLabelDetail">
+          <property name="font">
+           <font>
+            <family>Fontin SmallCaps</family>
+            <pointsize>14</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>Logging In...</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="verticalSpacer_2">
           <property name="orientation">
-           <enum>Qt::Horizontal</enum>
+           <enum>Qt::Vertical</enum>
           </property>
           <property name="sizeHint" stdset="0">
            <size>
-            <width>512</width>
-            <height>20</height>
+            <width>20</width>
+            <height>40</height>
            </size>
           </property>
          </spacer>

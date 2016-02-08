@@ -23,7 +23,7 @@ CoreService::CoreService()
 CoreService::~CoreService() {
 }
 
-void CoreService::load() {
+bool CoreService::load() {
     sensitiveSettings()->beginGroup("session");
     QString sessionId = sensitiveSettings()->value("id").toString();
     sensitiveSettings()->endGroup();
@@ -31,12 +31,14 @@ void CoreService::load() {
     // Required here so that the setup dialog also gets this palette
     interface()->setTheme();
 
+    interface()->start();
+
     while (sessionId.isEmpty()) {
         // Oh no, run setup.
         int result = interface()->showSetup(); // Blocking
         if (result != 0x0) {
-            qApp->quit();
-            return;
+            interface()->window()->close();
+            return false;
         }
 
         QVariantMap map = interface()->getSetupDialog()->getData();
@@ -53,12 +55,13 @@ void CoreService::load() {
     // Load the main application!
     connect(session(), &Session::Request::profileData, this, profileLoaded);
     session()->loginWithSessionId(sessionId);
-    interface()->start();
 
     // Load Plugins
     getPluginManager()->scanPlugins(true);
     getPluginManager()->verifyPlugins();
     getPluginManager()->preparePlugins();
+
+    return true;
 }
 
 void CoreService::profileLoaded(QString profileData) {
