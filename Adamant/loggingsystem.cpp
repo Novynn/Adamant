@@ -6,7 +6,7 @@ LoggingSystem::LoggingSystem()
     : QObject()
 {
     qInstallMessageHandler(LoggingSystem::qtMessage);
-    qSetMessagePattern("[%{time h:mm:ss.zzz}] %{file}:%{line} - %{message}");
+    qSetMessagePattern("[%{time h:mm:ss.zzz}] %{if-debug}%{file}:%{line} - %{endif}%{message}");
 }
 
 
