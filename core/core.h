@@ -31,11 +31,11 @@ public:
 
     void load();
 
-    UI* interface() {
+    Q_INVOKABLE UI* interface() {
         return _ui;
     }
 
-    Session::Request* session() {
+    Q_INVOKABLE Session::Request* session() {
         return Session::Global();
     }
 
