@@ -69,6 +69,17 @@ MainWindow::MainWindow(CoreService *core, QWidget *parent)
             if (_mode == HomeMode || _mode == ElsewhereMode)
                 ui->toggleButton->toggle();
         });
+        ui->toggleButton->toggle();
+    }
+
+    {
+        QShortcut* shortcut = new QShortcut(QKeySequence("Ctrl+="), this);
+        connect(shortcut, &QShortcut::activated, [this] () {
+            if (_mode == HomeMode || _mode == ElsewhereMode)
+                setMode(LoadingMode);
+            else
+                setMode(HomeMode);
+        });
     }
 
     {
