@@ -7,7 +7,8 @@
 #include <QAction>
 #include <QMenu>
 #include <QRegularExpression>
-#include <QAbstractTextDocumentLayout>
+#include <QScrollBar>
+#include <QGraphicsView>
 #include <dialogs/itemtooltip.h>
 
 GraphicItem::GraphicItem(QGraphicsItem *parent, const Item* item, const QString &imagePath)
@@ -145,7 +146,7 @@ QPixmap GraphicItem::GenerateLinksOverlay(const Item *item) {
     return base;
 }
 
-QPixmap GraphicItem::GenerateItemTooltip(const Item *item) {
+QPair<QString, QPixmap> GraphicItem::GenerateItemTooltip(const Item *item) {
     QString typeLineEx = item->data("typeLine").toString();
     const QString typeLine = typeLineEx.remove(QRegularExpression("\\<.*\\>")); // Greedy
     QString nameEx = item->data("name").toString();
@@ -319,7 +320,7 @@ QPixmap GraphicItem::GenerateItemTooltip(const Item *item) {
     painter.setRenderHint(QPainter::HighQualityAntialiasing);
     painter.drawPixmap(0, 0, tooltip.grab());
 
-    return result;
+    return {tooltip.ui->propertiesEdit->toPlainText(), result};
 }
 
 bool GraphicItem::IsFilteredBy(QString text) {
@@ -335,14 +336,18 @@ bool GraphicItem::IsFilteredBy(QString text) {
     return true;
 }
 
-void GraphicItem::GenerateItemTooltip() {
+bool GraphicItem::GenerateItemTooltip() {
     if (_tooltip == nullptr) {
-        QPixmap data = GraphicItem::GenerateItemTooltip(_item);
-        if (!data.isNull()) {
-            _tooltip = new QGraphicsPixmapItem(data);
+        auto data = GraphicItem::GenerateItemTooltip(_item);
+        if (!data.first.isEmpty() && !data.second.isNull()) {
+            _tooltip = new QGraphicsPixmapItem(data.second);
+            _tooltipText = data.first;
             scene()->addItem(_tooltip);
+            return true;
         }
+        return false;
     }
+    return true;
 }
 
 const Item* GraphicItem::GetItem() const {
@@ -365,23 +370,65 @@ void GraphicItem::ShowLinks(bool show, ShowLinkReason reason) {
     }
 }
 
+void GraphicItem::ShowTooltip(bool show) {
+    if (show) {
+        if (GenerateItemTooltip()) {
+            const QPointF p = scenePos();
+            _tooltip->setPos(p.x() - (_tooltip->boundingRect().width() / 2) + (boundingRect().width() / 2),
+                             p.y() - _tooltip->boundingRect().height());
+
+            if (!scene()->views().isEmpty()) {
+                // Get the viewport's rect converted to scene co-ordinates
+                QGraphicsView* view = scene()->views().first();
+                QRect viewRect = view->rect();
+                viewRect.adjust(0, 0, (view->verticalScrollBar()) ? -view->verticalScrollBar()->width() : 0,
+                                      (view->horizontalScrollBar()) ? -view->horizontalScrollBar()->height() : 0);
+                QRectF rect = view->mapToScene(viewRect).boundingRect();
+
+                // Get the tooltip's rect converted to scene co-ordinates
+                QRectF sceneTooltipRect = _tooltip->boundingRect();
+                QPointF pos = _tooltip->pos();
+                sceneTooltipRect.moveTo(pos);
+
+                // Check if the tooltip needs to be adjusted
+                if (!rect.contains(sceneTooltipRect)) {
+                    // TODO(rory): need to make this smarter for supporting embedded gems etc...
+                    if (sceneTooltipRect.topLeft().y() < rect.topLeft().y()) {
+                        pos += QPointF(0, rect.topLeft().y() - sceneTooltipRect.topLeft().y());
+                        sceneTooltipRect.moveTo(pos);
+                    }
+                    if (sceneTooltipRect.topLeft().x() < rect.topLeft().x()) {
+                        pos += QPointF(rect.topLeft().x() - sceneTooltipRect.topLeft().x(), 0);
+                        sceneTooltipRect.moveTo(pos);
+                    }
+                    if (sceneTooltipRect.topRight().x() > rect.topRight().x()) {
+                        pos -= QPointF(sceneTooltipRect.topRight().x() - rect.topRight().x(), 0);
+                        sceneTooltipRect.moveTo(pos);
+                    }
+                    _tooltip->setPos(pos);
+                }
+            }
+            _tooltip->show();
+        }
+
+    }
+    else {
+        if (_tooltip) _tooltip->hide();
+    }
+}
+
 void GraphicItem::hoverEnterEvent(QGraphicsSceneHoverEvent *event) {
     event->accept();
     ShowLinks(true, ShowLinkReason::Hover);
 
-    GenerateItemTooltip();
-    if (_tooltip) {
-        const QPointF p = scenePos();
-        _tooltip->setPos(p.x() - (_tooltip->boundingRect().width() / 2) + (boundingRect().width() / 2),
-                         p.y() - _tooltip->boundingRect().height());
-        _tooltip->show();
-    }
+    ShowTooltip(true);
 }
 
 void GraphicItem::hoverLeaveEvent(QGraphicsSceneHoverEvent *event) {
     event->accept();
     ShowLinks(false, ShowLinkReason::Hover);
-    if (_tooltip) _tooltip->hide();
+
+    ShowTooltip(false);
 }
 
 void GraphicItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
@@ -406,15 +453,18 @@ void GraphicItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
 }
 
 QVariant GraphicItem::itemChange(QGraphicsItem::GraphicsItemChange change, const QVariant &value) {
-    if (change == ItemEnabledChange || change == ItemVisibleHasChanged) {
+    if (change == ItemEnabledChange) {
         if (value.toBool())
             setOpacity(1.0);
         else {
             // Disabled
             setOpacity(0.5);
-            if (_tooltip) _tooltip->hide();
+            ShowTooltip(false);
         }
-        return value;
+    }
+    if (change == change == ItemVisibleHasChanged) {
+        if (!value.toBool())
+            ShowTooltip(false);
     }
     return QGraphicsItem::itemChange(change, value);
 }

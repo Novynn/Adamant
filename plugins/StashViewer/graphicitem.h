@@ -31,7 +31,7 @@ public:
     void SetImage(QImage image);
 
     static QPixmap GenerateLinksOverlay(const Item* item);
-    static QPixmap GenerateItemTooltip(const Item* item);
+    static QPair<QString, QPixmap> GenerateItemTooltip(const Item* item);
 
     bool IsFilteredBy(QString text);
 
@@ -39,11 +39,12 @@ public:
         return _tooltipText;
     }
 
-    void GenerateItemTooltip();
+    bool GenerateItemTooltip();
 
     const Item* GetItem() const;
 
     void ShowLinks(bool show=true, ShowLinkReason reason=ShowLinkReason::Hover);
+    void ShowTooltip(bool show=true);
 protected:
     void hoverEnterEvent(QGraphicsSceneHoverEvent *event);
     void hoverLeaveEvent(QGraphicsSceneHoverEvent *event);
