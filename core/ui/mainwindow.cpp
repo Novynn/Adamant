@@ -63,11 +63,21 @@ MainWindow::MainWindow(CoreService *core, QWidget *parent)
         qInfo() << qPrintable(message);
     });
 
-    QShortcut* shortcut = new QShortcut(QKeySequence("Ctrl+" + QString::number(++_shortcutIndex)), this);
-    connect(shortcut, &QShortcut::activated, [this] () {
-        if (_mode == HomeMode || _mode == ElsewhereMode)
-            setPageIndex(0);
-    });
+    {
+        QShortcut* shortcut = new QShortcut(QKeySequence("Ctrl+`"), this);
+        connect(shortcut, &QShortcut::activated, [this] () {
+            if (_mode == HomeMode || _mode == ElsewhereMode)
+                ui->toggleButton->toggle();
+        });
+    }
+
+    {
+        QShortcut* shortcut = new QShortcut(QKeySequence("Ctrl+" + QString::number(++_shortcutIndex)), this);
+        connect(shortcut, &QShortcut::activated, [this] () {
+            if (_mode == HomeMode || _mode == ElsewhereMode)
+                setPageIndex(0);
+        });
+    }
 
     emit loaded();
 }
