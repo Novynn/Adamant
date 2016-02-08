@@ -36,6 +36,7 @@ public:
     Q_INVOKABLE int registerPage(const QIcon &icon, const QString &title, const QString &description,
                                  QWidget* widget, bool lower = false);
     void setCurrentPageButton(int index);
+    void setMenuExpanded(bool expanded);
 public slots:
     void onProfileBadgeImage(const QString &badge, QImage image);
     void updateAccountMessagesCount(int messages);
@@ -45,6 +46,8 @@ private slots:
     void on_messagesButton_clicked();
     void on_reloadScriptsButton_clicked();
     void on_homeButton_clicked();
+    void on_toggleButton_toggled(bool checked);
+
 signals:
     void loaded();
 private:
@@ -58,6 +61,7 @@ private:
     QMap<QString, QLabel*> _badgeMap;
 
     QMap<int, CommandButton*> _buttonForPage;
+    int _shortcutIndex = 0;
 
     ScriptSandbox* _script;
 

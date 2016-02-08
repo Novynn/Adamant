@@ -40,7 +40,14 @@
         <widget class="QListWidget" name="listWidget"/>
        </item>
        <item>
-        <widget class="QComboBox" name="comboBox"/>
+        <widget class="QComboBox" name="comboBox">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>24</height>
+          </size>
+         </property>
+        </widget>
        </item>
       </layout>
      </widget>

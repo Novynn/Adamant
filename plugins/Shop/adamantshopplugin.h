@@ -19,7 +19,7 @@ public slots:
         StashViewerPlugin* sPlugin = dynamic_cast<StashViewerPlugin*>(plugin);
 
         Core()->interface()->window()->registerPage(QIcon(":/icons/dark/cart.png"), "Shops", "Manage shop threads.",
-                                    new QWidget(), true);
+                                    new QWidget());
 
         if (sPlugin) {
 

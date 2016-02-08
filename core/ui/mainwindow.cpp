@@ -4,6 +4,7 @@
 #include "ui/ui.h"
 #include "commandbutton.h"
 #include <QDesktopServices>
+#include <QShortcut>
 #include "pluginmanager.h"
 #include "scripting/scriptsandbox.h"
 #include <items/itemmanager.h>
@@ -59,9 +60,14 @@ MainWindow::MainWindow(CoreService *core, QWidget *parent)
         _statusBarProgress->hide();
         const QString message = QString("%1 stash tabs loaded!").arg(league);
         _statusBarLabel->setText(message);
-        emit _core->message(message, QtInfoMsg);
+        qInfo() << qPrintable(message);
     });
 
+    QShortcut* shortcut = new QShortcut(QKeySequence("Ctrl+" + QString::number(++_shortcutIndex)), this);
+    connect(shortcut, &QShortcut::activated, [this] () {
+        if (_mode == HomeMode || _mode == ElsewhereMode)
+            setPageIndex(0);
+    });
 
     emit loaded();
 }
@@ -143,7 +149,7 @@ void MainWindow::setPageIndex(int index) {
     setCurrentPageButton(index);
 }
 
-CORE_EXTERN int MainWindow::registerPage(const QIcon &icon, const QString &title, const QString &description,
+int MainWindow::registerPage(const QIcon &icon, const QString &title, const QString &description,
                                          QWidget *widget, bool lower) {
     int initialCount = ui->stackedWidget->count();
     int index = ui->stackedWidget->addWidget(widget);
@@ -167,6 +173,12 @@ CORE_EXTERN int MainWindow::registerPage(const QIcon &icon, const QString &title
         }
         else {
             ui->navWidget->layout()->addWidget(button);
+
+            QShortcut* shortcut = new QShortcut(QKeySequence("Ctrl+" + QString::number(++_shortcutIndex)), this);
+            connect(shortcut, &QShortcut::activated, [this, index] () {
+                if (_mode == HomeMode || _mode == ElsewhereMode)
+                    setPageIndex(index);
+            });
         }
 
         if (_mode == ElsewhereMode) {
@@ -181,28 +193,29 @@ CORE_EXTERN int MainWindow::registerPage(const QIcon &icon, const QString &title
     return index;
 }
 
+void MainWindow::setMenuExpanded(bool expanded) {
+    for (CommandButton* button : ui->sidebarWidget->findChildren<CommandButton*>()) {
+        button->setIconOnly(!expanded);
+    }
+    if (expanded) {
+        ui->sidebarWidget->setMinimumSize(240, 0);
+        ui->sidebarWidget->setMaximumSize(240, 16777215);
+    }
+    else {
+        ui->sidebarWidget->setMinimumSize(48, 0);
+        ui->sidebarWidget->setMaximumSize(48, 16777215);
+    }
+}
+
 void MainWindow::setMode(MainWindow::Mode mode) {
     if (mode != _mode) {
         _mode = mode;
 
         switch (_mode) {
-            case HomeMode: {
-                ui->pagesWidget->setCurrentIndex(0);
-                _loadingImage->stop();
-                for (CommandButton* button : ui->sidebarWidget->findChildren<CommandButton*>()) {
-                    button->setIconOnly(false);
-                }
-                ui->sidebarWidget->setMinimumSize(240, 0);
-                ui->sidebarWidget->setMaximumSize(240, 16777215);
-            } break;
+            case HomeMode:
             case ElsewhereMode: {
                 ui->pagesWidget->setCurrentIndex(0);
                 _loadingImage->stop();
-                for (CommandButton* button : ui->sidebarWidget->findChildren<CommandButton*>()) {
-                    button->setIconOnly(true);
-                }
-                ui->sidebarWidget->setMinimumSize(48, 0);
-                ui->sidebarWidget->setMaximumSize(48, 16777215);
             } break;
             case LoadingMode: {
                 ui->pagesWidget->setCurrentIndex(1);
@@ -213,5 +226,11 @@ void MainWindow::setMode(MainWindow::Mode mode) {
             } break;
         }
         updateGeometry();
+        repaint();
+        qApp->processEvents();
     }
+}
+
+void MainWindow::on_toggleButton_toggled(bool checked) {
+    setMenuExpanded(checked);
 }

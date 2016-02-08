@@ -22,8 +22,8 @@ StashViewer::StashViewer(QWidget *parent, QString league)
     , _currentLeague(league)
 {
     ui->setupUi(this);
-    ui->splitter->setStretchFactor(0, 5);
-    ui->splitter->setStretchFactor(1, 1);
+    ui->splitter->setStretchFactor(0, 1);
+    ui->splitter->setStretchFactor(1, 4);
 
     _imageCache->moveToThread(_imageThread);
     connect(_imageCache, &ImageCache::onImage, this, &StashViewer::OnImage);
@@ -197,12 +197,12 @@ void StashViewer::on_listWidget_itemSelectionChanged() {
     }
 
     // Set up other stuff
-    if (tabLabels.size() == 1) {
-        ui->selectionLabel->setText(tabLabels.first());
-    }
-    else {
-        ui->selectionLabel->setText(QString("%1 tabs selected.").arg(tabLabels.size()));
-    }
+//    if (tabLabels.size() == 1) {
+//        ui->selectionLabel->setText(tabLabels.first());
+//    }
+//    else {
+//        ui->selectionLabel->setText(QString("%1 tabs selected.").arg(tabLabels.size()));
+//    }
 
     emit ui->lineEdit->textChanged(ui->lineEdit->text());
 }
