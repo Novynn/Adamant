@@ -124,6 +124,11 @@ void StashViewer::SetTabs(QList<StashItemLocation*> tabs) {
 void StashViewer::on_listWidget_itemSelectionChanged() {
     QList<QListWidgetItem*> items = ui->listWidget->selectedItems();
 
+    // Sort into the same order that the QListWidget contains them as
+    std::sort(items.begin(), items.end(), [this](const QListWidgetItem* a, const QListWidgetItem* b) -> bool {
+        return ui->listWidget->row(a) < ui->listWidget->row(b);
+    });
+
     static QPixmap grid(":/images/StashPanelGrid.png");
     static QSize stashPanelSize = grid.size();
 
