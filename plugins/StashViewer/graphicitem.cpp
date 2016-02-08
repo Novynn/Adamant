@@ -7,6 +7,7 @@
 #include <QAction>
 #include <QMenu>
 #include <QRegularExpression>
+#include <QAbstractTextDocumentLayout>
 #include <dialogs/itemtooltip.h>
 
 GraphicItem::GraphicItem(QGraphicsItem *parent, const Item* item, const QString &imagePath)
@@ -144,14 +145,6 @@ QPixmap GraphicItem::GenerateLinksOverlay(const Item *item) {
     return base;
 }
 
-qreal AddSeparator(QPainter* painter, qreal y, qreal width) {
-    const QPixmap separator(":/headers/ns.png");
-    const qreal Height = 7.91075;
-    QRectF rect(0, y, width, Height);
-    painter->drawPixmap(rect.toRect(), separator.scaled(width, Height));
-    return Height;
-}
-
 QPixmap GraphicItem::GenerateItemTooltip(const Item *item) {
     QString typeLineEx = item->data("typeLine").toString();
     const QString typeLine = typeLineEx.remove(QRegularExpression("\\<.*\\>")); // Greedy
@@ -180,20 +173,23 @@ QPixmap GraphicItem::GenerateItemTooltip(const Item *item) {
     if (singleline && (type == FrameType::Rare || type == FrameType::Unique))
         suffix = "SingleLine";
 
+    int frameHeight;
+
     if (singleline) {
+        frameHeight = 34;
         tooltip.ui->itemNameFirstLine->hide();
         tooltip.ui->itemNameSecondLine->setAlignment(Qt::AlignCenter);
-        tooltip.ui->itemNameContainerWidget->setFixedSize(16777215, 34);
-        tooltip.ui->itemHeaderLeft->setFixedSize(29, 34);
-        tooltip.ui->itemHeaderRight->setFixedSize(29, 34);
+        tooltip.ui->itemHeaderLeft->setFixedSize(29, frameHeight);
+        tooltip.ui->itemHeaderRight->setFixedSize(29, frameHeight);
     } else {
+        frameHeight = 54;
         tooltip.ui->itemNameFirstLine->show();
         tooltip.ui->itemNameFirstLine->setAlignment(Qt::AlignBottom | Qt::AlignHCenter);
         tooltip.ui->itemNameSecondLine->setAlignment(Qt::AlignTop | Qt::AlignHCenter);
-        tooltip.ui->itemNameContainerWidget->setFixedSize(16777215, 54);
-        tooltip.ui->itemHeaderLeft->setFixedSize(44, 54);
-        tooltip.ui->itemHeaderRight->setFixedSize(44, 54);
+        tooltip.ui->itemHeaderLeft->setFixedSize(44, frameHeight);
+        tooltip.ui->itemHeaderRight->setFixedSize(44, frameHeight);
     }
+    tooltip.ui->itemNameContainerWidget->setFixedSize(16777215, frameHeight);
 
     const QStringList FrameToKey = {
         "White",
@@ -224,9 +220,11 @@ QPixmap GraphicItem::GenerateItemTooltip(const Item *item) {
         "#aa9e82"
     };
 
-    QString css = "border-image: none; font-size: 20px; color: " + FrameToColor[typeIndex];
+    QString css = "border-image: none; font-size: 19px; color: " + FrameToColor[typeIndex];
     tooltip.ui->itemNameFirstLine->setStyleSheet(css);
     tooltip.ui->itemNameSecondLine->setStyleSheet(css);
+
+    tooltip.ui->propertiesEdit->setStyleSheet("font-size: 15px;");
 
     const QString separator = "<img src=':/tooltip/Separator" + key + ".png'>";;
 
@@ -306,9 +304,22 @@ QPixmap GraphicItem::GenerateItemTooltip(const Item *item) {
         resultText += Item::formatProperty(text, {}, -5, true) + "<br>";
     }
 
-    tooltip.ui->propertiesLabel->setText(QString("<center>%1</center>").arg(resultText));
+    resultText = QString("<center>%1</center>").arg(resultText);
+    tooltip.ui->propertiesEdit->setText(resultText);
+    tooltip.setAttribute(Qt::WA_DontShowOnScreen);
+    tooltip.show();
 
-    return tooltip.grab();
+    qreal height = tooltip.ui->propertiesEdit->document()->size().height();
+    tooltip.ui->propertiesEdit->setFixedHeight(height);
+    tooltip.updateGeometry();
+
+    QPixmap result = QPixmap(tooltip.width(), height + frameHeight);
+    result.fill(QColor(0, 0, 0, 204));
+    QPainter painter(&result);
+    painter.setRenderHint(QPainter::HighQualityAntialiasing);
+    painter.drawPixmap(0, 0, tooltip.grab());
+
+    return result;
 }
 
 bool GraphicItem::IsFilteredBy(QString text) {
@@ -330,8 +341,6 @@ void GraphicItem::GenerateItemTooltip() {
         if (!data.isNull()) {
             _tooltip = new QGraphicsPixmapItem(data);
             scene()->addItem(_tooltip);
-            const QPointF p = scenePos();
-            _tooltip->setPos(p.x() - (data.width() / 2), p.y() - data.height());
         }
     }
 }
@@ -361,7 +370,12 @@ void GraphicItem::hoverEnterEvent(QGraphicsSceneHoverEvent *event) {
     ShowLinks(true, ShowLinkReason::Hover);
 
     GenerateItemTooltip();
-    if (_tooltip) _tooltip->show();
+    if (_tooltip) {
+        const QPointF p = scenePos();
+        _tooltip->setPos(p.x() - (_tooltip->boundingRect().width() / 2) + (boundingRect().width() / 2),
+                         p.y() - _tooltip->boundingRect().height());
+        _tooltip->show();
+    }
 }
 
 void GraphicItem::hoverLeaveEvent(QGraphicsSceneHoverEvent *event) {
@@ -392,11 +406,14 @@ void GraphicItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
 }
 
 QVariant GraphicItem::itemChange(QGraphicsItem::GraphicsItemChange change, const QVariant &value) {
-    if (change == ItemEnabledChange) {
+    if (change == ItemEnabledChange || change == ItemVisibleHasChanged) {
         if (value.toBool())
             setOpacity(1.0);
-        else
+        else {
+            // Disabled
             setOpacity(0.5);
+            if (_tooltip) _tooltip->hide();
+        }
         return value;
     }
     return QGraphicsItem::itemChange(change, value);
