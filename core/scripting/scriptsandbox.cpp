@@ -92,7 +92,7 @@ ScriptSandbox::ScriptSandbox(const PluginManager *parent, const QString &script,
     , _engineDebugger()
     , _errorString()
 {
-    _engineDebugger.attachTo(&_engine);
+    // _engineDebugger.attachTo(&_engine);
 
     _program = QScriptProgram(_script, "internal.qs");
 
