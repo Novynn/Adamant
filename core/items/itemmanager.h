@@ -6,10 +6,12 @@
 #include <QJsonDocument>
 #include <QVariant>
 #include <QRegularExpression>
+#include <QQueue>
 
 class CoreService;
 class StashItemLocation;
 class ItemManagerInstance;
+class ItemManager;
 
 struct ItemManagerInstanceTab {
     int tabIndex;
@@ -19,12 +21,24 @@ struct ItemManagerInstanceTab {
 };
 
 struct ItemManagerInstance {
+    QString accountName;
     QString league;
     QRegularExpression filter;
     bool firstTabReceived;
     int totalTabs;
     int receivedTabs;
+    ItemManager* manager;
     QMap<int, ItemManagerInstanceTab*> tabs;
+};
+
+// Or we could just use polymorphism... But this is fun!
+struct Fetchable {
+    bool first;
+    union {
+        void* ptr;
+        ItemManagerInstance* instance;
+        ItemManagerInstanceTab* tab;
+    };
 };
 
 class CORE_EXTERN ItemManager : public QObject
@@ -47,7 +61,22 @@ public:
         }
         return stash;
     }
-
+protected:
+    void fetchFirstStashTab(ItemManagerInstance* instance);
+    void queueStashTab(ItemManagerInstanceTab* tab);
+    static void beginFetch();
+    static void pruneHistory();
+    static QQueue<Fetchable*> _fetchQueue;
+    static QMap<Fetchable*, QDateTime> _fetchHistory;
+    static bool _fetchWaiting;
+    static const int RequestsPerPeriod;
+    static const int RequestPeriodMSecs;
+    static const int RequestPeriodWait;
+    static void updateFetchable(Fetchable* fetchable);
+    static void updateFetchable(ItemManagerInstance* instance);
+    static void updateFetchable(ItemManagerInstanceTab* tab);
+    void fetchStashTab(ItemManagerInstanceTab* tab);
+    void queueFirstStashTab(ItemManagerInstance* instance);
 signals:
     void onCharacterUpdateAvailable(QString characterName);
     void onStashTabUpdateBegin(QString league);
