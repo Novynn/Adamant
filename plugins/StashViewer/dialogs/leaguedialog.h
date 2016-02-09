@@ -24,25 +24,29 @@ public:
     }
 
     QString GetFilter() {
-        return _currentFilter;
+        return _leagueFilters.value(_currentLeague);
     }
+
+    void applyFilter();
 
     void Clear();
 
 private slots:
-    void on_checkBox_toggled(bool checked);
 
-    void on_advancedEdit_textChanged(const QString &text);
-    void on_leaguesListWidget_currentItemChanged(QListWidgetItem *current, QListWidgetItem *previous);
+    void on_tableWidget_cellChanged(int row, int column);
+    void on_tableWidget_currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn);
+
+    void on_selectButton_clicked();
 
 signals:
     void RequestStashTabList(QString league);
 private:
     Ui::LeagueDialog *ui;
 
-    QStringList _leagues;
+    QMap<QString, QStringList> _leagueTabs;
+    QMap<QString, QString> _leagueFilters;
+
     QString _currentLeague;
-    QString _currentFilter;
 };
 
 #endif // LEAGUEDIALOG_H

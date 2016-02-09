@@ -173,7 +173,10 @@ void ItemManager::onStashTabResult(QString league, QByteArray json, QVariant dat
 
         error = true;
     }
-    if (doc.object().contains("tabs") && !instance->firstTabReceived) {
+    if (!instance->firstTabReceived) {
+        if (!doc.object().contains("tabs")) {
+            qDebug() << "??? result did not contain tabs...";
+        }
         // This means it was a initial request, future requests for tab items should not have "tabs" set.
         // At least unless GGG changes their API.
         instance->firstTabReceived = true;

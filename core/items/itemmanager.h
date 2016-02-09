@@ -52,7 +52,7 @@ public:
     }
 
     Q_INVOKABLE void fetchStashTabs(const QString &league, const QString &filter = QString());
-    Q_INVOKABLE QList<StashItemLocation*> GetStashTabs(const QString &league) {
+    Q_INVOKABLE QList<StashItemLocation*> getStashTabs(const QString &league) {
         QList<StashItemLocation*> stash;
         if (_currentInstances.contains(league)) {
             for (ItemManagerInstanceTab* tab : _currentInstances.value(league)->tabs.values()) {

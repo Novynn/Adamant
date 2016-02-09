@@ -68,8 +68,11 @@ void StashViewer::OnImage(const QString &path, QImage image) {
     }
 }
 
+QStringList LeaguesList;
+
 void StashViewer::OnLeaguesList(QStringList list) {
     _leagueDialog->SetLeagues(list);
+    LeaguesList = list;
 }
 
 void StashViewer::OnTabsList(QString league, QStringList list) {
@@ -77,7 +80,10 @@ void StashViewer::OnTabsList(QString league, QStringList list) {
 }
 
 void StashViewer::ShowLeagueSelectionDialog() {
-    emit RequestLeaguesList();
+    if (LeaguesList.isEmpty())
+        emit RequestLeaguesList();
+    else
+        _leagueDialog->SetLeagues(LeaguesList);
     if (_leagueDialog->exec() == QDialog::Accepted) {
         _currentLeague = _leagueDialog->GetChosenLeague();
         emit LeagueDetailsChanged(_currentLeague, _leagueDialog->GetFilter());

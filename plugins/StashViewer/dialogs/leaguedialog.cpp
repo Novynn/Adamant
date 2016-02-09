@@ -7,8 +7,8 @@ LeagueDialog::LeagueDialog(QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::LeagueDialog) {
     ui->setupUi(this);
-    ui->checkBox->setChecked(false);
-
+    ui->splitter->setStretchFactor(0, 2);
+    ui->splitter->setStretchFactor(1, 1);
 }
 
 LeagueDialog::~LeagueDialog()
@@ -17,82 +17,96 @@ LeagueDialog::~LeagueDialog()
 }
 
 void LeagueDialog::SetLeagues(QStringList leagues) {
-    _leagues = leagues;
+    ui->tableWidget->clearContents();
+    while (ui->tableWidget->rowCount()) {
+        ui->tableWidget->removeRow(0);
+    }
+    for (QString league : leagues) {
+        int row = ui->tableWidget->rowCount();
+        ui->tableWidget->insertRow(row);
 
-    ui->leaguesListWidget->clear();
-    ui->leaguesListWidget->addItems(leagues);
+        auto header = new QTableWidgetItem(league);
+        header->setFlags(header->flags() & ~Qt::ItemIsEditable);
+        ui->tableWidget->setItem(row, 0, header);
+        ui->tableWidget->setItem(row, 1, new QTableWidgetItem(""));
+    }
 }
 
 void LeagueDialog::SetLeagueTabs(QString league, QStringList tabs) {
-    QList<QListWidgetItem*> selection = ui->leaguesListWidget->selectedItems();
-    if (selection.isEmpty()) return;
-    if (league == selection.first()->text()) {
+    _leagueTabs.remove(league);
+    _leagueTabs.insert(league, tabs);
+
+    if (league == _currentLeague) {
         ui->tabsListWidget->clear();
         ui->tabsListWidget->addItems(tabs);
-        ui->leaguesListWidget->setEnabled(true);
+        ui->tableWidget->setEnabled(true);
+        applyFilter();
+    }
+}
 
-        emit ui->checkBox->toggled(ui->checkBox->isChecked());
+void LeagueDialog::applyFilter() {
+    QString regex = _leagueFilters.value(_currentLeague);
+    QRegularExpression expr(regex);
+    if (regex.isEmpty() || !expr.isValid()) {
+        return;
+    }
+
+    for (int i = 0; i < ui->tabsListWidget->count(); i++) {
+        QListWidgetItem* item = ui->tabsListWidget->item(i);
+        auto match = expr.match(item->text());
+        if (match.hasMatch()) {
+            item->setFlags(item->flags() & ~Qt::ItemIsEnabled);
+        }
+        else {
+            item->setFlags(item->flags() & Qt::ItemIsEnabled);
+        }
     }
 }
 
 void LeagueDialog::Clear() {
-    ui->leaguesListWidget->setEnabled(true);
+    SetLeagues({});
+    _leagueTabs.clear();
+    ui->tableWidget->setEnabled(true);
 }
 
-void LeagueDialog::on_checkBox_toggled(bool checked) {
-    static const Qt::ItemFlags DefaultFlags = Qt::ItemIsSelectable |
-                                              Qt::ItemIsUserCheckable |
-                                              Qt::ItemIsEnabled |
-                                              Qt::ItemIsDragEnabled;
+void LeagueDialog::on_tableWidget_cellChanged(int row, int column) {
+    if (column != 1) return;
 
-    for (int i = 0; i < ui->tabsListWidget->count(); i++) {
-        QListWidgetItem* item = ui->tabsListWidget->item(i);
-        if (!checked) {
-            // Default state
-            item->setFlags(DefaultFlags);
-            item->setCheckState(Qt::Checked);
-        }
-        else {
-            // Clear checkbox
-            item->setData(Qt::CheckStateRole, QVariant());
-        }
+    QString league = ui->tableWidget->item(row, 0)->text();
+    auto regexItem = ui->tableWidget->item(row, column);
+    QString regex = regexItem->text();
+    _leagueFilters.remove(league);
+    _leagueFilters.insert(league, regex);
+
+    applyFilter();
+}
+
+
+void LeagueDialog::on_tableWidget_currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn) {
+    Q_UNUSED(currentColumn)
+    Q_UNUSED(previousRow)
+    Q_UNUSED(previousColumn)
+
+    if (currentRow < 0) {
+        ui->selectButton->setEnabled(false);
+        ui->tabsListWidget->clear();
+        _currentLeague = "";
+        return;
     }
+    ui->selectButton->setEnabled(true);
 
-    ui->advancedWidget->setVisible(checked);
-    if (checked) {
-        emit ui->advancedEdit->textChanged(ui->advancedEdit->text());
+    QString league = ui->tableWidget->item(currentRow, 0)->text();
+    _currentLeague = league;
+    if (_leagueTabs.value(league).isEmpty()) {
+        ui->tableWidget->setEnabled(false);
+        ui->tabsListWidget->clear();
+        RequestStashTabList(league);
     }
     else {
-        _currentFilter = "";
+        SetLeagueTabs(league, _leagueTabs.value(league));
     }
 }
 
-void LeagueDialog::on_advancedEdit_textChanged(const QString &text) {
-    static const Qt::ItemFlags DefaultFlags = Qt::ItemIsSelectable |
-                                              Qt::ItemIsUserCheckable |
-                                              Qt::ItemIsEnabled |
-                                              Qt::ItemIsDragEnabled;
-
-    QRegularExpression expr(text, QRegularExpression::CaseInsensitiveOption);
-    for (int i = 0; i < ui->tabsListWidget->count(); i++) {
-        QListWidgetItem* item = ui->tabsListWidget->item(i);
-        if (!text.isEmpty() &&
-            expr.isValid() &&
-            item->text().contains(expr)) {
-            item->setFlags(Qt::NoItemFlags);
-        }
-        else {
-            item->setFlags(DefaultFlags);
-        }
-    }
-    _currentFilter = text;
-}
-
-void LeagueDialog::on_leaguesListWidget_currentItemChanged(QListWidgetItem *current, QListWidgetItem *previous) {
-    Q_UNUSED(previous)
-    if (!current || current->text().isEmpty()) return;
-    _currentLeague = current->text();
-    ui->tabsListWidget->clear();
-    ui->leaguesListWidget->setEnabled(false);
-    emit RequestStashTabList(_currentLeague);
+void LeagueDialog::on_selectButton_clicked() {
+    accept();
 }

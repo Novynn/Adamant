@@ -26,7 +26,7 @@ void StashViewerPlugin::OnLoad() {
         // We only care about our current league
         if (league != Settings()->value("league").toString()) return;
 
-        QList<StashItemLocation*> tabs = Core()->getItemManager()->GetStashTabs(league);
+        QList<StashItemLocation*> tabs = Core()->getItemManager()->getStashTabs(league);
         _viewer->SetTabs(tabs);
     });
 
