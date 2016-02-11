@@ -52,23 +52,21 @@ bool CoreService::load() {
         sensitiveSettings()->endGroup();
     }
 
-    // Load the main application!
-    connect(session(), &Session::Request::profileData, this, profileLoaded);
-    session()->loginWithSessionId(sessionId);
+    connect(session(), &Session::Request::profileData, this, &CoreService::ready);
 
     // Load Plugins
     getPluginManager()->scanPlugins(true);
     getPluginManager()->verifyPlugins();
     getPluginManager()->preparePlugins();
 
+    // Load the main application!
+    session()->loginWithSessionId(sessionId);
+
     return true;
 }
 
-void CoreService::profileLoaded(QString profileData) {
-    Q_UNUSED(profileData)
-    // We only care about this once...
-    disconnect(session(), &Session::Request::profileData, this, &CoreService::profileLoaded);
-
+void CoreService::ready() {
+    disconnect(session(), &Session::Request::profileData, this, &CoreService::ready);
     getPluginManager()->loadPlugins();
 
     emit message("Adamant Started!", QtInfoMsg);

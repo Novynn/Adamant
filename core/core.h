@@ -57,7 +57,7 @@ public:
 signals:
     void message(const QString &message, QtMsgType type);
 private slots:
-    void profileLoaded(QString profileData);
+    void ready();
 public slots:
     void loggedMessage(const QString &message, QtMsgType type);
 private:
