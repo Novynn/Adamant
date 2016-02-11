@@ -3,6 +3,7 @@
 
 #include <QThread>
 #include <QWidget>
+#include "graphicitemfactory.h"
 #include "stashscene.h"
 #include <QGraphicsRectItem>
 #include <QJsonDocument>
@@ -51,13 +52,14 @@ private:
     QTabBar* _bar;
     StashScene* _scene;
     ImageCache* _imageCache;
-    QThread* _imageThread;
 
     QHash<QListWidgetItem* ,QGraphicsPixmapItem*> _tabGrids;
     QHash<QString, StashItemLocation*> _tabs;
 
     LeagueDialog* _leagueDialog;
     QString _currentLeague;
+    GraphicItemFactory* _factory;
+    QThread* _factoryThread;
 };
 Q_DECLARE_METATYPE(StashViewer*)
 

@@ -14,7 +14,8 @@ HEADERS += stashviewerplugin.h \
     stashscene.h \
     dialogs/leaguedialog.h \
     characterviewer.h \
-    dialogs/itemtooltip.h
+    dialogs/itemtooltip.h \
+    graphicitemfactory.h
 
 FORMS += \
     stashviewer.ui \

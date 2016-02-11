@@ -6,6 +6,7 @@
 
 StashScene::StashScene(QObject* parent)
     : QGraphicsScene(parent) {
+    setItemIndexMethod(NoIndex);
 }
 
 void StashScene::keyPressEvent(QKeyEvent *event) {
