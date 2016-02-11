@@ -110,3 +110,13 @@ void LeagueDialog::on_tableWidget_currentCellChanged(int currentRow, int current
 void LeagueDialog::on_selectButton_clicked() {
     accept();
 }
+
+void LeagueDialog::on_tableWidget_cellDoubleClicked(int row, int column) {
+    Q_UNUSED(column)
+
+    if (!ui->tableWidget->isEnabled()) return;
+
+    QString league = ui->tableWidget->item(row, 0)->text();
+    _currentLeague = league;
+    accept();
+}

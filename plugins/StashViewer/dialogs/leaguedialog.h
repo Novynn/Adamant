@@ -38,6 +38,8 @@ private slots:
 
     void on_selectButton_clicked();
 
+    void on_tableWidget_cellDoubleClicked(int row, int column);
+
 signals:
     void RequestStashTabList(QString league);
 private:
