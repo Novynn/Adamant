@@ -69,7 +69,7 @@ void CoreService::ready() {
     disconnect(session(), &Session::Request::profileData, this, &CoreService::ready);
     getPluginManager()->loadPlugins();
 
-    emit message("Adamant Started!", QtInfoMsg);
+    qInfo() << qPrintable("Adamant Started!");
     interface()->registerPages();
 
     // Set page to home

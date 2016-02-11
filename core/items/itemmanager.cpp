@@ -160,7 +160,7 @@ void ItemManager::updateFetchable(ItemManagerInstanceTab* tab) {
 void ItemManager::onStashTabResult(QString league, QByteArray json, QVariant data) {
     ItemManagerInstance* instance = _fetchingInstances.value(league, nullptr);
     if (!instance) {
-        qDebug() << "Failed to fetch instance for " << league;
+        //qDebug() << "Failed to fetch instance for " << league;
         return;
     }
     QJsonDocument doc = QJsonDocument::fromJson(json);

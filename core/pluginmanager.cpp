@@ -215,8 +215,6 @@ void PluginManager::preparePlugins() {
             if (plugin != nullptr) {
                 data->instance = plugin;
 
-                qDebug() << data->name << error;
-
                 // Now we inject the PluginManager
                 injectPluginData(data);
 
@@ -247,11 +245,11 @@ void PluginManager::preparePlugins() {
 }
 
 void PluginManager::loadPlugins() {
-    qDebug() << "Loading plugins " << _plugins.count();
+    qDebug() << qPrintable(QString("Loading %1 plugin%...").arg(_plugins.count()).arg(_plugins.count() == 1 ? "" : "s"));
     for (const AdamantPluginInfo* data : _plugins) {
         // Invoke so we can finish triggered all loads then bail.
         QMetaObject::invokeMethod(data->instance, "OnLoad", Qt::QueuedConnection);
-        qDebug() << "Loaded " << data->name;
+        qDebug() << qPrintable("Loaded " + data->name);
         emit pluginLoadStarted(data->name);
     }
     finish();

@@ -232,9 +232,10 @@ void StashViewer::on_lineEdit_returnPressed() {
             item->setHidden(!showGrid);
         }
     }
-
-    _scene->invalidate();
     OnViewportChanged();
+
+    // TODO(rory): This should not be needed here
+    // _scene->invalidate();
 }
 
 void StashViewer::on_leagueButton_clicked() {

@@ -43,7 +43,7 @@ MainWindow::MainWindow(CoreService *core, QWidget *parent)
     connect(_core->getItemManager(), &ItemManager::onStashTabUpdateBegin, [this](QString league) {
         const QString message = QString("Loading %1 stash tabs...").arg(league);
         _statusBarLabel->setText(message);
-        emit _core->message(message, QtInfoMsg);
+        qInfo() << qPrintable(message);
     });
 
     connect(_core->getItemManager(), &ItemManager::onStashTabUpdateProgress, [this](QString league, int r, int m, bool t) {
