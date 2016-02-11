@@ -19,17 +19,19 @@ StashViewer::StashViewer(QWidget *parent, QString league)
     , _imageCache(new ImageCache)
     , _leagueDialog(new LeagueDialog(this))
     , _currentLeague(league)
-    , _factory(new GraphicItemFactory(this, _imageCache))
-    , _factoryThread(new QThread())
+    , _factory(new GraphicItemFactory(_imageCache))
+    , _factoryThread(new QThread(this))
 {
     ui->setupUi(this);
     ui->splitter->setStretchFactor(0, 1);
     ui->splitter->setStretchFactor(1, 4);
 
     connect(_imageCache, &ImageCache::onImage, this, &StashViewer::OnImage);
+    qDebug() << QThread::currentThreadId();
 
     _factory->moveToThread(_factoryThread);
-    connect(_factory, &GraphicItemFactory::OnItemsReady, [this] (QList<GraphicItem*> items, void* ptr) {
+    connect(_factory, &GraphicItemFactory::OnItemsReady, this, [this] (QList<GraphicItem*> items, QSet<QString> images, void* ptr) {
+        qDebug() << QThread::currentThreadId();
         QGraphicsItem* parent = reinterpret_cast<QGraphicsItem*>(ptr);
         if (parent) {
             for (auto item : items) {
@@ -37,6 +39,10 @@ StashViewer::StashViewer(QWidget *parent, QString league)
             }
         }
         parent->setOpacity(1.0);
+
+        for (const QString &image : images) {
+            _imageCache->fetchImage(image);
+        }
     });
     connect(_factory, &GraphicItemFactory::destroyed, _factoryThread, &QThread::deleteLater);
     _factoryThread->start();
@@ -45,28 +51,7 @@ StashViewer::StashViewer(QWidget *parent, QString league)
         emit RequestStashTabList(league);
     });
 
-    // Enable rubber band selections
-    ui->graphicsView->setDragMode(QGraphicsView::RubberBandDrag);
-    ui->graphicsView->setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
-    ui->graphicsView->setOptimizationFlags(QGraphicsView::DontAdjustForAntialiasing | QGraphicsView::IndirectPainting);
     ui->graphicsView->setScene(_scene);
-
-//    connect(_scene, &StashScene::selectionChanged, [this] () {
-//        QStringList selection;
-//        for (QGraphicsItem* i : _scene->selectedItems()) {
-//            GraphicItem* item = dynamic_cast<GraphicItem*>(i);
-//            if (item) {
-//                if (item->Tooltip().isEmpty()) {
-//                    item->GenerateItemTooltip();
-//                }
-//                selection << item->Tooltip();
-//            }
-//        }
-
-//        ui->textEdit->setHtml(selection.join("<br><br>"));
-//    });
-
-    qRegisterMetaType<const ItemLocation*>("const ItemLocation*");
 }
 
 void StashViewer::OnImage(const QString &path, QImage image) {
@@ -197,11 +182,6 @@ void StashViewer::on_listWidget_itemSelectionChanged() {
         index++;
     }
 
-    // Request Images
-    for (QString imageUrl : images) {
-        _imageCache->fetchImage(imageUrl);
-    }
-
     // Set up other stuff
 //    if (tabLabels.size() == 1) {
 //        ui->selectionLabel->setText(tabLabels.first());
@@ -214,32 +194,34 @@ void StashViewer::on_listWidget_itemSelectionChanged() {
 }
 
 void StashViewer::on_lineEdit_returnPressed() {
-//    const QString &text = ui->lineEdit->text();
-//    for (int i = 0; i < ui->listWidget->count(); i++) {
-//        QListWidgetItem* item = ui->listWidget->item(i);
-//        QGraphicsPixmapItem* gridItem = _tabGrids.value(item);
+    const QString &text = ui->lineEdit->text();
+    for (int i = 0; i < ui->listWidget->count(); i++) {
+        QListWidgetItem* item = ui->listWidget->item(i);
+        QGraphicsPixmapItem* gridItem = _tabGrids.value(item);
 
-//        bool showGrid = false;
-//        for (QGraphicsItem* gi : gridItem->childItems()) {
-//            GraphicItem* gitem = dynamic_cast<GraphicItem*>(gi);
-//            if (gitem) {
-//                if (text.isEmpty() || !gitem->IsFilteredBy(text)) {
-//                    gitem->setEnabled(true);
-//                    showGrid = true;
-//                }
-//                else {
-//                    gitem->setEnabled(false);
-//                }
-//            }
-//        }
-//        if (text.isEmpty()) {
-//            item->setHidden(false);
-//        }
-//        else {
-//            item->setSelected(showGrid);
-//            item->setHidden(!showGrid);
-//        }
-//    }
+        bool showGrid = false;
+        for (QGraphicsItem* gi : gridItem->childItems()) {
+            GraphicItem* gitem = dynamic_cast<GraphicItem*>(gi);
+            if (gitem) {
+                if (text.isEmpty() || !gitem->IsFilteredBy(text)) {
+                    gitem->setEnabled(true);
+                    showGrid = true;
+                }
+                else {
+                    gitem->setEnabled(false);
+                }
+            }
+        }
+        if (text.isEmpty()) {
+            item->setHidden(false);
+        }
+        else {
+            item->setSelected(showGrid);
+            item->setHidden(!showGrid);
+        }
+    }
+
+    _scene->invalidate();
 }
 
 void StashViewer::on_leagueButton_clicked() {

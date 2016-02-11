@@ -27,7 +27,11 @@ public:
 
     GraphicItem(QGraphicsItem* parent, const Item *item, const QString &imagePath);
 
-    bool IsWaitingForImage(QString imagePath) const;
+    bool IsWaitingForImage(QString imagePath=QString()) const;
+    const QString getImagePath() const {
+        return _imagePath;
+    }
+
     void SetImage(QImage image);
 
     static QPixmap GenerateLinksOverlay(const Item* item);
