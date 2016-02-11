@@ -245,11 +245,11 @@ void PluginManager::preparePlugins() {
 }
 
 void PluginManager::loadPlugins() {
-    qDebug() << qPrintable(QString("Loading %1 plugin%...").arg(_plugins.count()).arg(_plugins.count() == 1 ? "" : "s"));
+    qInfo() << qPrintable(QString("Loading %1 plugin%2...").arg(_plugins.count()).arg(_plugins.count() == 1 ? "" : "s"));
     for (const AdamantPluginInfo* data : _plugins) {
         // Invoke so we can finish triggered all loads then bail.
         QMetaObject::invokeMethod(data->instance, "OnLoad", Qt::QueuedConnection);
-        qDebug() << qPrintable("Loaded " + data->name);
+        qInfo() << qPrintable("Loaded " + data->name);
         emit pluginLoadStarted(data->name);
     }
     finish();
