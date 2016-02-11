@@ -11,17 +11,21 @@ class GraphicItemFactory : public QObject
 {
     Q_OBJECT
 public:
-    explicit GraphicItemFactory(QObject *parent, ImageCache* cache)
-        : QObject(parent)
+    explicit GraphicItemFactory(ImageCache* cache)
+        : QObject()
         , _imageCache(cache) {
+        qRegisterMetaType<const ItemLocation*>("const ItemLocation*");
+        qRegisterMetaType<QList<GraphicItem*>>("QList<GraphicItem*>");
+        qRegisterMetaType<QSet<QString>>("QSet<QString>");
     }
 
 signals:
-    void OnItemsReady(QList<GraphicItem*> items, void* ptr);
+    void OnItemsReady(QList<GraphicItem*> items, QSet<QString> images, void* ptr);
 
 public slots:
     void SubmitLocation(const ItemLocation* location, void* ptr) {
         QList<GraphicItem*> items;
+        QSet<QString> images;
         for (const Item* item : location->items()) {
             QString icon = item->data("icon").toString();
 
@@ -37,10 +41,13 @@ public slots:
             if (_imageCache->hasLocalImage(icon)) {
                 gItem->SetImage(_imageCache->getImage(icon));
             }
+            else {
+                images << icon;
+            }
             items.append(gItem);
         }
 
-        emit OnItemsReady(items, ptr);
+        emit OnItemsReady(items, images, ptr);
     }
 private:
     ImageCache* _imageCache;

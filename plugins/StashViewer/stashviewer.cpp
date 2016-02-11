@@ -2,6 +2,7 @@
 #include "stashviewer.h"
 #include "ui_stashviewer.h"
 
+#include <QScrollBar>
 #include <QGraphicsPixmapItem>
 #include <QJsonArray>
 #include <QJsonObject>
@@ -19,8 +20,8 @@ StashViewer::StashViewer(QWidget *parent, QString league)
     , _imageCache(new ImageCache)
     , _leagueDialog(new LeagueDialog(this))
     , _currentLeague(league)
-    , _factory(new GraphicItemFactory(this, _imageCache))
-    , _factoryThread(new QThread())
+    , _factory(new GraphicItemFactory(_imageCache))
+    , _factoryThread(new QThread(this))
 {
     ui->setupUi(this);
     ui->splitter->setStretchFactor(0, 1);
@@ -29,7 +30,7 @@ StashViewer::StashViewer(QWidget *parent, QString league)
     connect(_imageCache, &ImageCache::onImage, this, &StashViewer::OnImage);
 
     _factory->moveToThread(_factoryThread);
-    connect(_factory, &GraphicItemFactory::OnItemsReady, [this] (QList<GraphicItem*> items, void* ptr) {
+    connect(_factory, &GraphicItemFactory::OnItemsReady, this, [this] (QList<GraphicItem*> items, QSet<QString> images, void* ptr) {
         QGraphicsItem* parent = reinterpret_cast<QGraphicsItem*>(ptr);
         if (parent) {
             for (auto item : items) {
@@ -37,6 +38,10 @@ StashViewer::StashViewer(QWidget *parent, QString league)
             }
         }
         parent->setOpacity(1.0);
+
+        for (const QString &image : images) {
+            _imageCache->fetchImage(image);
+        }
     });
     connect(_factory, &GraphicItemFactory::destroyed, _factoryThread, &QThread::deleteLater);
     _factoryThread->start();
@@ -45,28 +50,37 @@ StashViewer::StashViewer(QWidget *parent, QString league)
         emit RequestStashTabList(league);
     });
 
-    // Enable rubber band selections
-    ui->graphicsView->setDragMode(QGraphicsView::RubberBandDrag);
-    ui->graphicsView->setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
-    ui->graphicsView->setOptimizationFlags(QGraphicsView::DontAdjustForAntialiasing | QGraphicsView::IndirectPainting);
+    connect(ui->graphicsView->verticalScrollBar(), &QScrollBar::valueChanged, this, &StashViewer::OnViewportChanged);
+    connect(ui->graphicsView->verticalScrollBar(), &QScrollBar::rangeChanged, this, &StashViewer::OnViewportChanged);
     ui->graphicsView->setScene(_scene);
+}
 
-//    connect(_scene, &StashScene::selectionChanged, [this] () {
-//        QStringList selection;
-//        for (QGraphicsItem* i : _scene->selectedItems()) {
-//            GraphicItem* item = dynamic_cast<GraphicItem*>(i);
-//            if (item) {
-//                if (item->Tooltip().isEmpty()) {
-//                    item->GenerateItemTooltip();
-//                }
-//                selection << item->Tooltip();
-//            }
-//        }
+void StashViewer::OnViewportChanged() {
+    if (_tabGrids.isEmpty()) return;
 
-//        ui->textEdit->setHtml(selection.join("<br><br>"));
-//    });
+    // Setup a nice rect in the center of the viewport to show which grids are in "focus".
+    QRectF viewport = ui->graphicsView->mapToScene(ui->graphicsView->viewport()->rect()).boundingRect();
+    QPointF center = viewport.center();
+    QRectF gridRect = _tabGrids.values().first()->boundingRect(); // Steal the rect of one of the grids (ew, dirty)
+    gridRect.translate(-gridRect.height() / 2 + center.x(), -gridRect.width() / 2 + center.y());
 
-    qRegisterMetaType<const ItemLocation*>("const ItemLocation*");
+    QList<QGraphicsItem*> items = _scene->items(gridRect, Qt::IntersectsItemBoundingRect, Qt::AscendingOrder, ui->graphicsView->transform());
+    QList<QGraphicsItem*> filtered;
+    for (auto item : items) {
+        if (item->topLevelItem() == item) filtered << item;
+    }
+
+    for (auto listItem : _tabGrids.keys()) {
+        auto grid = _tabGrids.value(listItem);
+
+        if (filtered.contains(grid)) {
+            listItem->setTextAlignment(Qt::AlignRight);
+            ui->listWidget->scrollToItem(listItem); // Ensures the item is visible
+        }
+        else {
+            listItem->setTextAlignment(Qt::AlignLeft);
+        }
+    }
 }
 
 void StashViewer::OnImage(const QString &path, QImage image) {
@@ -137,6 +151,14 @@ void StashViewer::SetTabs(QList<StashItemLocation*> tabs) {
         QGraphicsPixmapItem* gridItem = _scene->addPixmap(grid);
         gridItem->setVisible(false);
         _tabGrids.insert(item, gridItem);
+
+        // Invoke item loading, right here right now
+        gridItem->setOpacity(0.1);
+        QMetaObject::invokeMethod(_factory,
+                                  "SubmitLocation",
+                                  Qt::QueuedConnection,
+                                  Q_ARG(const ItemLocation*, tab),
+                                  Q_ARG(void*, (void*)gridItem));
     }
 }
 
@@ -161,7 +183,6 @@ void StashViewer::on_listWidget_itemSelectionChanged() {
 
     int index = 0;
     QStringList tabLabels;
-    QSet<QString> images;
 
     for (QListWidgetItem* item : _tabGrids.keys()) {
         QGraphicsPixmapItem* gridItem = _tabGrids.value(item);
@@ -178,68 +199,42 @@ void StashViewer::on_listWidget_itemSelectionChanged() {
         // Move into the correct position
         int height = (stashPanelSize.height() + Padding) * index;
         gridItem->setPos(0, height);
-
-        static const bool HasLoaded = 0x01;
-
-        if (!gridItem->data(HasLoaded).toBool()) {
-            // Gather Items, and Display
-            gridItem->setOpacity(0.2);
-            const ItemLocation* tab = _tabs.value(item->text());
-            if (tab) {
-                QMetaObject::invokeMethod(_factory,
-                                          "SubmitLocation",
-                                          Qt::QueuedConnection,
-                                          Q_ARG(const ItemLocation*, tab),
-                                          Q_ARG(void*, (void*)gridItem));
-            }
-            gridItem->setData(HasLoaded, true);
-        }
         index++;
     }
-
-    // Request Images
-    for (QString imageUrl : images) {
-        _imageCache->fetchImage(imageUrl);
-    }
-
-    // Set up other stuff
-//    if (tabLabels.size() == 1) {
-//        ui->selectionLabel->setText(tabLabels.first());
-//    }
-//    else {
-//        ui->selectionLabel->setText(QString("%1 tabs selected.").arg(tabLabels.size()));
-//    }
 
     emit ui->lineEdit->returnPressed();
 }
 
 void StashViewer::on_lineEdit_returnPressed() {
-//    const QString &text = ui->lineEdit->text();
-//    for (int i = 0; i < ui->listWidget->count(); i++) {
-//        QListWidgetItem* item = ui->listWidget->item(i);
-//        QGraphicsPixmapItem* gridItem = _tabGrids.value(item);
+    const QString &text = ui->lineEdit->text();
+    for (int i = 0; i < ui->listWidget->count(); i++) {
+        QListWidgetItem* item = ui->listWidget->item(i);
+        QGraphicsPixmapItem* gridItem = _tabGrids.value(item);
 
-//        bool showGrid = false;
-//        for (QGraphicsItem* gi : gridItem->childItems()) {
-//            GraphicItem* gitem = dynamic_cast<GraphicItem*>(gi);
-//            if (gitem) {
-//                if (text.isEmpty() || !gitem->IsFilteredBy(text)) {
-//                    gitem->setEnabled(true);
-//                    showGrid = true;
-//                }
-//                else {
-//                    gitem->setEnabled(false);
-//                }
-//            }
-//        }
-//        if (text.isEmpty()) {
-//            item->setHidden(false);
-//        }
-//        else {
-//            item->setSelected(showGrid);
-//            item->setHidden(!showGrid);
-//        }
-//    }
+        bool showGrid = false;
+        for (QGraphicsItem* gi : gridItem->childItems()) {
+            GraphicItem* gitem = dynamic_cast<GraphicItem*>(gi);
+            if (gitem) {
+                if (text.isEmpty() || !gitem->IsFilteredBy(text)) {
+                    gitem->setEnabled(true);
+                    showGrid = true;
+                }
+                else {
+                    gitem->setEnabled(false);
+                }
+            }
+        }
+        if (text.isEmpty()) {
+            item->setHidden(false);
+        }
+        else {
+            item->setSelected(showGrid);
+            item->setHidden(!showGrid);
+        }
+    }
+
+    _scene->invalidate();
+    OnViewportChanged();
 }
 
 void StashViewer::on_leagueButton_clicked() {

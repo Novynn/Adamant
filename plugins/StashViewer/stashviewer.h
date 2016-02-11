@@ -33,6 +33,7 @@ public slots:
     void OnImage(const QString &path, QImage image);
     void OnLeaguesList(QStringList list);
     void OnTabsList(QString league, QStringList list);
+    void OnViewportChanged();
 
     void ShowLeagueSelectionDialog();
 private slots:

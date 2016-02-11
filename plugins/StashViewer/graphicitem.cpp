@@ -19,14 +19,17 @@ GraphicItem::GraphicItem(QGraphicsItem *parent, const Item* item, const QString 
     , _tooltip(nullptr)
     , _tooltipText(QString())
     , _item(item) {
+
     int x = item->data("x").toInt();
     int y = item->data("y").toInt();
     int w = item->data("w").toInt();
     int h = item->data("h").toInt();
 
-    QPixmap pix = QPixmap(":/images/inventory_item_background.png", "png");
-    pix = pix.scaled(w * 47, h * 47);
-    setPixmap(pix);
+    static QPixmap normalBack = QPixmap(":/images/inventory_item_background.png", "png");
+    static QPixmap unidentifiedBack = QPixmap(":/images/item_bg_unidentified.png", "png");
+
+    setPixmap((item->data("identified").toBool()) ? normalBack.scaled(w * 47, h * 47) : unidentifiedBack.scaled(w * 47, h * 47));
+
     setX(x * 47.4645);
     setY(y * 47.4645);
 
@@ -37,7 +40,7 @@ GraphicItem::GraphicItem(QGraphicsItem *parent, const Item* item, const QString 
 }
 
 bool GraphicItem::IsWaitingForImage(QString imagePath) const {
-    return _waitingForImage && imagePath == _imagePath;
+    return _waitingForImage && (imagePath.isEmpty() || imagePath == _imagePath);
 }
 
 void GraphicItem::SetImage(QImage image) {
@@ -158,6 +161,7 @@ QPair<QString, QPixmap> GraphicItem::GenerateItemTooltip(const Item *item) {
     const QString secDescrText = item->data("secDescrText").toString();
     const QString descrText = item->data("descrText").toString();
     const bool corrupted = item->data("corrupted").toBool();
+    const bool identified = item->data("identified").toBool();
     const QStringList flavourText = item->data("flavourText").toStringList();
     int typeIndex = item->data("frameType").toInt();
     FrameType type = static_cast<FrameType>(typeIndex);
@@ -285,7 +289,14 @@ QPair<QString, QPixmap> GraphicItem::GenerateItemTooltip(const Item *item) {
         resultText += Item::formatProperty(mod, {}, -1, true) + "<br>";
     }
 
+    if (!identified) {
+        if (explicitMods.isEmpty() && !firstPrinted) resultText += (separator) + "<br>";
+        resultText += Item::formatProperty("Unidentified", {}, -2, true) + "<br>";
+        firstPrinted = false;
+    }
+
     if (corrupted) {
+        if (explicitMods.isEmpty() && identified && !firstPrinted) resultText += (separator) + "<br>";
         resultText += Item::formatProperty("Corrupted", {}, -2, true) + "<br>";
         firstPrinted = false;
     }
@@ -462,7 +473,7 @@ QVariant GraphicItem::itemChange(QGraphicsItem::GraphicsItemChange change, const
             ShowTooltip(false);
         }
     }
-    if (change == change == ItemVisibleHasChanged) {
+    if (change == ItemVisibleHasChanged) {
         if (!value.toBool())
             ShowTooltip(false);
     }
