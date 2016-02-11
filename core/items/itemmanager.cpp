@@ -35,6 +35,7 @@ void ItemManager::fetchStashTabs(const QString &league, const QString &filter) {
     instance->accountName = accountName;
     instance->league = league;
     instance->filter = QRegularExpression(filter, QRegularExpression::CaseInsensitiveOption);
+    instance->throttled = false;
     instance->firstTabReceived = false;
     instance->receivedTabs = 0;
     instance->totalTabs = 0;
@@ -76,21 +77,30 @@ void ItemManager::beginFetch() {
         while (!ItemManager::_fetchQueue.isEmpty()) {
             Fetchable* fetchable = ItemManager::_fetchQueue.dequeue();
 
+            ItemManagerInstance* instance = nullptr;
+            ItemManager* manager = nullptr;
             ItemManager::_fetchHistory.insert(fetchable, QDateTime());
             if (fetchable->first) {
-                auto instance = fetchable->instance;
-                instance->manager->fetchFirstStashTab(instance);
+                instance = fetchable->instance;
+                manager = instance->manager;
+                manager->fetchFirstStashTab(instance);
             }
             else {
                 auto tab = fetchable->tab;
-                tab->instance->manager->fetchStashTab(tab);
+                instance = tab->instance;
+                manager = instance->manager;
+                manager->fetchStashTab(tab);
             }
 
             if (ItemManager::_fetchHistory.count() >= ItemManager::RequestsPerPeriod) {
                 qInfo() << "Stash tab fetching has been throttled.";
+                for (auto i : manager->_fetchingInstances.values()) {
+                    emit manager->onStashTabUpdateProgress(i->league, i->receivedTabs, i->totalTabs, i->throttled = true);
+                }
                 // Throttle!
                 break;
             }
+            instance->throttled = false;
         }
     }
 
@@ -166,7 +176,7 @@ void ItemManager::onStashTabResult(QString league, QByteArray json, QVariant dat
             // We failed to get the first tab (uh oh).
             qWarning() << qPrintable("Failed to get the first tab.");
             _fetchingInstances.remove(instance->league);
-            emit onStashTabUpdateProgress(instance->league, 0, 0);
+            emit onStashTabUpdateProgress(instance->league, 0, 0, false);
             emit onStashTabUpdateAvailable(instance->league);
             return;
         }
@@ -216,7 +226,7 @@ void ItemManager::onStashTabResult(QString league, QByteArray json, QVariant dat
 
         instance->totalTabs = chosenIndicies.count();
 
-        emit onStashTabUpdateProgress(instance->league, instance->receivedTabs, instance->totalTabs);
+        emit onStashTabUpdateProgress(instance->league, instance->receivedTabs, instance->totalTabs, instance->throttled);
 
         if (instance->totalTabs == 0) {
             // TODO(rory): Notify the user that no tabs were returned...
@@ -244,7 +254,7 @@ void ItemManager::onStashTabResult(QString league, QByteArray json, QVariant dat
             wrapper->error = error;
 
             instance->receivedTabs++;
-            emit onStashTabUpdateProgress(instance->league, instance->receivedTabs, instance->totalTabs);
+            emit onStashTabUpdateProgress(instance->league, instance->receivedTabs, instance->totalTabs, instance->throttled);
 
             if (instance->receivedTabs == instance->totalTabs) {
                 // We're done!

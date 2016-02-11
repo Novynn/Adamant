@@ -23,6 +23,7 @@ struct ItemManagerInstanceTab {
 struct ItemManagerInstance {
     QString accountName;
     QString league;
+    bool throttled;
     QRegularExpression filter;
     bool firstTabReceived;
     int totalTabs;
@@ -80,7 +81,7 @@ protected:
 signals:
     void onCharacterUpdateAvailable(QString characterName);
     void onStashTabUpdateBegin(QString league);
-    void onStashTabUpdateProgress(QString league, int received, int total);
+    void onStashTabUpdateProgress(QString league, int received, int total, bool throttled);
     void onStashTabUpdateAvailable(QString league);
 public slots:
     void updateStashTabs(){}

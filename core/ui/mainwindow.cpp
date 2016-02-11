@@ -46,11 +46,16 @@ MainWindow::MainWindow(CoreService *core, QWidget *parent)
         emit _core->message(message, QtInfoMsg);
     });
 
-    connect(_core->getItemManager(), &ItemManager::onStashTabUpdateProgress, [this](QString league, int r, int m) {
+    connect(_core->getItemManager(), &ItemManager::onStashTabUpdateProgress, [this](QString league, int r, int m, bool t) {
         _statusBarProgress->show();
         _statusBarProgress->setValue(r);
         _statusBarProgress->setMaximum(m);
-        const QString message = QString("Loading %1 stash tabs... (%2/%3)").arg(league).arg(r).arg(m);
+        QString message;
+        if (t)
+            message = QString("Loading %1 stash tabs... (throttled)").arg(league);
+        else
+            message = QString("Loading %1 stash tabs... (%2/%3)").arg(league).arg(r).arg(m);
+
         _statusBarLabel->setText(message);
     });
 
@@ -69,7 +74,6 @@ MainWindow::MainWindow(CoreService *core, QWidget *parent)
             if (_mode == HomeMode || _mode == ElsewhereMode)
                 ui->toggleButton->toggle();
         });
-        ui->toggleButton->toggle();
     }
 
     {
@@ -89,6 +93,8 @@ MainWindow::MainWindow(CoreService *core, QWidget *parent)
                 setPageIndex(0);
         });
     }
+
+    setMenuExpanded(false);
 
     emit loaded();
 }
@@ -202,9 +208,7 @@ int MainWindow::registerPage(const QIcon &icon, const QString &title, const QStr
             });
         }
 
-        if (_mode == ElsewhereMode) {
-            button->setIconOnly(true);
-        }
+        button->setIconOnly(!ui->toggleButton->isChecked());
 
         connect(button, &CommandButton::clicked, [this, index] () {
             setPageIndex(index);
