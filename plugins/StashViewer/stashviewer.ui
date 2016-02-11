@@ -157,11 +157,17 @@
            <property name="renderHints">
             <set>QPainter::HighQualityAntialiasing|QPainter::SmoothPixmapTransform|QPainter::TextAntialiasing</set>
            </property>
+           <property name="dragMode">
+            <enum>QGraphicsView::RubberBandDrag</enum>
+           </property>
            <property name="viewportUpdateMode">
-            <enum>QGraphicsView::BoundingRectViewportUpdate</enum>
+            <enum>QGraphicsView::FullViewportUpdate</enum>
            </property>
            <property name="rubberBandSelectionMode">
             <enum>Qt::IntersectsItemBoundingRect</enum>
+           </property>
+           <property name="optimizationFlags">
+            <set>QGraphicsView::DontAdjustForAntialiasing|QGraphicsView::IndirectPainting</set>
            </property>
           </widget>
          </item>
@@ -227,8 +233,6 @@
    </item>
   </layout>
  </widget>
- <resources>
-  <include location="../../core/ui/res.qrc"/>
- </resources>
+ <resources/>
  <connections/>
 </ui>

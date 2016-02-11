@@ -2,6 +2,7 @@
     <qresource prefix="/">
         <file>images/StashPanelGrid.png</file>
         <file>images/inventory_item_background.png</file>
+        <file>images/item_bg_unidentified.png</file>
     </qresource>
     <qresource prefix="/sockets">
         <file alias="D.png">images/Socket_D.png</file>
@@ -18,7 +19,6 @@
         <file alias="SeparatorUnique.png">images/ItemsSeparatorUnique.png</file>
         <file alias="SeparatorGem.png">images/ItemsSeparatorGem.png</file>
         <file alias="SeparatorCurrency.png">images/ItemsSeparatorCurrency.png</file>
-
         <file alias="ItemHeaderUniqueLeft.png">images/ItemHeaderUniqueLeft.png</file>
         <file alias="ItemHeaderUniqueMiddle.png">images/ItemHeaderUniqueMiddle.png</file>
         <file alias="ItemHeaderUniqueRight.png">images/ItemHeaderUniqueRight.png</file>
@@ -37,5 +37,8 @@
         <file alias="ItemHeaderCurrencyLeft.png">images/ItemHeaderCurrencyLeft.png</file>
         <file alias="ItemHeaderCurrencyMiddle.png">images/ItemHeaderCurrencyMiddle.png</file>
         <file alias="ItemHeaderCurrencyRight.png">images/ItemHeaderCurrencyRight.png</file>
+        <file alias="ItemHeaderRareSingleLineLeft.png">images/ItemsHeaderRareSingleLineLeft.png</file>
+        <file alias="ItemHeaderRareSingleLineMiddle.png">images/ItemsHeaderRareSingleLineMiddle.png</file>
+        <file alias="ItemHeaderRareSingleLineRight.png">images/ItemsHeaderRareSingleLineRight.png</file>
     </qresource>
 </RCC>
