@@ -1,17 +1,15 @@
-! include( ../plugins/plugin.pri ) {
-    error( Couldn\'t find plugin.pri! )
-}
-
 DESTDIR       = ../bin
 
-QT += core network gui widgets
-CONFIG -= plugin debug_and_release
+TEMPLATE = lib
+CONFIG += qt c++14
+QT += core network gui widgets script scripttools
 TARGET = adamant
 
 DEFINES += CORE_INTERNAL
 
 HEADERS += \
     core.h \
+    interfaces/adamantplugin.h \
     ui/commandbutton.h \
     ui/mainwindow.h \
     ui/setupdialog.h \
