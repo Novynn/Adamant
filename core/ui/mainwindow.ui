@@ -656,7 +656,12 @@ QSplitter::handle, QStatusBar {
           </widget>
           <widget class="QWidget" name="consoleWidget" native="true">
            <property name="autoFillBackground">
-            <bool>true</bool>
+            <bool>false</bool>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">#consoleWidget, #lineEdit {
+  background-color: #2D2D2D;
+}</string>
            </property>
            <layout class="QVBoxLayout" name="verticalLayout_3">
             <property name="spacing">
@@ -681,6 +686,12 @@ QSplitter::handle, QStatusBar {
                 <family>Consolas</family>
                </font>
               </property>
+              <property name="frameShape">
+               <enum>QFrame::NoFrame</enum>
+              </property>
+              <property name="frameShadow">
+               <enum>QFrame::Plain</enum>
+              </property>
               <property name="readOnly">
                <bool>true</bool>
               </property>
@@ -703,6 +714,9 @@ QSplitter::handle, QStatusBar {
                  <font>
                   <family>Consolas</family>
                  </font>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">border-radius: 0px;</string>
                 </property>
                 <property name="frame">
                  <bool>true</bool>

@@ -29,6 +29,8 @@ MainWindow::MainWindow(CoreService *core, QWidget *parent)
         appendScriptOutput(message, "===");
     });
 
+    ui->lineEdit->installEventFilter(this);
+
     _statusBarLabel = new QLabel(statusBar());
     _statusBarLabel->setMargin(8);
     _statusBarProgress = new QProgressBar(statusBar());
@@ -117,6 +119,11 @@ void MainWindow::on_lineEdit_returnPressed() {
     ui->lineEdit->clear();
 
     appendScriptOutput(text, "-->");
+
+    // Reset index
+    _currentIndex = -1;
+    _scriptHistory.prepend(text);
+    while (_scriptHistory.size() >= 100) _scriptHistory.takeLast();
     _script->addLine(text);
 }
 
@@ -258,4 +265,32 @@ void MainWindow::setMode(MainWindow::Mode mode) {
 
 void MainWindow::on_toggleButton_toggled(bool checked) {
     setMenuExpanded(checked);
+}
+
+bool MainWindow::eventFilter(QObject* obj, QEvent* event) {
+    if (obj != ui->lineEdit) return false;
+
+    if (event->type() == QEvent::KeyPress) {
+        QKeyEvent* e = dynamic_cast<QKeyEvent*>(event);
+        if (e) {
+            switch (e->key()) {
+                case Qt::Key_Up: {
+                    if (_currentIndex < 100 && (_currentIndex + 1) < _scriptHistory.size()) {
+                        _currentIndex++;
+                        ui->lineEdit->setText(_scriptHistory.at(_currentIndex));
+                    }
+                } break;
+                case Qt::Key_Down: {
+                    if (_currentIndex >= 0) {
+                        _currentIndex--;
+                        ui->lineEdit->setText(_currentIndex < 0 ? QString() : _scriptHistory.at(_currentIndex));
+                    }
+                } break;
+                default:
+                    return false;
+            }
+            return true;
+        }
+    }
+    return false;
 }

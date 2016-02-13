@@ -47,7 +47,8 @@ private slots:
     void on_reloadScriptsButton_clicked();
     void on_homeButton_clicked();
     void on_toggleButton_toggled(bool checked);
-
+protected:
+    bool eventFilter(QObject *obj, QEvent *event);
 signals:
     void loaded();
 private:
@@ -69,6 +70,9 @@ private:
     QProgressBar* _statusBarProgress;
 
     QMovie* _loadingImage;
+
+    int _currentIndex = -1;
+    QStringList _scriptHistory;
 };
 Q_DECLARE_METATYPE(MainWindow*)
 
