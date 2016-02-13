@@ -50,7 +50,6 @@ signals:
 private:
     Ui::StashViewer *ui;
 
-    QTabBar* _bar;
     StashScene* _scene;
     ImageCache* _imageCache;
 

@@ -41,4 +41,13 @@
         <file alias="ItemHeaderRareSingleLineMiddle.png">images/ItemsHeaderRareSingleLineMiddle.png</file>
         <file alias="ItemHeaderRareSingleLineRight.png">images/ItemsHeaderRareSingleLineRight.png</file>
     </qresource>
+    <qresource prefix="/character">
+        <file alias="duelist.png">images/character/duelist.png</file>
+        <file alias="marauder.png">images/character/marauder.png</file>
+        <file alias="ranger.png">images/character/ranger.png</file>
+        <file alias="scion.png">images/character/scion.png</file>
+        <file alias="shadow.png">images/character/shadow.png</file>
+        <file alias="templar.png">images/character/templar.png</file>
+        <file alias="witch.png">images/character/witch.png</file>
+    </qresource>
 </RCC>

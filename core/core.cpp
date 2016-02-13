@@ -8,7 +8,7 @@
 CoreService::CoreService()
     : QObject()
     , _pluginManager(new PluginManager(this))
-    , _settings("plugins.ini", QSettings::IniFormat)
+    , _settings("data.ini", QSettings::IniFormat)
     , _sensitiveSettings("sensitive.ini", QSettings::IniFormat)
     , _itemManager(new ItemManager(this)) {
     Session::SetCoreService(this);
@@ -22,6 +22,17 @@ CoreService::CoreService()
 
 CoreService::~CoreService() {
 }
+
+#define ADD_REQUIREMENT(object, slot, type, var) \
+    _requiredData.insert(#slot, QObject::connect(object, &slot, this, [this] (type var) { \
+        QObject::disconnect(_requiredData.take(#slot)); \
+        _settings.beginGroup("data"); \
+        _settings.setValue(#var, var); \
+        _settings.endGroup(); \
+        if (_requiredData.isEmpty()) { \
+            ready(); \
+        } \
+    }))
 
 bool CoreService::load() {
     sensitiveSettings()->beginGroup("session");
@@ -52,7 +63,10 @@ bool CoreService::load() {
         sensitiveSettings()->endGroup();
     }
 
-    connect(session(), &Session::Request::profileData, this, &CoreService::ready);
+    // These are requirements for data we need before the application loads
+    _requiredData.clear();
+    ADD_REQUIREMENT(session(), Session::Request::profileData, QString, profile);
+    ADD_REQUIREMENT(session(), Session::Request::leaguesList, QStringList, leagues);
 
     // Load Plugins
     getPluginManager()->scanPlugins(true);
@@ -60,13 +74,20 @@ bool CoreService::load() {
     getPluginManager()->preparePlugins();
 
     // Load the main application!
+    session()->fetchLeagues();
     session()->loginWithSessionId(sessionId);
 
     return true;
 }
 
 void CoreService::ready() {
-    disconnect(session(), &Session::Request::profileData, this, &CoreService::ready);
+    _settings.beginGroup("data");
+    QString profileData = _settings.value("profile").toString();
+    QStringList leagues = _settings.value("leagues").toStringList();
+    _settings.endGroup();
+
+    qDebug() << leagues;
+
     getPluginManager()->loadPlugins();
 
     qInfo() << qPrintable("Adamant Started!");

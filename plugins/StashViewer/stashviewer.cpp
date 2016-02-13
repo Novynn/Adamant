@@ -30,14 +30,14 @@ StashViewer::StashViewer(QWidget *parent, QString league)
     connect(_imageCache, &ImageCache::onImage, this, &StashViewer::OnImage);
 
     _factory->moveToThread(_factoryThread);
-    connect(_factory, &GraphicItemFactory::OnItemsReady, this, [this] (QList<GraphicItem*> items, QSet<QString> images, void* ptr) {
-        QGraphicsItem* parent = reinterpret_cast<QGraphicsItem*>(ptr);
+    connect(_factory, &GraphicItemFactory::OnItemsReady, this, [this] (QList<GraphicItem*> items, QSet<QString> images, QVariant data) {
+        QGraphicsItem* parent = data.value<QGraphicsItem*>();
         if (parent) {
             for (auto item : items) {
                 item->setParentItem(parent);
             }
+            parent->setOpacity(1.0);
         }
-        parent->setOpacity(1.0);
 
         for (const QString &image : images) {
             _imageCache->fetchImage(image);
@@ -158,7 +158,7 @@ void StashViewer::SetTabs(QList<StashItemLocation*> tabs) {
                                   "SubmitLocation",
                                   Qt::QueuedConnection,
                                   Q_ARG(const ItemLocation*, tab),
-                                  Q_ARG(void*, (void*)gridItem));
+                                  Q_ARG(QVariant, QVariant::fromValue<QGraphicsItem*>(gridItem)));
     }
 }
 

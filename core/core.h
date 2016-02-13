@@ -66,6 +66,8 @@ private:
     QSettings _sensitiveSettings;
     ItemManager* _itemManager;
     UI* _ui;
+
+    QMap<QString, QMetaObject::Connection> _requiredData;
 };
 
 Q_DECLARE_METATYPE(CoreService*)

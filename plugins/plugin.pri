@@ -1,14 +1,13 @@
-TEMPLATE      = lib
-CONFIG       += qt plugin debug_and_release #link_prl
-# CONFIG       -= embed_manifest_dll
+TEMPLATE     = lib
+CONFIG      += qt plugin debug_and_release
 
+DESTDIR      = ../../bin/plugins
 INCLUDEPATH += ../../core/interfaces/ \
                ../../core/
+HEADERS     += ../../core/interfaces/adamantplugin.h
 
-CONFIG += c++14
+CONFIG      += c++14
 
-DESTDIR       = ../../bin/plugins
+QT          += script
 
-HEADERS += ../../core/interfaces/adamantplugin.h
 
-QT += script scripttools

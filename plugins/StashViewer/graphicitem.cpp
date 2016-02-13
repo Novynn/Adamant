@@ -30,6 +30,19 @@ GraphicItem::GraphicItem(QGraphicsItem *parent, const Item* item, const QString 
 
     setPixmap((item->data("identified").toBool()) ? normalBack.scaled(w * 47, h * 47) : unidentifiedBack.scaled(w * 47, h * 47));
 
+    static QMap<QString, QPoint> inventoryMap;
+    if (inventoryMap.isEmpty()) {
+        inventoryMap.insert("Belt", QPoint(10,10));
+    }
+
+    QString inventoryId = item->data("inventoryId").toString();
+    if (inventoryMap.contains(inventoryId)) {
+        x = inventoryMap.value(inventoryId).x();
+        y = inventoryMap.value(inventoryId).y();
+    }
+    else if (inventoryId == "MainInventory") {
+        y += 7;
+    }
     setX(x * 47.4645);
     setY(y * 47.4645);
 

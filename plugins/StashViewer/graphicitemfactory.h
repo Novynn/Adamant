@@ -20,10 +20,10 @@ public:
     }
 
 signals:
-    void OnItemsReady(QList<GraphicItem*> items, QSet<QString> images, void* ptr);
+    void OnItemsReady(QList<GraphicItem*> items, QSet<QString> images, QVariant data);
 
 public slots:
-    void SubmitLocation(const ItemLocation* location, void* ptr) {
+    void SubmitLocation(const ItemLocation* location, QVariant data = QVariant()) {
         QList<GraphicItem*> items;
         QSet<QString> images;
         for (const Item* item : location->items()) {
@@ -47,7 +47,7 @@ public slots:
             items.append(gItem);
         }
 
-        emit OnItemsReady(items, images, ptr);
+        emit OnItemsReady(items, images, data);
     }
 private:
     ImageCache* _imageCache;

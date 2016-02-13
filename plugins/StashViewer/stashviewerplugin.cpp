@@ -30,7 +30,10 @@ void StashViewerPlugin::OnLoad() {
         _viewer->SetTabs(tabs);
     });
 
-    connect(Core()->session(), &Session::Request::leaguesList, _viewer, &StashViewer::OnLeaguesList);
+    Core()->settings()->beginGroup("data");
+    _viewer->OnLeaguesList(Core()->settings()->value("leagues").toStringList());
+    Core()->settings()->endGroup();
+
     connect(Core()->session(), &Session::Request::accountStashTabsJson, [this] (QString league, QJsonDocument doc, QVariant) {
         QStringList tabsList;
         for (QJsonValue tabVal : doc.object().value("tabs").toArray()) {
@@ -42,12 +45,25 @@ void StashViewerPlugin::OnLoad() {
     });
 
     connect(Core()->session(), &Session::Request::accountCharactersJson, [this] (QJsonDocument doc, QVariant) {
-        QStringList names;
+        QList<Character> characters;
         for (QJsonValue charVal : doc.array()) {
-            QJsonObject character = charVal.toObject();
-            names << character.value("name").toString();
+            QJsonObject charObj = charVal.toObject();
+            Character character = {
+                                    charObj.value("name").toString(),
+                                    charObj.value("league").toString(),
+                                    charObj.value("class").toString(),
+                                    charObj.value("level").toInt()
+                                  };
+            Core()->getItemManager()->fetchCharacterItems(character.name, character.classType, character.level);
+            characters << character;
         }
-        _characterViewer->setCharacters(names);
+
+        _characterViewer->setCharacters(characters);
+    });
+
+    connect(Core()->getItemManager(), &ItemManager::onCharacterUpdateAvailable, [this] (QString character) {
+        auto location = Core()->getItemManager()->getCharacterItems(character);
+        _characterViewer->setCharacterItems(character, location);
     });
 
     connect(_viewer, &StashViewer::RequestLeaguesList, Core()->session(), &Session::Request::fetchLeagues);
