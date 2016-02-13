@@ -18,7 +18,7 @@ QString StashItemLocation::header() const {
     return QString("#%1: %2").arg(tabIndex).arg(tabLabel);
 }
 
-QString StashItemLocation::forumCode(const QString &league, const Item *item) const {
+QString StashItemLocation::forumCode(const Item *item) const {
     Q_UNUSED(item)
     // TODO(rory): implement item location gathering
     QString format("[linkItem location=\"Stash%1\" league=\"%2\" x=\"%3\" y=\"%4\"]");

@@ -27,7 +27,8 @@ HEADERS += \
     ui/pages/pluginpage.h \
     ui/widgets/pluginitem.h \
     ui/widgets/pluginitemdelegate.h \
-    session/sessionrequest.h
+    session/sessionrequest.h \
+    items/characteritemlocation.h
 
 SOURCES += \
     core.cpp \
@@ -44,7 +45,8 @@ SOURCES += \
     ui/pages/pluginpage.cpp \
     ui/widgets/pluginitem.cpp \
     ui/widgets/pluginitemdelegate.cpp \
-    session/sessionrequest.cpp
+    session/sessionrequest.cpp \
+    items/characteritemlocation.cpp
 
 RESOURCES += \
     ui/res.qrc

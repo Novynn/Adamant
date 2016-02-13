@@ -21,7 +21,7 @@ public:
     virtual LocationType location() const = 0;
     virtual QString header() const = 0;
     virtual QString hash() const = 0;
-    virtual QString forumCode(const QString &league, const Item *item) const = 0;
+    virtual QString forumCode(const Item *item) const = 0;
     virtual bool operator<(const ItemLocation &other) const = 0;
     virtual bool operator==(const ItemLocation &other) const = 0;
 

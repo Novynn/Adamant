@@ -103,6 +103,7 @@ void Session::Request::fetchAccountCharacterItems(const QString &accountName, co
 
     QNetworkRequest request = QNetworkRequest(url);
     setAttribute(&request, UserData, data);
+    setAttribute(&request, Character, character);
     QNetworkReply *r = _manager->get(request);
 
     connect(r, &QNetworkReply::finished, this, &Session::Request::Request::onAccountCharacterItemsResult);

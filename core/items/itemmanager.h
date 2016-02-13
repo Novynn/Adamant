@@ -9,7 +9,9 @@
 #include <QQueue>
 
 class CoreService;
+class ItemLocation;
 class StashItemLocation;
+class CharacterItemLocation;
 class ItemManagerInstance;
 class ItemManager;
 
@@ -22,19 +24,39 @@ struct ItemManagerInstanceTab {
 
 struct ItemManagerInstance {
     QString accountName;
-    QString league;
     bool throttled;
-    QRegularExpression filter;
-    bool firstTabReceived;
-    int totalTabs;
-    int receivedTabs;
     ItemManager* manager;
-    QMap<int, ItemManagerInstanceTab*> tabs;
+
+    struct Stash {
+        QString league;
+        int totalTabs;
+        int receivedTabs;
+        QRegularExpression filter;
+        bool firstTabReceived;
+        QMap<int, ItemManagerInstanceTab*> tabs;
+    };
+
+    struct Character {
+        QString name;
+        CharacterItemLocation* location;
+        QString classType;
+        int level;
+    };
+
+    union {
+        Stash* stash;
+        Character* character;
+    };
 };
 
 // Or we could just use polymorphism... But this is fun!
 struct Fetchable {
-    bool first;
+    enum {
+        Instance,
+        Character,
+        Tab
+    } type;
+
     union {
         void* ptr;
         ItemManagerInstance* instance;
@@ -48,23 +70,27 @@ class CORE_EXTERN ItemManager : public QObject
 public:
     explicit ItemManager(CoreService *parent);
 
-    Q_INVOKABLE void getCharacter(const QString &characterName) {
-        Q_UNUSED(characterName)
-    }
-
+    Q_INVOKABLE void fetchCharacterItems(const QString &characterName, const QString &classType, int level);
     Q_INVOKABLE void fetchStashTabs(const QString &league, const QString &filter = QString());
+
     Q_INVOKABLE QList<StashItemLocation*> getStashTabs(const QString &league) {
         QList<StashItemLocation*> stash;
         if (_currentInstances.contains(league)) {
-            for (ItemManagerInstanceTab* tab : _currentInstances.value(league)->tabs.values()) {
+            for (ItemManagerInstanceTab* tab : _currentInstances.value(league)->stash->tabs.values()) {
                 stash.append(tab->location);
             }
         }
         return stash;
     }
+
+    Q_INVOKABLE CharacterItemLocation* getCharacterItems(const QString &character) {
+        return _currentInstances.value("CHARACTER_" + character, nullptr)->character->location;
+    }
+
 protected:
     void fetchFirstStashTab(ItemManagerInstance* instance);
     void queueStashTab(ItemManagerInstanceTab* tab);
+    void queueCharacter(ItemManagerInstance* instance);
     static void beginFetch();
     static void pruneHistory();
     static QQueue<Fetchable*> _fetchQueue;
@@ -74,9 +100,10 @@ protected:
     static const int RequestPeriodMSecs;
     static const int RequestPeriodWait;
     static void updateFetchable(Fetchable* fetchable);
-    static void updateFetchable(ItemManagerInstance* instance);
+    static void updateFetchable(ItemManagerInstance* instance, int type = Fetchable::Instance);
     static void updateFetchable(ItemManagerInstanceTab* tab);
     void fetchStashTab(ItemManagerInstanceTab* tab);
+    void fetchCharacter(ItemManagerInstance* instance);
     void queueFirstStashTab(ItemManagerInstance* instance);
 signals:
     void onCharacterUpdateAvailable(QString characterName);
@@ -89,6 +116,7 @@ public slots:
     void updateCharacter(QString characterName){Q_UNUSED(characterName)}
 private slots:
     void onStashTabResult(QString league, QByteArray json, QVariant data);
+    void onCharacterItemsResult(QString character, QByteArray json, QVariant data);
 private:
     CoreService* _core;
 

@@ -1,19 +1,14 @@
-#ifndef STASHITEMLOCATION_H
-#define STASHITEMLOCATION_H
+#ifndef CHARACTERITEMLOCATION_H
+#define CHARACTERITEMLOCATION_H
 
 #include "itemlocation.h"
-#include <QColor>
 #include <QJsonObject>
 #include <QString>
 
-class StashItemLocation : public ItemLocation
+class CharacterItemLocation : public ItemLocation
 {
 public:
-    StashItemLocation(const QJsonObject &tabData);
-
-    QColor tabColor() const {
-        return _color;
-    }
+    CharacterItemLocation(const QJsonObject &data);
 
     LocationType location() const final;
     QString header() const final;
@@ -23,11 +18,10 @@ public:
     bool operator==(const ItemLocation &other) const final;
     void addItems(ItemList items) final;
 private:
-    int tabIndex;
-    QString tabLabel;
-
-    QString league;
-    QColor _color;
+    QString _name;
+    QString _league;
+    QString _class;
+    int _level;
 };
 
-#endif // STASHITEMLOCATION_H
+#endif // CHARACTERITEMLOCATION_H
