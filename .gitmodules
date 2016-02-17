@@ -1,0 +1,3 @@
+[submodule "plugins/Adamant-StashViewer"]
+	path = plugins/Adamant-StashViewer
+	url = https://github.com/Novynn/Adamant-StashViewer.git
