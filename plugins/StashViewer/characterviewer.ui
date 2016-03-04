@@ -23,6 +23,18 @@
       <enum>Qt::Horizontal</enum>
      </property>
      <widget class="QWidget" name="widget" native="true">
+      <property name="minimumSize">
+       <size>
+        <width>256</width>
+        <height>0</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>16777215</height>
+       </size>
+      </property>
       <layout class="QVBoxLayout" name="verticalLayout">
        <property name="leftMargin">
         <number>0</number>
@@ -44,6 +56,15 @@
          <property name="showDropIndicator" stdset="0">
           <bool>false</bool>
          </property>
+         <property name="alternatingRowColors">
+          <bool>true</bool>
+         </property>
+         <property name="movement">
+          <enum>QListView::Static</enum>
+         </property>
+         <property name="isWrapping" stdset="0">
+          <bool>false</bool>
+         </property>
          <property name="viewMode">
           <enum>QListView::ListMode</enum>
          </property>
@@ -53,7 +74,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QComboBox" name="comboBox">
+        <widget class="QComboBox" name="filterBox">
          <property name="minimumSize">
           <size>
            <width>0</width>
@@ -64,7 +85,14 @@
        </item>
       </layout>
      </widget>
-     <widget class="QGraphicsView" name="graphicsView"/>
+     <widget class="QGraphicsView" name="graphicsView">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+        <horstretch>5</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+     </widget>
     </widget>
    </item>
   </layout>

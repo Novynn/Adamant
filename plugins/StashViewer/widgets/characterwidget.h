@@ -18,6 +18,7 @@ public:
 
     QString getCharacterName();
 
+    QString getCharacterLeague();
 private:
     Ui::CharacterWidget *ui;
 };

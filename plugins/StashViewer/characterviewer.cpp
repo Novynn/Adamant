@@ -38,7 +38,7 @@ CharacterViewer::CharacterViewer(QWidget *parent)
     connect(_factory, &GraphicItemFactory::destroyed, _factoryThread, &QThread::deleteLater);
     _factoryThread->start();
 
-    _scene->setSceneRect(0, 0, 569, 569);
+    _scene->setSceneRect(0, 0, 569, 569+(47*2));
     ui->graphicsView->setScene(_scene);
 }
 
@@ -58,6 +58,12 @@ CharacterViewer::~CharacterViewer() {
     delete ui;
 }
 
+void CharacterViewer::setLeagues(QStringList leagues) {
+    ui->filterBox->clear();
+    ui->filterBox->addItem("All");
+    ui->filterBox->addItems(leagues);
+}
+
 void CharacterViewer::setCharacters(QList<Character> characters) {
     ui->listWidget->clear();
     _scene->clear();
@@ -68,8 +74,14 @@ void CharacterViewer::setCharacters(QList<Character> characters) {
         auto listItem = new QListWidgetItem();
         ui->listWidget->addItem(listItem);
         auto widget = new CharacterWidget(this, character);
-        listItem->setSizeHint(widget->sizeHint());
+
+        listItem->setSizeHint(QSize(listItem->sizeHint().width(), widget->sizeHint().height()));
+
+
         ui->listWidget->setItemWidget(listItem, widget);
+
+        listItem->setData(0x0100, QVariant::fromValue<Character>(character));
+        listItem->setHidden(filterItem(character.league));
     }
 }
 
@@ -81,9 +93,7 @@ void CharacterViewer::setCharacterItems(const QString &character, CharacterItemL
         _scene->removeItem(view);
         delete view;
     }
-    else {
-        view = _scene->addRect(0, 0, 569, 569);
-    }
+    view = _scene->addRect(0, 0, 569, 569+(47*2));
     view->setOpacity(0.2);
     view->hide();
 
@@ -104,13 +114,28 @@ void CharacterViewer::on_listWidget_currentItemChanged(QListWidgetItem *current,
     }
 
     if (current) {
-        auto widget = qobject_cast<CharacterWidget*>(ui->listWidget->itemWidget(current));
-        if (widget) {
-            QString character = widget->getCharacterName();
-            auto view = _characterViews.value(character);
-            if (view) {
-                view->show();
-            }
+        const Character c = current->data(0x0100).value<Character>();
+        auto view = _characterViews.value(c.name);
+        if (view) {
+            view->show();
+        }
+    }
+}
+
+bool CharacterViewer::filterItem(const QString &league) {
+    const QString filter = ui->filterBox->currentText();
+    if (filter.isEmpty() || filter == "All") return false;
+    return league.compare(filter, Qt::CaseInsensitive);
+}
+
+void CharacterViewer::on_filterBox_currentIndexChanged(const QString &str) {
+    for (int i = 0; i < ui->listWidget->count(); i++) {
+        auto item = ui->listWidget->item(i);
+        if (item) {
+            const Character c = item->data(0x0100).value<Character>();
+            bool hide = filterItem(c.league);
+            item->setHidden(hide);
+            if (hide && item->isSelected()) item->setSelected(false);
         }
     }
 }

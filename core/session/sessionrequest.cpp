@@ -338,7 +338,9 @@ const QMap<QString, QString> Session::Request::getAccountBadges(const QByteArray
     while (iter.hasNext()) {
         QRegularExpressionMatch match = iter.next();
         if (match.isValid() && match.hasMatch()) {
-            result.insert(match.captured("name"), match.captured("url"));
+            QString url = match.captured("url");
+            if (url.startsWith("/")) url.prepend("https://p7p4m6s5.ssl.hwcdn.net");
+            result.insert(match.captured("name"), url);
         }
     }
 

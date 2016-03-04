@@ -6,6 +6,7 @@
 #include <items/itemlocation.h>
 #include <session/imagecache.h>
 #include "graphicitem.h"
+#include <session/session.h>
 
 class GraphicItemFactory : public QObject
 {
@@ -30,7 +31,7 @@ public slots:
             QString icon = item->data("icon").toString();
 
             if (icon.startsWith("/")) {
-                icon.prepend("https://www.pathofexile.com");
+                icon.prepend(Session::BaseUrl().toString());
             }
             QString path = _imageCache->generateFileName(icon);
 

@@ -24,8 +24,6 @@ StashViewer::StashViewer(QWidget *parent, QString league)
     , _factoryThread(new QThread(this))
 {
     ui->setupUi(this);
-    ui->splitter->setStretchFactor(0, 1);
-    ui->splitter->setStretchFactor(1, 4);
 
     connect(_imageCache, &ImageCache::onImage, this, &StashViewer::OnImage);
 
@@ -52,6 +50,9 @@ StashViewer::StashViewer(QWidget *parent, QString league)
 
     connect(ui->graphicsView->verticalScrollBar(), &QScrollBar::valueChanged, this, &StashViewer::OnViewportChanged);
     connect(ui->graphicsView->verticalScrollBar(), &QScrollBar::rangeChanged, this, &StashViewer::OnViewportChanged);
+
+    _scene->setBackgroundBrush(QBrush(Qt::transparent));
+    ui->graphicsView->setBackgroundBrush(QBrush(Qt::transparent));
     ui->graphicsView->setScene(_scene);
 }
 

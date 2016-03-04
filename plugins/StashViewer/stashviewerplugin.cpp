@@ -31,7 +31,9 @@ void StashViewerPlugin::OnLoad() {
     });
 
     Core()->settings()->beginGroup("data");
-    _viewer->OnLeaguesList(Core()->settings()->value("leagues").toStringList());
+    QStringList leagues = Core()->settings()->value("leagues").toStringList();
+    _viewer->OnLeaguesList(leagues);
+    _characterViewer->setLeagues(leagues);
     Core()->settings()->endGroup();
 
     connect(Core()->session(), &Session::Request::accountStashTabsJson, [this] (QString league, QJsonDocument doc, QVariant) {

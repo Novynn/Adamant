@@ -34,8 +34,11 @@ public:
     void setCharacters(QList<Character> characters);
     void setCharacterItems(const QString &character, CharacterItemLocation* location);
     void OnImage(const QString& path, QImage image);
+    void setLeagues(QStringList leagues);
 private slots:
     void on_listWidget_currentItemChanged(QListWidgetItem *current, QListWidgetItem *previous);
+
+    void on_filterBox_currentIndexChanged(const QString &str);
 
 private:
     Ui::CharacterViewer *ui;
@@ -47,6 +50,8 @@ private:
     ImageCache* _imageCache;
     GraphicItemFactory* _factory;
     QThread* _factoryThread;
+    bool filterItem(const QString& league);
 };
+Q_DECLARE_METATYPE(Character)
 
 #endif // CHARACTERVIEWER_H

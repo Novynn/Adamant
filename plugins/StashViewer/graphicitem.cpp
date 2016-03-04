@@ -20,31 +20,52 @@ GraphicItem::GraphicItem(QGraphicsItem *parent, const Item* item, const QString 
     , _tooltipText(QString())
     , _item(item) {
 
-    int x = item->data("x").toInt();
-    int y = item->data("y").toInt();
+    qreal x = (qreal) item->data("x").toInt();
+    qreal y = (qreal) item->data("y").toInt();
     int w = item->data("w").toInt();
     int h = item->data("h").toInt();
+
+    static QMap<QString, QPointF> inventoryMap;
+    if (inventoryMap.isEmpty()) {
+        inventoryMap.insert("Weapon", QPointF(0,0));
+        inventoryMap.insert("Offhand", QPointF(2,0));
+        inventoryMap.insert("Weapon2", QPointF(8,0));
+        inventoryMap.insert("Offhand2", QPointF(10,0));
+        inventoryMap.insert("Helm", QPointF(5,0));
+        inventoryMap.insert("BodyArmour", QPointF(5,2));
+        inventoryMap.insert("Belt", QPointF(5,5));
+        inventoryMap.insert("Gloves", QPointF(3,4));
+        inventoryMap.insert("Boots", QPointF(7,4));
+        inventoryMap.insert("Ring", QPointF(4,3));
+        inventoryMap.insert("Ring2", QPointF(7,3));
+        inventoryMap.insert("Amulet", QPointF(7,2));
+        inventoryMap.insert("Flask", QPointF(3.5,6));
+    }
+
+    QString inventoryId = item->data("inventoryId").toString();
+    if (inventoryMap.contains(inventoryId)) {
+        x += inventoryMap.value(inventoryId).x();
+        y += inventoryMap.value(inventoryId).y();
+
+        if (inventoryId.startsWith("Weapon") ||
+            inventoryId.startsWith("Offhand")) {
+            w = 2;
+            h = 4;
+        }
+    }
+    else if (inventoryId == "MainInventory") {
+        y += 9;
+    }
+    setX(x * 47.4645);
+    setY(y * 47.4645);
+
+    _width = w;
+    _height = h;
 
     static QPixmap normalBack = QPixmap(":/images/inventory_item_background.png", "png");
     static QPixmap unidentifiedBack = QPixmap(":/images/item_bg_unidentified.png", "png");
 
     setPixmap((item->data("identified").toBool()) ? normalBack.scaled(w * 47, h * 47) : unidentifiedBack.scaled(w * 47, h * 47));
-
-    static QMap<QString, QPoint> inventoryMap;
-    if (inventoryMap.isEmpty()) {
-        inventoryMap.insert("Belt", QPoint(10,10));
-    }
-
-    QString inventoryId = item->data("inventoryId").toString();
-    if (inventoryMap.contains(inventoryId)) {
-        x = inventoryMap.value(inventoryId).x();
-        y = inventoryMap.value(inventoryId).y();
-    }
-    else if (inventoryId == "MainInventory") {
-        y += 7;
-    }
-    setX(x * 47.4645);
-    setY(y * 47.4645);
 
     setAcceptHoverEvents(true);
     setShapeMode(BoundingRectShape);
@@ -62,7 +83,9 @@ void GraphicItem::SetImage(QImage image) {
     QPixmap result(pixmap());
     {
         QPainter painter(&result);
-        painter.drawPixmap(0, 0, result.width(), result.height(), pix);
+        qreal x = (pixmap().width() / 2) - (pix.width() / 2);
+        qreal y = (pixmap().height() / 2) - (pix.height() / 2);
+        painter.drawPixmap(x, y, pix.width(), pix.height(), pix);
     }
 
     setPixmap(result);
@@ -73,10 +96,13 @@ const int LINKH_HEIGHT = 16;
 const int LINKH_WIDTH = 38;
 const int LINKV_HEIGHT = LINKH_WIDTH;
 const int LINKV_WIDTH = LINKH_HEIGHT;
-
 QPixmap GraphicItem::GenerateLinksOverlay(const Item *item) {
     int height = item->data("h").toInt();
     int width = item->data("w").toInt();
+    return GenerateLinksOverlay(item, width, height);
+}
+
+QPixmap GraphicItem::GenerateLinksOverlay(const Item *item, int width, int height) {
     int socket_rows = 0;
     int socket_columns = 0;
     // this will ensure we have enough room to draw the slots
@@ -384,6 +410,9 @@ void GraphicItem::ShowLinks(bool show, ShowLinkReason reason) {
         if (_linkOverlay == nullptr) {
             QPixmap overlay = GenerateLinksOverlay(_item);
             _linkOverlay = new QGraphicsPixmapItem(overlay, this);
+            qreal x = (pixmap().width() / 2) - (overlay.width() / 2);
+            qreal y = (pixmap().height() / 2) - (overlay.height() / 2);
+            _linkOverlay->setPos(x, y);
         }
         _linkOverlay->show();
     }

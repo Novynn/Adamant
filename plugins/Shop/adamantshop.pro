@@ -10,7 +10,9 @@ QT += core gui widgets network
 TARGET = com.adamant.plugin.adamantshop
 
 OTHER_FILES += adamantshop.json
-HEADERS += adamantshopplugin.h
+HEADERS += adamantshopplugin.h \
+    shopviewer.h \
+    widgets/shopwidget.h
 
 win32: LIBS += -L$$OUT_PWD/../../bin/ -ladamant
 else:unix: LIBS += -L$$OUT_PWD/../../bin/ -ladamant
@@ -23,3 +25,11 @@ else:unix: LIBS += -L$$OUT_PWD/../../bin/plugins/ -lcom.adamant.plugin.stashview
 
 INCLUDEPATH += $$PWD/../../plugins/StashViewer
 DEPENDPATH += $$PWD/../../plugins/StashViewer
+
+FORMS += \
+    shopviewer.ui \
+    widgets/shopwidget.ui
+
+SOURCES += \
+    shopviewer.cpp \
+    widgets/shopwidget.cpp
