@@ -28,7 +28,9 @@ HEADERS += \
     ui/widgets/pluginitem.h \
     ui/widgets/pluginitemdelegate.h \
     session/sessionrequest.h \
-    items/characteritemlocation.h
+    items/characteritemlocation.h \
+    ui/dialogs/loginsessiondialog.h \
+    ui/dialogs/ilogindialog.h
 
 SOURCES += \
     core.cpp \
@@ -46,7 +48,8 @@ SOURCES += \
     ui/widgets/pluginitem.cpp \
     ui/widgets/pluginitemdelegate.cpp \
     session/sessionrequest.cpp \
-    items/characteritemlocation.cpp
+    items/characteritemlocation.cpp \
+    ui/dialogs/loginsessiondialog.cpp
 
 RESOURCES += \
     ui/res.qrc
@@ -55,4 +58,5 @@ FORMS += \
     ui/mainwindow.ui \
     ui/setupdialog.ui \
     ui/pages/pluginpage.ui \
-    ui/widgets/pluginitem.ui
+    ui/widgets/pluginitem.ui \
+    ui/dialogs/loginsessiondialog.ui

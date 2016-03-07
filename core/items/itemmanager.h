@@ -17,6 +17,7 @@ class ItemManager;
 
 struct ItemManagerInstanceTab {
     int tabIndex;
+    QString tabId;
     StashItemLocation* location;
     ItemManagerInstance* instance;
     bool error;

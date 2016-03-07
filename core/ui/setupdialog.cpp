@@ -6,12 +6,17 @@
 #include <QInputDialog>
 #include <QFileDialog>
 #include <QStandardPaths>
+#include <core.h>
+#include <session/sessionrequest.h>
+
+#include <ui/dialogs/loginsessiondialog.h>
 
 #undef STEAM_SUPPORT
 
-SetupDialog::SetupDialog(QWidget *parent)
+SetupDialog::SetupDialog(QWidget *parent, CoreService* core)
     : QDialog(parent)
     , ui(new Ui::SetupDialog)
+    , _core(core)
     , _email()
     , _sessionId()
     , _accountName("Unknown")
@@ -25,6 +30,8 @@ SetupDialog::SetupDialog(QWidget *parent)
     ui->steamLoginButton->hide();
 #endif
     setPage(SetupDialog::LoginMethodPage);
+
+    _loginMethods.insert(SetupDialog::LoginEmail, new LoginSessionDialog(this, core));
 }
 
 void SetupDialog::closeEvent(QCloseEvent* event) {
@@ -44,22 +51,24 @@ SetupDialog::~SetupDialog()
 
 void SetupDialog::setPage(SetupDialog::Page p) {
     ui->stackWidget->setCurrentIndex(p);
-    ui->backButton->setHidden(p == 0);
-
-    if (p == SetupDialog::LoginPage) {
-        updateLoginInput("");
-    }
+    // Disallow "backing" into login
+    ui->backButton->setHidden(p <= SetupDialog::AccountPage);
 }
 
 void SetupDialog::loginSuccess(const QString &sessionId) {
-    updateLoginInput("Login Successful", true);
-    ui->sessionIdEdit->clear();
+    auto dialog = _loginMethods.value(_method);
+    if (dialog) {
+        dialog->accept();
+    }
     setPage(SetupDialog::AccountPage);
     _sessionId = sessionId;
 }
 
 void SetupDialog::loginFailed(const QString &message) {
-    updateLoginInput("Login Failed: " + message, true);
+    auto dialog = _loginMethods.value(_method);
+    if (dialog) {
+        dialog->showError(message);
+    }
 }
 
 void SetupDialog::updateAccountAvatar(QImage image) {
@@ -73,49 +82,18 @@ void SetupDialog::updateAccountName(const QString &name) {
 }
 
 void SetupDialog::on_poeLoginButton_clicked() {
-    ui->loginInputWidget->show();
-    ui->sessionInputWidget->hide();
-    _method = LoginEmail;
-    setPage(SetupDialog::LoginPage);
+    attemptLogin(SetupDialog::LoginEmail);
 }
 
 void SetupDialog::on_sessionIdLoginButton_clicked() {
-    ui->loginInputWidget->hide();
-    ui->sessionInputWidget->show();
-    _method = LoginSessionId;
-    setPage(SetupDialog::LoginPage);
+    attemptLogin(SetupDialog::LoginSessionId);
 }
 
-void SetupDialog::on_loginButton_clicked() {
-    switch (_method) {
-        case LoginEmail: {
-            QString email = ui->emailEdit->text();
-            QString password = ui->passwordEdit->text();
-
-            if (!email.isEmpty() && !password.isEmpty()) {
-                _email = email;
-                updateLoginInput("Logging In...", false);
-
-                emit loginRequested(email, password);
-                ui->passwordEdit->clear();
-            }
-            else {
-                updateLoginInput("Please enter your email and your password.", true);
-            }
-        } break;
-        case LoginSessionId: {
-            QString id = ui->sessionIdEdit->text();
-
-            if (!id.isEmpty() && id.length() == 32) {
-                _email.clear();
-                updateLoginInput("Logging In...", false);
-
-                emit loginByIdRequested(id);
-            }
-            else {
-                updateLoginInput("Your session ID is invalid.", true);
-            }
-        } break;
+void SetupDialog::attemptLogin(LoginMethod method) {
+    _method = method;
+    auto dialog = _loginMethods.value(_method);
+    if (dialog) {
+        dialog->exec();
     }
 }
 
@@ -141,14 +119,6 @@ void SetupDialog::on_finishButton_clicked() {
 
 void SetupDialog::on_backButton_clicked() {
     setPage((SetupDialog::Page) (ui->stackWidget->currentIndex() - 1));
-}
-
-void SetupDialog::updateLoginInput(const QString &message, bool enable) {
-    ui->loginStatusLabel->setText(message);
-    ui->emailEdit->setEnabled(enable);
-    ui->passwordEdit->setEnabled(enable);
-    ui->loginButton->setEnabled(enable);
-    ui->backButton->setEnabled(enable);
 }
 
 void SetupDialog::on_skipButton_clicked() {
@@ -189,19 +159,4 @@ void SetupDialog::on_poeBrowseButton_clicked() {
 
 void SetupDialog::on_analyticsCheckbox_toggled(bool checked) {
     _analytics = checked;
-}
-
-void SetupDialog::on_passwordEdit_returnPressed() {
-    ui->loginButton->setFocus();
-    ui->loginButton->click();
-}
-
-void SetupDialog::on_emailEdit_returnPressed() {
-    ui->passwordEdit->setFocus();
-    ui->passwordEdit->selectAll();
-}
-
-void SetupDialog::on_sessionIdEdit_editingFinished() {
-    ui->loginButton->setFocus();
-    ui->loginButton->click();
 }

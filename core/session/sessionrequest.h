@@ -57,9 +57,7 @@ public slots:
     void setAccount(const QString &account) {
         _accountName = account;
     }
-    void setSessionId(const QString &sessionId) {
-        _sessionId = sessionId;
-    }
+    void setSessionId(const QString &sessionId);
     //void setListenToAll();
 
 private slots:

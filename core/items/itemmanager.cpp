@@ -262,6 +262,8 @@ void ItemManager::onStashTabResult(QString league, QByteArray json, QVariant dat
             ItemManagerInstanceTab* wrapper = new ItemManagerInstanceTab;
             StashItemLocation* location = new StashItemLocation(tab);
             wrapper->tabIndex = i;
+            wrapper->tabId = tab.value("id").toString();
+            qDebug() << wrapper->tabId;
             wrapper->location = location;
             wrapper->instance = instance;
             wrapper->error = false;

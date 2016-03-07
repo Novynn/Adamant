@@ -65,8 +65,6 @@ bool CoreService::load() {
 
     // These are requirements for data we need before the application loads
     _requiredData.clear();
-    ADD_REQUIREMENT(session(), Session::Request::profileData, QString, profile);
-    ADD_REQUIREMENT(session(), Session::Request::leaguesList, QStringList, leagues);
 
     // Load Plugins
     getPluginManager()->scanPlugins(true);
@@ -74,8 +72,26 @@ bool CoreService::load() {
     getPluginManager()->preparePlugins();
 
     // Load the main application!
-    session()->fetchLeagues();
-    session()->loginWithSessionId(sessionId);
+    /* Require profile data */ {
+        ADD_REQUIREMENT(session(), Session::Request::profileData, QString, profile);
+        session()->loginWithSessionId(sessionId);
+
+        // TODO(rory): Improve this
+        connect(session(), &Session::Request::loginResult,
+                [this] (int result, QString resultString) {
+            if (result == 0) {
+
+            }
+            else {
+                qDebug() << "Failed to log in: " << resultString;
+            }
+        });
+    }
+
+    /* Require leagues list */ {
+        ADD_REQUIREMENT(session(), Session::Request::leaguesList, QStringList, leagues);
+        session()->fetchLeagues();
+    }
 
     return true;
 }

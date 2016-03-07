@@ -13,10 +13,28 @@ Session::Request::Request(QObject *parent)
     , _sessionId()
 {
     connect(_cache, &ImageCache::onImage, this, &Session::Request::Request::onImageResult);
+    connect(_manager, &QNetworkAccessManager::sslErrors, this, [this] (QNetworkReply* reply, const QList<QSslError> &errors) {
+        reply->ignoreSslErrors();
+    });
 }
 
 void Session::Request::setTimeout(int timeout) {
     Q_UNUSED(timeout)
+}
+
+void Session::Request::setSessionId(const QString& sessionId) {
+    _sessionId = sessionId;
+//    for (QNetworkCookie cookie : _manager->cookieJar()->cookiesForUrl(BaseUrl())) {
+//        if (cookie.name() == SessionIdCookie().toUtf8()) {
+//            if (sessionId.isEmpty()) {
+//                _manager->cookieJar()->deleteCookie(cookie);
+//            }
+//            else {
+//                cookie.setValue(sessionId.toUtf8());
+//                _manager->cookieJar()->updateCookie(cookie);
+//            }
+//        }
+//    }
 }
 
 void Session::Request::login(const QString &username, const QString &password) {
@@ -34,7 +52,7 @@ void Session::Request::loginWithSessionId(const QString &sessionId) {
     QNetworkCookie poeCookie(SessionIdCookie().toUtf8(), sessionId.toUtf8());
     poeCookie.setPath("/");
     poeCookie.setDomain(".pathofexile.com");
-
+    // This will override, no biggy
     _manager->cookieJar()->insertCookie(poeCookie);
 
     QNetworkRequest request = QNetworkRequest(LoginUrl());

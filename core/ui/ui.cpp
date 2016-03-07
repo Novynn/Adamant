@@ -13,7 +13,7 @@ UI::UI(CoreService *parent)
     , _core(parent)
     , _theme(ApplicationTheme::Light) {
     _window = new MainWindow(parent);
-    _setupDialog = new SetupDialog(_window);
+    _setupDialog = new SetupDialog(_window, _core);
 
     connect(_setupDialog, &SetupDialog::loginByIdRequested,
             _core->session(), &Session::Request::loginWithSessionId);

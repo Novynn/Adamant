@@ -8,13 +8,15 @@ namespace Ui {
 class SetupDialog;
 }
 
+class CoreService;
+class ILoginDialog;
+
 class SetupDialog : public QDialog
 {
     Q_OBJECT
 
     enum Page {
         LoginMethodPage,
-        LoginPage,
         AccountPage,
         PathsPage,
         AnalyticsPage,
@@ -29,7 +31,7 @@ class SetupDialog : public QDialog
     };
 
 public:
-    explicit SetupDialog(QWidget *parent = 0);
+    explicit SetupDialog(QWidget *parent, CoreService* core);
     ~SetupDialog();
 
     void setPage(Page p);
@@ -46,6 +48,7 @@ public:
         return map;
     }
 
+    void attemptLogin(LoginMethod method);
 public slots:
     void loginSuccess(const QString &sessionId);
     void loginFailed(const QString &message);
@@ -56,7 +59,6 @@ protected:
 private slots:
     void on_poeLoginButton_clicked();
     void on_sessionIdLoginButton_clicked();
-    void on_loginButton_clicked();
     void on_continueNameButton_clicked();
     void on_continuePathsButton_clicked();
     void on_continueAnalyticsButton_clicked();
@@ -72,17 +74,12 @@ private slots:
 
     void on_analyticsCheckbox_toggled(bool checked);
 
-    void on_passwordEdit_returnPressed();
-
-    void on_emailEdit_returnPressed();
-
-    void on_sessionIdEdit_editingFinished();
-
 signals:
     void loginRequested(const QString &username, const QString &password);
     void loginByIdRequested(const QString &sessionId);
 private:
     Ui::SetupDialog *ui;
+    CoreService* _core;
 
     LoginMethod _method;
     QString _email;
@@ -92,7 +89,7 @@ private:
     QString _poeConfigPath;
     bool _analytics;
 
-    void updateLoginInput(const QString &message, bool enable=true);
+    QMap<LoginMethod, ILoginDialog*> _loginMethods;
 };
 Q_DECLARE_METATYPE(SetupDialog*)
 

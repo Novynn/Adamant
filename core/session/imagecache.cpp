@@ -9,6 +9,9 @@ ImageCache::ImageCache(QObject *parent)
     : QObject(parent)
     , _manager(new QNetworkAccessManager(parent))
 {
+    connect(_manager, &QNetworkAccessManager::sslErrors, this, [this] (QNetworkReply* reply, const QList<QSslError> &errors) {
+        reply->ignoreSslErrors();
+    });
 }
 
 QDir ImageCache::cacheDir() const {
