@@ -6,8 +6,8 @@
 #include <QTimer>
 #include <session/sessionrequest.h>
 
-QQueue<Fetchable*> ItemManager::_fetchQueue;
-QMap<Fetchable*, QDateTime> ItemManager::_fetchHistory;
+QQueue<ItemManagerInstance*> ItemManager::_fetchQueue;
+QMap<ItemManagerInstance*, QDateTime> ItemManager::_fetchHistory;
 bool ItemManager::_fetchWaiting = false;
 const int ItemManager::RequestsPerPeriod = 45;
 const int ItemManager::RequestPeriodMSecs = 60000;
@@ -23,7 +23,7 @@ ItemManager::ItemManager(CoreService *parent)
 
 void ItemManager::fetchCharacterItems(const QString& characterName, const QString &classType, int level) {
     const QString key = "CHARACTER_" + characterName;
-    if (_fetchingInstances.contains(key)) {
+    if (_fetchingCharacterInstances.contains(key)) {
         qDebug() << "Already fetching " << characterName;
         return;
     }
@@ -37,22 +37,25 @@ void ItemManager::fetchCharacterItems(const QString& characterName, const QStrin
     instance->accountName = accountName;
     instance->manager = this;
     instance->throttled = false;
-
+    instance->location = nullptr;
+    instance->type = ItemManagerInstance::Type::Character;
     instance->character = new ItemManagerInstance::Character;
     instance->character->name = characterName;
-    instance->character->location = nullptr;
     instance->character->classType = classType;
     instance->character->level = level;
 
-    _fetchingInstances.insert(key, instance);
+    _fetchingCharacterInstances.insert(key, instance);
 
     queueCharacter(instance);
     beginFetch();
 }
 
-void ItemManager::fetchStashTabs(const QString &league, const QString &filter) {
-    if (_fetchingInstances.contains(league)) {
-        qDebug() << "Already fetching from " << league;
+void ItemManager::fetchStashTab(const QString& league, QString id) {
+    if (id.isEmpty()) {
+        id = "index_" + league;
+    }
+    if (_fetchingTabInstances.contains(id)) {
+        qDebug() << "Already fetching " << id;
         return;
     }
     const QString accountName = _core->session()->accountName();
@@ -61,50 +64,114 @@ void ItemManager::fetchStashTabs(const QString &league, const QString &filter) {
         return;
     }
 
-    ItemManagerInstance* instance = new ItemManagerInstance;
-    instance->accountName = accountName;
-    instance->manager = this;
-    instance->throttled = false;
+    ItemManagerInstance* instance = _currentTabInstances.value(id, nullptr);
+    if (instance == nullptr) {
+        instance = new ItemManagerInstance;
+        instance->accountName = accountName;
+        instance->manager = this;
+        instance->throttled = false;
+        instance->location = nullptr;
+        instance->type = ItemManagerInstance::Type::StashTab;
+        instance->tab = new ItemManagerInstance::StashTab;
+        instance->tab->league = league;
+        instance->tab->tabId = id;
+        instance->tab->tabIndex = getStashIndexById(league, id);
+    }
 
-    instance->stash = new ItemManagerInstance::Stash;
-    instance->stash->league = league;
-    instance->stash->filter = QRegularExpression(filter, QRegularExpression::CaseInsensitiveOption);
-    instance->stash->firstTabReceived = false;
-    instance->stash->receivedTabs = 0;
-    instance->stash->totalTabs = 0;
+    _fetchingTabInstances.insert(id, instance);
+    _currentTabInstances.insert(id, instance);
 
-    _fetchingInstances.insert(league, instance);
-
-    emit onStashTabUpdateBegin(league);
-
-    queueFirstStashTab(instance);
+    queueStashTab(instance);
     beginFetch();
 }
 
+QList<StashItemLocation*> ItemManager::getStashTabs(const QString& league) {
+    QList<StashItemLocation*> stash;
+    for (ItemManagerInstance* instance : _currentTabInstances.values()) {
+        if (instance->tab->league == league && instance->location != nullptr)
+            stash.append(dynamic_cast<StashItemLocation*>(instance->location));
+    }
+    return stash;
+}
+
+StashItemLocation* ItemManager::getStashTab(const QString &tabId) {
+    ItemManagerInstance* instance = _currentTabInstances.value(tabId, nullptr);
+    if (instance) return dynamic_cast<StashItemLocation*>(instance->location);
+    return nullptr;
+}
+
+CharacterItemLocation*ItemManager::getCharacterItems(const QString& character) {
+    return dynamic_cast<CharacterItemLocation*>(_currentCharacterInstances.value("CHARACTER_" + character, nullptr)->location);
+}
+
+QDir ItemManager::StashDataDir(QString league) {
+    QDir dataDir = CoreService::dataPath();
+    league = league.toLower();
+    QString folder = QString("%1_cache").arg(league);
+    if (!dataDir.cd(folder)) {
+        dataDir.mkdir(folder);
+        dataDir.cd(folder);
+    }
+    return dataDir;
+}
+
+void ItemManager::saveStash(QString league) {
+    Q_UNUSED(league)
+    //    QDir dataDir = ItemManager::StashDataDir(league);
+
+//    if (_currentInstances.contains(league)) {
+//        for (ItemManagerTab* tab : _currentInstances.values(league)->stash->tabs.values()) {
+//            QString filePath = dataDir.absoluteFilePath(QString("%1.tab").arg(tab->tabId));
+//            QJsonDocument doc;
+//            doc.setObject(tab->location->toJson());
+//            QFile file(filePath);
+//            if (file.open(QFile::Text | QFile::WriteOnly)) {
+//                file.write(doc.toJson(QJsonDocument::Indented));
+//                file.close();
+//            }
+//        }
+//    }
+}
+
+void ItemManager::printIndexMap(QString league) {
+    QStringList leagues;
+    if (league.isEmpty())
+        leagues << _tabIndexMap.uniqueKeys();
+    else
+        leagues << league;
+
+    for (const QString &l : leagues) {
+        for (const QString &id : _tabIndexMap[l].keys()) {
+            _core->loggedMessage(QString("%2 #%3: %1").arg(id).arg(l).arg(_tabIndexMap[l].value(id, -1)), QtInfoMsg);
+        }
+    }
+}
+
 void ItemManager::queueCharacter(ItemManagerInstance* instance) {
-    ItemManager::_fetchQueue.enqueue(new Fetchable {Fetchable::Character, (void*)instance});
+    ItemManager::_fetchQueue.enqueue(instance);
 }
 
-void ItemManager::queueFirstStashTab(ItemManagerInstance* instance) {
-    ItemManager::_fetchQueue.enqueue(new Fetchable {Fetchable::Instance, (void*)instance});
+qint32 ItemManager::getStashIndexById(const QString &league, const QString& id) {
+    if (id.isEmpty()) return -1;
+    return _tabIndexMap[league].value(id, -1);
 }
 
-void ItemManager::queueStashTab(ItemManagerInstanceTab* tab) {
-    ItemManager::_fetchQueue.enqueue(new Fetchable {Fetchable::Tab, (void*)tab});
+void ItemManager::queueStashTab(ItemManagerInstance* instance) {
+    ItemManager::_fetchQueue.enqueue(instance);
 }
 
-void ItemManager::fetchFirstStashTab(ItemManagerInstance *instance) {
-    _core->session()->fetchAccountStashTabs(instance->accountName, instance->stash->league, 0, true);
+void ItemManager::fetchStashTab(ItemManagerInstance *instance) {
+    QString data = instance->tab->tabId;
+    if (data.isEmpty()) {
+        data = "index_" + instance->tab->league;
+    }
+    _core->session()->fetchAccountStashTabs(instance->accountName, instance->tab->league,
+                                            (instance->tab->tabIndex == -1) ? 0 : instance->tab->tabIndex, true,
+                                            data);
 }
 
 void ItemManager::fetchCharacter(ItemManagerInstance* instance) {
     _core->session()->fetchAccountCharacterItems(instance->accountName, instance->character->name);
-}
-
-void ItemManager::fetchStashTab(ItemManagerInstanceTab* tab) {
-    QString accountName = tab->instance->accountName;
-    QString league = tab->instance->stash->league;
-    _core->session()->fetchAccountStashTabs(accountName, league, tab->tabIndex, false, tab->tabIndex);
 }
 
 void ItemManager::beginFetch() {
@@ -115,34 +182,28 @@ void ItemManager::beginFetch() {
     // Only fetch tabs if we haven't gotten 45 in the last minute (this is how it works on GGG's end).
     if (_fetchHistory.count() < ItemManager::RequestsPerPeriod) {
         while (!ItemManager::_fetchQueue.isEmpty()) {
-            Fetchable* fetchable = ItemManager::_fetchQueue.dequeue();
+            ItemManagerInstance* instance = ItemManager::_fetchQueue.dequeue();
+            ItemManager::_fetchHistory.insert(instance, QDateTime());
 
-            ItemManagerInstance* instance = nullptr;
-            ItemManager* manager = nullptr;
-            ItemManager::_fetchHistory.insert(fetchable, QDateTime());
-            switch (fetchable->type) {
-                case Fetchable::Instance: {
-                    instance = fetchable->instance;
-                    manager = instance->manager;
-                    manager->fetchFirstStashTab(instance);
-                } break;
-                case Fetchable::Character: {
-                    instance = fetchable->instance;
-                    manager = instance->manager;
-                    manager->fetchCharacter(instance);
-                } break;
-                case Fetchable::Tab: {
-                    auto tab = fetchable->tab;
-                    instance = tab->instance;
-                    manager = instance->manager;
-                    manager->fetchStashTab(tab);
-                } break;
+            ItemManager* manager = instance->manager;
+            if (instance->type == ItemManagerInstance::Type::StashTab) {
+                manager->fetchStashTab(instance);
+                emit manager->onStashTabUpdateProgress(instance->tab->league, instance->tab->tabId, false);
+            }
+            else if (instance->type == ItemManagerInstance::Type::Character) {
+                manager->fetchCharacter(instance);
+                emit manager->onCharacterUpdateProgress(instance->character->name, false);
             }
 
             if (ItemManager::_fetchHistory.count() >= ItemManager::RequestsPerPeriod) {
                 qInfo() << "Stash tab fetching has been throttled.";
-                for (auto i : manager->_fetchingInstances.values()) {
-                    emit manager->onStashTabUpdateProgress(i->stash->league, i->stash->receivedTabs, i->stash->totalTabs, i->throttled = true);
+                for (auto i : manager->_fetchingTabInstances.values()) {
+                    i->throttled = true;
+                    emit manager->onStashTabUpdateProgress(i->tab->league, i->tab->tabId, i->throttled);
+                }
+                for (auto i : manager->_fetchingCharacterInstances.values()) {
+                    i->throttled = true;
+                    emit manager->onCharacterUpdateProgress(i->character->name, i->throttled);
                 }
                 // Throttle!
                 break;
@@ -163,15 +224,12 @@ void ItemManager::beginFetch() {
 void ItemManager::pruneHistory() {
     int start = _fetchHistory.count();
     QDateTime now = QDateTime::currentDateTime();
-    QMap<Fetchable*, QDateTime> newHistory;
+    QMap<ItemManagerInstance*, QDateTime> newHistory;
     while (!ItemManager::_fetchHistory.isEmpty()) {
         auto fetchable = ItemManager::_fetchHistory.firstKey();
         QDateTime date = ItemManager::_fetchHistory.take(fetchable);
         if (date.isNull() || date.msecsTo(now) < ItemManager::RequestPeriodMSecs) {
             newHistory.insert(fetchable, date);
-        }
-        else {
-            delete fetchable;
         }
     }
     int removed = start - newHistory.size();
@@ -181,33 +239,17 @@ void ItemManager::pruneHistory() {
     }
 }
 
-void ItemManager::updateFetchable(Fetchable* fetchable) {
-    ItemManager::_fetchHistory.remove(fetchable);
-    ItemManager::_fetchHistory.insert(fetchable, QDateTime::currentDateTime());
-}
-
-void ItemManager::updateFetchable(ItemManagerInstance* instance, int type) {
-    for (Fetchable* fetchable : ItemManager::_fetchHistory.keys()) {
-        if (static_cast<int>(fetchable->type) == type && fetchable->instance == instance) {
-            updateFetchable(fetchable);
-            break;
-        }
-    }
-}
-
-void ItemManager::updateFetchable(ItemManagerInstanceTab* tab) {
-    for (Fetchable* fetchable : ItemManager::_fetchHistory.keys()) {
-        if (fetchable->type == Fetchable::Tab && fetchable->tab == tab) {
-            updateFetchable(fetchable);
-            break;
-        }
-    }
+void ItemManager::updateFetchable(ItemManagerInstance* instance) {
+    ItemManager::_fetchHistory.remove(instance);
+    ItemManager::_fetchHistory.insert(instance, QDateTime::currentDateTime());
 }
 
 void ItemManager::onStashTabResult(QString league, QByteArray json, QVariant data) {
-    ItemManagerInstance* instance = _fetchingInstances.value(league, nullptr);
+    QString key = data.toString();
+
+    ItemManagerInstance* instance = _fetchingTabInstances.value(key, nullptr);
     if (!instance) {
-        //qDebug() << "Failed to fetch instance for " << league;
+        qDebug() << "Failed to fetch instance for " << league << key;
         return;
     }
     QJsonDocument doc = QJsonDocument::fromJson(json);
@@ -219,109 +261,130 @@ void ItemManager::onStashTabResult(QString league, QByteArray json, QVariant dat
         // {"error":{"message":"You are requesting your stash too frequently. Please try again later."}}
         qDebug() << qPrintable(json);
 
-        if (!instance->stash->firstTabReceived) {
-            // We failed to get the first tab (uh oh).
-            qWarning() << qPrintable("Failed to get the first tab.");
-            _fetchingInstances.remove(instance->stash->league);
-            emit onStashTabUpdateProgress(instance->stash->league, 0, 0, false);
-            emit onStashTabUpdateAvailable(instance->stash->league);
-            return;
-        }
-
+        // We failed to get the first tab (uh oh).
+        qWarning() << qPrintable("Failed to get the first tab.");
         error = true;
     }
-    if (!instance->stash->firstTabReceived) {
-        if (!doc.object().contains("tabs")) {
-            qDebug() << "??? result did not contain tabs...";
-        }
-        // This means it was a initial request, future requests for tab items should not have "tabs" set.
-        // At least unless GGG changes their API.
-        instance->stash->firstTabReceived = true;
-        ItemManager::updateFetchable(instance);
 
-        QList<int> chosenIndicies;
+    ItemManager::updateFetchable(instance);
 
-        QJsonObject root = doc.object();
-        QJsonArray tabs = root.value("tabs").toArray();
-        for (QJsonValue tabVal : tabs) {
-            QJsonObject tab = tabVal.toObject();
-            // Check hidden flag
-            if (tab.value("hidden").toBool()) continue;
+    int foundIndex = -1;
 
-            // Check filters
-            QString name = tab.value("n").toString();
-            if (!instance->stash->filter.pattern().isEmpty() &&
-                instance->stash->filter.isValid() &&
-                name.contains(instance->stash->filter)) {
-                continue;
-            }
+    QJsonObject root = doc.object();
+    QJsonArray tabs = root.value("tabs").toArray();
 
-            int i = tab.value("i").toInt();
-            chosenIndicies.append(i);
-
-            ItemManagerInstanceTab* wrapper = new ItemManagerInstanceTab;
-            StashItemLocation* location = new StashItemLocation(tab);
-            wrapper->tabIndex = i;
-            wrapper->tabId = tab.value("id").toString();
-            qDebug() << wrapper->tabId;
-            wrapper->location = location;
-            wrapper->instance = instance;
-            wrapper->error = false;
-            instance->stash->tabs.insert(i, wrapper);
-
-            queueStashTab(wrapper);
-        }
-        beginFetch();
-
-        instance->stash->totalTabs = chosenIndicies.count();
-
-        emit onStashTabUpdateProgress(instance->stash->league, instance->stash->receivedTabs, instance->stash->totalTabs, instance->throttled);
-
-        if (instance->stash->totalTabs == 0) {
-            // TODO(rory): Notify the user that no tabs were returned...
-            emit onStashTabUpdateAvailable(instance->stash->league);
+    QList<ItemManagerInstance*> currentInstances;
+    for (ItemManagerInstance* i : _currentTabInstances.values()) {
+        if (i->tab->league == league && i != instance) {
+            currentInstances.append(i);
         }
     }
-    else {
-        int tabIndex = data.toInt();
-        ItemManagerInstanceTab* wrapper = instance->stash->tabs.value(tabIndex, nullptr);
-        if (wrapper != nullptr) {
-            // Update our history
-            ItemManager::updateFetchable(wrapper);
 
-            // Add items data to some sort of container
-            // Potientially this is empty, as an error will come through here
+    _tabIndexMap[league].clear();
+    for (QJsonValue tabVal : tabs) {
+        QJsonObject tab = tabVal.toObject();
+        // Check hidden flag
+        if (tab.value("hidden").toBool()) continue;
+        QString id = tab.value("id").toString();
+        int index = tab.value("i").toInt();
+
+        // Update league tab map
+        _tabIndexMap[league].insert(id, index);
+
+        // Update tab info
+        ItemManagerInstance* currentInstance = nullptr;
+        StashItemLocation* current = nullptr;
+
+        if ((currentInstance = _currentTabInstances.value(id, nullptr)) != nullptr) {
+            if ((current = dynamic_cast<StashItemLocation*>(currentInstance->location)) != nullptr) {
+                current->update(tab);
+            }
+            else {
+                currentInstance->location = new StashItemLocation(tab);
+                currentInstance->location->setState(ItemLocation::Loading);
+            }
+            currentInstances.removeOne(currentInstance);
+        }
+        else {
+            if (id == instance->tab->tabId) {
+                currentInstance = instance;
+            }
+            else {
+                // Setup new instance
+                currentInstance = new ItemManagerInstance;
+                currentInstance->accountName = instance->accountName;
+                currentInstance->manager = this;
+                currentInstance->throttled = false;
+                currentInstance->location = new StashItemLocation(tab);
+                currentInstance->type = ItemManagerInstance::Type::StashTab;
+                currentInstance->tab = new ItemManagerInstance::StashTab;
+                currentInstance->tab->tabId = id;
+                currentInstance->tab->tabIndex = index;
+                currentInstance->tab->league = league;
+            }
+            _currentTabInstances[id] = currentInstance;
+        }
+
+        if (id == instance->tab->tabId) {
+            foundIndex = index;
+        }
+    }
+
+    // Clear non-existant tabs
+    for (ItemManagerInstance* i : currentInstances) {
+        auto i2 = _currentTabInstances.take(i->tab->tabId);
+        Q_ASSERT(i == i2 && i2 != 0);
+    }
+
+    emit onStashTabIndexMapUpdate(league);
+
+    // Actually delete
+    while (!currentInstances.isEmpty()) {
+        auto i = currentInstances.takeFirst();
+        if (i != 0) {
+            delete i;
+        }
+    }
+
+    // TODO(rory): Currently we waste a stash tab fetch when we index, this could be made smarter
+    if (foundIndex != -1 && foundIndex == instance->tab->tabIndex) {
+        if (!error) {
             QJsonArray items = doc.object().value("items").toArray();
             ItemList itemObjects;
             for (QJsonValue itemVal : items) {
                 QJsonObject item = itemVal.toObject();
                 itemObjects.append(new Item(item));
             }
-            wrapper->location->addItems(itemObjects);
+            instance->location->setItems(itemObjects);
+            instance->location->setState(ItemLocation::Loaded);
+        }
 
-            // Mark error
-            wrapper->error = error;
+        // Mark error
+        instance->error = error;
 
-            instance->stash->receivedTabs++;
-            emit onStashTabUpdateProgress(instance->stash->league, instance->stash->receivedTabs, instance->stash->totalTabs, instance->throttled);
+        emit onStashTabUpdateProgress(instance->tab->league, instance->tab->tabId, instance->throttled);
 
-            if (instance->stash->receivedTabs == instance->stash->totalTabs) {
-                // We're done!
-                _fetchingInstances.remove(instance->stash->league);
+        _fetchingTabInstances.remove(key);
 
-                ItemManagerInstance* in = _currentInstances.take(league);
-                if (in) {
-                    for (ItemManagerInstanceTab* tab : in->stash->tabs) {
-                        delete tab->location;
-                        delete tab;
-                    }
-                    in->stash->tabs.clear();
-                    delete in->stash;
-                    delete in;
-                }
-                _currentInstances[league] = instance;
-                emit onStashTabUpdateAvailable(instance->stash->league);
-            }
+        saveStash(instance->tab->league);
+        emit onStashTabUpdate(instance->tab->league, instance->tab->tabId);
+    }
+    else {
+        // Oh no! Failed to find the specified tab
+        bool andThatsFine = (instance->tab->tabId.startsWith("index_"));
+        if (!andThatsFine) qDebug() << "Failed to find " << instance->tab->tabId << " at " << instance->tab->tabIndex;
+        if (foundIndex == -1) {
+            if (!andThatsFine) qDebug() << "\tThe specified tab id does not exist.";
+            _fetchingTabInstances.remove(key);
+            _currentTabInstances.remove(key);
+
+            delete instance;
+        }
+        else {
+            qDebug() << "\tInstead it was found at: " << foundIndex;
+            instance->tab->tabIndex = foundIndex;
+            queueStashTab(instance);
+            ItemManager::beginFetch();
         }
     }
 }
@@ -329,9 +392,9 @@ void ItemManager::onStashTabResult(QString league, QByteArray json, QVariant dat
 void ItemManager::onCharacterItemsResult(QString character, QByteArray json, QVariant data) {
     Q_UNUSED(data)
     const QString key = "CHARACTER_" + character;
-    ItemManagerInstance* instance = _fetchingInstances.value(key, nullptr);
+    ItemManagerInstance* instance = _fetchingCharacterInstances.value(key, nullptr);
     if (!instance) {
-//        qDebug() << "Failed to fetch instance for " << character;
+        qDebug() << "Failed to fetch instance for " << character;
         return;
     }
     QJsonDocument doc = QJsonDocument::fromJson(json);
@@ -341,28 +404,26 @@ void ItemManager::onCharacterItemsResult(QString character, QByteArray json, QVa
         // TODO(rory): Handle throttling
         // {"error":{"message":"You are requesting your stash too frequently. Please try again later."}}
         qDebug() << qPrintable(json);
-        _fetchingInstances.remove(key);
+        _fetchingCharacterInstances.remove(key);
         return;
     }
-    ItemManager::updateFetchable(instance, Fetchable::Character);
+    ItemManager::updateFetchable(instance);
 
     QJsonObject characterData = doc.object().value("character").toObject();
     characterData.insert("class", instance->character->classType);
     characterData.insert("level", instance->character->level);
 
     doc.object().insert("character", characterData);
+    instance->location = new CharacterItemLocation(doc.object());
 
-    auto location = new CharacterItemLocation(doc.object());
-    instance->character->location = location;
+    _fetchingCharacterInstances.remove(key);
 
-    _fetchingInstances.remove(key);
-
-    ItemManagerInstance* in = _currentInstances.take(key);
+    ItemManagerInstance* in = _currentCharacterInstances.take(key);
     if (in) {
         delete in->character;
         delete in;
     }
-    _currentInstances[key] = instance;
+    _currentCharacterInstances[key] = instance;
 
-    emit onCharacterUpdateAvailable(instance->character->name);
+    emit onCharacterUpdate(instance->character->name);
 }

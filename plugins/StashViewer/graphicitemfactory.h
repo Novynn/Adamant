@@ -5,6 +5,7 @@
 #include <items/item.h>
 #include <items/itemlocation.h>
 #include <session/imagecache.h>
+#include <stash/stashviewdata.h>
 #include "graphicitem.h"
 #include <session/session.h>
 

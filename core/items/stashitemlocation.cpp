@@ -2,6 +2,12 @@
 
 StashItemLocation::StashItemLocation(const QJsonObject &tabData)
     : ItemLocation() {
+    _tabId = tabData.value("id").toString();
+    update(tabData);
+}
+
+void StashItemLocation::update(const QJsonObject& tabData)
+{
     tabIndex = tabData.value("i").toInt();
     tabLabel = tabData.value("n").toString();
     QJsonObject color = tabData.value("colour").toObject();
@@ -15,7 +21,7 @@ ItemLocation::LocationType StashItemLocation::location() const {
 }
 
 QString StashItemLocation::header() const {
-    return QString("#%1: %2").arg(tabIndex).arg(tabLabel);
+    return QString("%1").arg(tabLabel);
 }
 
 QString StashItemLocation::forumCode(const Item *item) const {
@@ -26,8 +32,7 @@ QString StashItemLocation::forumCode(const Item *item) const {
 }
 
 QString StashItemLocation::hash() const {
-    QString format("stash:%1:%2");
-    return format.arg(tabIndex).arg(tabLabel);
+    return _tabId;
 }
 
 bool StashItemLocation::operator<(const ItemLocation &other) const {
@@ -39,9 +44,18 @@ bool StashItemLocation::operator<(const ItemLocation &other) const {
 bool StashItemLocation::operator==(const ItemLocation &other) const {
     if (location() != other.location())
         return false;
-    return tabIndex == dynamic_cast<const StashItemLocation&>(other).tabIndex;
+    return _tabId == dynamic_cast<const StashItemLocation&>(other)._tabId;
 }
 
-void StashItemLocation::addItems(ItemList items) {
-    _items.append(items);
+QJsonObject StashItemLocation::toJson() {
+    QJsonObject result;
+    result.insert("index", tabIndex);
+    result.insert("id", _tabId);
+    result.insert("label", tabLabel);
+    result.insert("league", league);
+    result.insert("color", (qint64) _color.rgb());
+
+    result.insert("items", ItemLocation::toJson().value("items"));
+
+    return result;
 }

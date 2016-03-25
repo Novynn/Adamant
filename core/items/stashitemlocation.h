@@ -15,15 +15,19 @@ public:
         return _color;
     }
 
-    LocationType location() const final;
-    QString header() const final;
-    QString hash() const final;
-    QString forumCode(const Item* item) const final;
-    bool operator<(const ItemLocation &other) const final;
-    bool operator==(const ItemLocation &other) const final;
-    void addItems(ItemList items) final;
+    void update(const QJsonObject &tabData);
+
+    LocationType location() const;
+    QString header() const;
+    QString hash() const;
+    QString forumCode(const Item* item) const;
+    bool operator<(const ItemLocation &other) const;
+    bool operator==(const ItemLocation &other) const;
+
+    QJsonObject toJson();
 private:
     int tabIndex;
+    QString _tabId;
     QString tabLabel;
 
     QString league;

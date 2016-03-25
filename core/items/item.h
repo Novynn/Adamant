@@ -138,6 +138,10 @@ public:
         return QJsonDocument(_data).toJson(QJsonDocument::Indented);
     }
 
+    QJsonObject toJson() const {
+        return _data;
+    }
+
 private:
     QJsonObject _data;
 };

@@ -16,7 +16,7 @@ public:
     QString forumCode(const Item* item) const final;
     bool operator<(const ItemLocation &other) const final;
     bool operator==(const ItemLocation &other) const final;
-    void addItems(ItemList items) final;
+    QJsonObject toJson() const final;
 private:
     QString _name;
     QString _league;

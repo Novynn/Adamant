@@ -23,9 +23,15 @@
     background-color: rgba(20, 20, 20, 200);
 }
 
+QStatusBar {
+    background-color: #222;
+}
+
+/*
 QSplitter::handle, QStatusBar {
     background-color: #222;
-}</string>
+}
+*/</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <property name="styleSheet">

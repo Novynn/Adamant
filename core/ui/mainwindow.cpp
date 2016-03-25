@@ -42,33 +42,33 @@ MainWindow::MainWindow(CoreService *core, QWidget *parent)
     statusBar()->addPermanentWidget(_statusBarProgress);
     _statusBarProgress->hide();
 
-    connect(_core->getItemManager(), &ItemManager::onStashTabUpdateBegin, [this](QString league) {
-        const QString message = QString("Loading %1 stash tabs...").arg(league);
-        _statusBarLabel->setText(message);
-        qInfo() << qPrintable(message);
-    });
+//    connect(_core->getItemManager(), &ItemManager::onStashTabUpdateBegin, [this](QString league) {
+//        const QString message = QString("Loading %1 stash tabs...").arg(league);
+//        _statusBarLabel->setText(message);
+//        qInfo() << qPrintable(message);
+//    });
 
-    connect(_core->getItemManager(), &ItemManager::onStashTabUpdateProgress, [this](QString league, int r, int m, bool t) {
-        _statusBarProgress->show();
-        _statusBarProgress->setValue(r);
-        _statusBarProgress->setMaximum(m);
-        QString message;
-        if (t)
-            message = QString("Loading %1 stash tabs... (throttled)").arg(league);
-        else
-            message = QString("Loading %1 stash tabs... (%2/%3)").arg(league).arg(r).arg(m);
+//    connect(_core->getItemManager(), &ItemManager::onStashTabUpdateProgress, [this](QString league, QString id, bool throttled) {
+//        _statusBarProgress->show();
+//        _statusBarProgress->setValue(r);
+//        _statusBarProgress->setMaximum(m);
+//        QString message;
+//        if (t)
+//            message = QString("Loading %1 stash tabs... (throttled)").arg(league);
+//        else
+//            message = QString("Loading %1 stash tabs... (%2/%3)").arg(league).arg(r).arg(m);
 
-        _statusBarLabel->setText(message);
-    });
+//        _statusBarLabel->setText(message);
+//    });
 
-    connect(_core->getItemManager(), &ItemManager::onStashTabUpdateAvailable, [this] (QString league) {
-        _statusBarProgress->setValue(0);
-        _statusBarProgress->setMaximum(100);
-        _statusBarProgress->hide();
-        const QString message = QString("%1 stash tabs loaded!").arg(league);
-        _statusBarLabel->setText(message);
-        qInfo() << qPrintable(message);
-    });
+//    connect(_core->getItemManager(), &ItemManager::onStashTabUpdateAvailable, [this] (QString league) {
+//        _statusBarProgress->setValue(0);
+//        _statusBarProgress->setMaximum(100);
+//        _statusBarProgress->hide();
+//        const QString message = QString("%1 stash tabs loaded!").arg(league);
+//        _statusBarLabel->setText(message);
+//        qInfo() << qPrintable(message);
+//    });
 
     {
         QShortcut* shortcut = new QShortcut(QKeySequence("Ctrl+`"), this);

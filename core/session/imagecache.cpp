@@ -16,9 +16,9 @@ ImageCache::ImageCache(QObject *parent)
 
 QDir ImageCache::cacheDir() const {
     QDir cacheDir = CoreService::dataPath();
-    if (!cacheDir.cd("cache")) {
-        cacheDir.mkdir("cache");
-        cacheDir.cd("cache");
+    if (!cacheDir.cd("image_cache")) {
+        cacheDir.mkdir("image_cache");
+        cacheDir.cd("image_cache");
     }
     return cacheDir;
 }

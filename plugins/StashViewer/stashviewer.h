@@ -8,6 +8,7 @@
 #include <QGraphicsRectItem>
 #include <QJsonDocument>
 #include <session/imagecache.h>
+#include <stash/stashviewdata.h>
 
 namespace Ui {
 class StashViewer;
@@ -16,7 +17,6 @@ class StashViewer;
 class QTabBar;
 class StashItemLocation;
 class GraphicItem;
-class LeagueDialog;
 class QListWidgetItem;
 
 class StashViewer : public QWidget
@@ -27,37 +27,43 @@ public:
     explicit StashViewer(QWidget *parent = 0, QString league = QString());
     ~StashViewer();
 
-    Q_INVOKABLE void SetTabs(QList<StashItemLocation *> tabs);
+    Q_INVOKABLE void SetTabs(const QString& league, QList<StashItemLocation *> tabs);
 
+    void AddTab(const QString& league, const ItemLocation* tab);
+    void LoadTabItem(const QString& tabId);
+    void LoadTabItem(StashViewData* data);
+    void LoadTab(StashViewData* data);
+    void LoadTab(const QString& league, const ItemLocation* tab);
 public slots:
     void OnImage(const QString &path, QImage image);
     void OnLeaguesList(QStringList list);
-    void OnTabsList(QString league, QStringList list);
     void OnViewportChanged();
-
-    void ShowLeagueSelectionDialog();
 private slots:
     void on_listWidget_itemSelectionChanged();
     void on_lineEdit_returnPressed();
 
-    void on_leagueButton_clicked();
     void on_lineEdit_textChanged(const QString &text);
+
+    void on_leagueBox_currentIndexChanged(const QString &text);
+
+    void on_updateButton_clicked();
 
 signals:
     void RequestLeaguesList();
     void RequestStashTabList(QString league);
-    void LeagueDetailsChanged(QString league, QString filter);
+    void RequestStashTab(QString league, QString id);
+    void LeagueDetailsChanged(QString league);
 private:
     Ui::StashViewer *ui;
 
     StashScene* _scene;
     ImageCache* _imageCache;
 
-    QHash<QListWidgetItem* ,QGraphicsPixmapItem*> _tabGrids;
-    QHash<QString, StashItemLocation*> _tabs;
+    QHash<QString, StashViewData*> _tabs;
 
-    LeagueDialog* _leagueDialog;
     QString _currentLeague;
+    QStringList _leaguesList;
+
     GraphicItemFactory* _factory;
     QThread* _factoryThread;
 };

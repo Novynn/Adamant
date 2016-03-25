@@ -47,6 +47,6 @@ bool CharacterItemLocation::operator==(const ItemLocation &other) const {
     return _name == dynamic_cast<const CharacterItemLocation&>(other)._name;
 }
 
-void CharacterItemLocation::addItems(ItemList items) {
-    _items.append(items);
+QJsonObject CharacterItemLocation::toJson() const {
+    return QJsonObject();
 }

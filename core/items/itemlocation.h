@@ -3,6 +3,7 @@
 
 #include <core_global.h>
 #include <QList>
+#include <QJsonObject>
 #include "item.h"
 typedef QList<const Item*> ItemList;
 
@@ -11,6 +12,14 @@ public:
     enum LocationType {
         StashLocation,
         CharacterLocation
+    };
+
+    enum State {
+        Unknown,
+        Loading,
+        Loaded,
+        LoadedFromDisk,
+        Removed
     };
 
     virtual ~ItemLocation() {
@@ -25,14 +34,36 @@ public:
     virtual bool operator<(const ItemLocation &other) const = 0;
     virtual bool operator==(const ItemLocation &other) const = 0;
 
-    virtual void addItems(ItemList items) = 0;
+    virtual void setItems(ItemList items) {
+        _items.clear();
+        _items.append(items);
+    }
+
     const ItemList items() const {
         return _items;
     }
 
-protected:
-    explicit ItemLocation() {}
+    void setState(State state) {
+        _state = state;
+    }
 
+    State state() const {
+        return _state;
+    }
+
+    virtual QJsonObject toJson() const {
+        QJsonObject result;
+        QJsonArray items;
+        for (const Item* item : _items) {
+            items.append(item->toJson());
+        }
+        result.insert("items", items);
+        return result;
+    }
+
+protected:
+    explicit ItemLocation() : _state(Unknown) {}
+    State _state;
     ItemList _items;
 };
 
