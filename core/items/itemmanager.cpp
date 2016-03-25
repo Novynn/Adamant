@@ -37,6 +37,7 @@ void ItemManager::fetchCharacterItems(const QString& characterName, const QStrin
     instance->accountName = accountName;
     instance->manager = this;
     instance->throttled = false;
+    instance->sent = false;
     instance->location = nullptr;
     instance->type = ItemManagerInstance::Type::Character;
     instance->character = new ItemManagerInstance::Character;
@@ -70,6 +71,7 @@ void ItemManager::fetchStashTab(const QString& league, QString id) {
         instance->accountName = accountName;
         instance->manager = this;
         instance->throttled = false;
+        instance->sent = false;
         instance->location = nullptr;
         instance->type = ItemManagerInstance::Type::StashTab;
         instance->tab = new ItemManagerInstance::StashTab;
@@ -82,7 +84,6 @@ void ItemManager::fetchStashTab(const QString& league, QString id) {
     _currentTabInstances.insert(id, instance);
 
     queueStashTab(instance);
-    beginFetch();
 }
 
 QList<StashItemLocation*> ItemManager::getStashTabs(const QString& league) {
@@ -115,22 +116,25 @@ QDir ItemManager::StashDataDir(QString league) {
     return dataDir;
 }
 
-void ItemManager::saveStash(QString league) {
-    Q_UNUSED(league)
-    //    QDir dataDir = ItemManager::StashDataDir(league);
+void ItemManager::saveStash(ItemManagerInstance* instance) {
+    QDir dataDir = ItemManager::StashDataDir(instance->tab->league);
 
-//    if (_currentInstances.contains(league)) {
-//        for (ItemManagerTab* tab : _currentInstances.values(league)->stash->tabs.values()) {
-//            QString filePath = dataDir.absoluteFilePath(QString("%1.tab").arg(tab->tabId));
-//            QJsonDocument doc;
-//            doc.setObject(tab->location->toJson());
-//            QFile file(filePath);
-//            if (file.open(QFile::Text | QFile::WriteOnly)) {
-//                file.write(doc.toJson(QJsonDocument::Indented));
-//                file.close();
-//            }
-//        }
-//    }
+    QString filePath = dataDir.absoluteFilePath(QString("%1.tab").arg(instance->tab->tabId));
+    QJsonDocument doc(instance->location->toJson());
+    const QByteArray data = doc.toJson(QJsonDocument::Indented);
+
+    QFile file(filePath);
+    if (file.open(QFile::Text | QFile::WriteOnly)) {
+        file.write(data);
+        file.close();
+    }
+}
+
+void ItemManager::saveStash(const QString &league, const QString &tabId) {
+    ItemManagerInstance* instance = _currentTabInstances.value(tabId, nullptr);
+    if (instance != nullptr && instance->tab->league == league){
+        saveStash(instance);
+    }
 }
 
 void ItemManager::printIndexMap(QString league) {
@@ -158,6 +162,10 @@ qint32 ItemManager::getStashIndexById(const QString &league, const QString& id) 
 
 void ItemManager::queueStashTab(ItemManagerInstance* instance) {
     ItemManager::_fetchQueue.enqueue(instance);
+    ItemManager::beginFetch();
+    if (ItemManager::_fetchWaiting) {
+        emit onStashTabUpdateProgress(instance->tab->league, instance->tab->tabId, instance->throttled = true);
+    }
 }
 
 void ItemManager::fetchStashTab(ItemManagerInstance *instance) {
@@ -168,10 +176,12 @@ void ItemManager::fetchStashTab(ItemManagerInstance *instance) {
     _core->session()->fetchAccountStashTabs(instance->accountName, instance->tab->league,
                                             (instance->tab->tabIndex == -1) ? 0 : instance->tab->tabIndex, true,
                                             data);
+    instance->sent = true;
 }
 
 void ItemManager::fetchCharacter(ItemManagerInstance* instance) {
     _core->session()->fetchAccountCharacterItems(instance->accountName, instance->character->name);
+    instance->sent = true;
 }
 
 void ItemManager::beginFetch() {
@@ -198,10 +208,12 @@ void ItemManager::beginFetch() {
             if (ItemManager::_fetchHistory.count() >= ItemManager::RequestsPerPeriod) {
                 qInfo() << "Stash tab fetching has been throttled.";
                 for (auto i : manager->_fetchingTabInstances.values()) {
+                    if (i->sent) continue;
                     i->throttled = true;
                     emit manager->onStashTabUpdateProgress(i->tab->league, i->tab->tabId, i->throttled);
                 }
                 for (auto i : manager->_fetchingCharacterInstances.values()) {
+                    if (i->sent) continue;
                     i->throttled = true;
                     emit manager->onCharacterUpdateProgress(i->character->name, i->throttled);
                 }
@@ -366,7 +378,7 @@ void ItemManager::onStashTabResult(QString league, QByteArray json, QVariant dat
 
         _fetchingTabInstances.remove(key);
 
-        saveStash(instance->tab->league);
+        saveStash(instance);
         emit onStashTabUpdate(instance->tab->league, instance->tab->tabId);
     }
     else {
@@ -384,7 +396,6 @@ void ItemManager::onStashTabResult(QString league, QByteArray json, QVariant dat
             qDebug() << "\tInstead it was found at: " << foundIndex;
             instance->tab->tabIndex = foundIndex;
             queueStashTab(instance);
-            ItemManager::beginFetch();
         }
     }
 }

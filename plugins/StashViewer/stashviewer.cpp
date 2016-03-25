@@ -21,6 +21,9 @@ StashViewer::StashViewer(QWidget *parent, QString league)
     , _factoryThread(new QThread(this))
 {
     ui->setupUi(this);
+//    ui->viewWidget->layout()->removeWidget(ui->optionsBar);
+//    ui->optionsBar->setParent(nullptr);
+
 
     connect(_imageCache, &ImageCache::onImage, this, &StashViewer::OnImage);
 
@@ -51,6 +54,8 @@ StashViewer::StashViewer(QWidget *parent, QString league)
     _scene->setBackgroundBrush(QBrush(Qt::transparent));
     ui->graphicsView->setBackgroundBrush(QBrush(Qt::transparent));
     ui->graphicsView->setScene(_scene);
+
+    _optionsBarProxy = nullptr; //_scene->addWidget(ui->optionsBar, Qt::Widget);
 }
 
 void StashViewer::OnViewportChanged() {
@@ -73,13 +78,6 @@ void StashViewer::OnViewportChanged() {
         auto listItem = data->getItem();
 
         if (filtered.contains(grid)) {
-            QString iconType;
-            if (listItem->backgroundColor().lightnessF() > 0.5)
-                iconType = "light";
-            else
-                iconType = "dark";
-
-            listItem->setIcon(QIcon(QString(":/icons/%1/cloud-check.png").arg(iconType)));
             ui->listWidget->scrollToItem(listItem); // Ensures the item is visible
         }
         else {
@@ -103,9 +101,11 @@ void StashViewer::OnImage(const QString &path, QImage image) {
 
 void StashViewer::OnLeaguesList(QStringList list) {
     _leaguesList = list;
+    ui->leagueBox->blockSignals(true);
     ui->leagueBox->clear();
     ui->leagueBox->addItems(list);
     ui->leagueBox->setCurrentText(_currentLeague);
+    ui->leagueBox->blockSignals(false);
 }
 
 StashViewer::~StashViewer() {
@@ -122,18 +122,20 @@ void StashViewer::LoadTabItem(StashViewData* data) {
     QColor background = loc ? loc->tabColor() : QColor(Qt::red);
     data->getItem()->setBackgroundColor(background);
     QColor foreground;
-    QString iconType;
+    QString colorHint;
     if (background.lightnessF() > 0.5) {
         foreground = QColor(Qt::black);
-        iconType = "light";
+        colorHint = "light";
     }
     else {
         foreground = QColor(Qt::white);
-        iconType = "dark";
+        colorHint = "dark";
     }
     data->getItem()->setForeground(foreground);
-    data->getItem()->setIcon(QIcon(QString(":/icons/%1/cloud-download.png").arg(iconType)));
     data->getItem()->setToolTip("Last Updated: Never");
+    if (data->getItem()->icon().isNull()) {
+        data->getItem()->setIcon(QIcon(QString(":/icons/%1/question.png").arg(colorHint)));
+    }
 }
 
 void StashViewer::SetTabs(const QString &league, QList<StashItemLocation*> tabs) {
@@ -216,6 +218,15 @@ void StashViewer::LoadTab(StashViewData* data)
                               Qt::QueuedConnection,
                               Q_ARG(const ItemLocation*, data->getLocation()),
                               Q_ARG(QVariant, QVariant::fromValue<StashViewData*>(data)));
+}
+
+void StashViewer::UpdateTab(const QString &league, const ItemLocation* tab, bool throttled) {
+    Q_UNUSED(league);
+
+    auto data = _tabs.value(tab->hash(), nullptr);
+    if (data) {
+        data->setLoaded(false, throttled);
+    }
 }
 
 void StashViewer::LoadTab(const QString &league, const ItemLocation* tab) {

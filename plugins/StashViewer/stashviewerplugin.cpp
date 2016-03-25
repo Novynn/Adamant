@@ -34,14 +34,21 @@ void StashViewerPlugin::OnLoad() {
 
     connect(Core()->getItemManager(), &ItemManager::onStashTabUpdate, [this] (QString league, QString id) {
         StashItemLocation* tab = Core()->getItemManager()->getStashTab(id);
-        _viewer->LoadTab(league, tab);
+        if (tab != nullptr)
+            _viewer->LoadTab(league, tab);
+    });
+
+    connect(Core()->getItemManager(), &ItemManager::onStashTabUpdateProgress, [this] (QString league, QString tabId, bool throttled) {
+        StashItemLocation* tab = Core()->getItemManager()->getStashTab(tabId);
+        if (tab != nullptr)
+            _viewer->UpdateTab(league, tab, throttled);
     });
 
     Core()->settings()->beginGroup("data");
-    QStringList leagues = Core()->settings()->value("leagues").toStringList();
+    const QStringList leagues = Core()->settings()->value("leagues").toStringList();
+    Core()->settings()->endGroup();
     _viewer->OnLeaguesList(leagues);
     _characterViewer->setLeagues(leagues);
-    Core()->settings()->endGroup();
 
     connect(Core()->session(), &Session::Request::accountCharactersJson, [this] (QJsonDocument doc, QVariant) {
         QList<Character> characters;
@@ -78,12 +85,9 @@ void StashViewerPlugin::OnLoad() {
     });
 
     if (!league.isEmpty()) {
-        Settings()->beginGroup(league);
-        const QString filter = Settings()->value("filter").toString();
-        Settings()->endGroup();
-
         // Perform a fetch
-        // Core()->getItemManager()->fetchStashTabs(league, filter);
+        qDebug() << "Auto-fetching " << league;
+        Core()->getItemManager()->fetchStashTab(league, "");
     }
 
     Core()->session()->fetchAccountCharacters(Core()->session()->accountName());

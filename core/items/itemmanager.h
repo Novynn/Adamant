@@ -20,6 +20,7 @@ struct ItemManagerInstance {
     QString accountName;
     bool throttled;
     bool error;
+    bool sent;
     ItemManager* manager;
 
     enum class Type {
@@ -61,7 +62,8 @@ public:
 
     Q_INVOKABLE CharacterItemLocation* getCharacterItems(const QString &character);
 
-    Q_INVOKABLE void saveStash(QString league);
+    Q_INVOKABLE void saveStash(ItemManagerInstance* instance);
+    Q_INVOKABLE void saveStash(const QString& league, const QString& tabId);
     Q_INVOKABLE void printIndexMap(QString league = QString());
 
     static QDir StashDataDir(QString league);

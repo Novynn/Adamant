@@ -4,7 +4,7 @@
 #include <QGraphicsPixmapItem>
 #include <QListWidget>
 #include <QObject>
-#include <items/itemlocation.h>
+#include <items/stashitemlocation.h>
 
 class StashViewData {
 public:
@@ -23,6 +23,10 @@ public:
         _tab = 0;
     }
 
+    const StashItemLocation* getTab() const {
+        return dynamic_cast<const StashItemLocation*>(_tab);
+    }
+
     const ItemLocation* getLocation() const {
         return _tab;
     }
@@ -35,15 +39,18 @@ public:
         return _grid;
     }
 
-    void setLoaded(bool loaded=true) {
+    void setLoaded(bool loaded=true, bool throttled=false) {
+        const QString colorHint = (getTab()->tabColor().lightnessF() > 0.5) ? "light" : "dark";
         if (loaded) {
             _gridRequirement->hide();
-            //_grid->setOpacity(1.0);
+            _item->setIcon(QIcon(QString(":/icons/%1/cloud-check.png").arg(colorHint)));
         }
         else {
             _gridRequirement->show();
-            _gridRequirement->setPos(_grid->boundingRect().center());
-            //_grid->setOpacity(0.1);
+            _gridRequirement->setPos(_grid->boundingRect().center() - _gridRequirement->boundingRect().center());
+
+            const QString icon = throttled ? "pause" : "cloud-download";
+            _item->setIcon(QIcon(QString(":/icons/%1/%2.png").arg(colorHint).arg(icon)));
         }
     }
 

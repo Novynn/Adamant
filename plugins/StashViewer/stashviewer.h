@@ -34,6 +34,7 @@ public:
     void LoadTabItem(StashViewData* data);
     void LoadTab(StashViewData* data);
     void LoadTab(const QString& league, const ItemLocation* tab);
+    void UpdateTab(const QString& league, const ItemLocation* tab, bool throttled);
 public slots:
     void OnImage(const QString &path, QImage image);
     void OnLeaguesList(QStringList list);
@@ -66,6 +67,8 @@ private:
 
     GraphicItemFactory* _factory;
     QThread* _factoryThread;
+
+    QGraphicsProxyWidget* _optionsBarProxy;
 };
 Q_DECLARE_METATYPE(StashViewer*)
 
