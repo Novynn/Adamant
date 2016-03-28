@@ -20,9 +20,6 @@ public:
 
 private:
     Ui::ItemTooltip *ui;
-
-    // NEVER DO THIS IN C++ OMG
-    // TODO(rory): REMOVE!!!
     friend class GraphicItem;
 };
 

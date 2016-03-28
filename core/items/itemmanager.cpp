@@ -267,7 +267,6 @@ void ItemManager::onStashTabResult(QString league, QByteArray json, QVariant dat
     QJsonDocument doc = QJsonDocument::fromJson(json);
     bool error = false;
     if (doc.isEmpty() || !doc.isObject() || doc.object().contains("error")) {
-        // TODO(rory): Log error
         qDebug() << "Failed to retrieve stash tabs (throttled?)";
         // TODO(rory): Handle throttling
         // {"error":{"message":"You are requesting your stash too frequently. Please try again later."}}
@@ -410,7 +409,6 @@ void ItemManager::onCharacterItemsResult(QString character, QByteArray json, QVa
     }
     QJsonDocument doc = QJsonDocument::fromJson(json);
     if (doc.isEmpty() || !doc.isObject() || doc.object().contains("error")) {
-        // TODO(rory): Log error
         qDebug() << "Failed to retrieve character (throttled?)";
         // TODO(rory): Handle throttling
         // {"error":{"message":"You are requesting your stash too frequently. Please try again later."}}

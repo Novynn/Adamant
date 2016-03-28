@@ -126,7 +126,6 @@ void PluginManager::loadAndExecuteScripts() {
     // Load plugin scripts first
     for (AdamantPluginInfo* container : _plugins) {
         if (container->script != nullptr) {
-            // TODO(rory): Is invoke necessary here? Ref. Multithreading
             container->script->evaluateProgram();
         }
     }

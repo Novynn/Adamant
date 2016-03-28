@@ -42,8 +42,6 @@ StashViewer::StashViewer(QWidget *parent, QString league)
         for (const QString &image : images) {
             _imageCache->fetchImage(image);
         }
-
-        // TODO(rory): set data to the loaded state
     });
     connect(_factory, &GraphicItemFactory::destroyed, _factoryThread, &QThread::deleteLater);
     _factoryThread->start();
