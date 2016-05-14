@@ -1,0 +1,12 @@
+{
+    "name" : "TCPDisconnect",
+    "version" : "0.0.1",
+    "compatVersion" : "0.0.1",
+    "vendor" : "Novynn",
+    "copyright" : "(C) Novynn",
+    "license" : "",
+    "description" : "",
+    "url" : "",
+    "role" : "service"
+}
+
