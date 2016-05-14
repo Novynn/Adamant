@@ -21,7 +21,8 @@ class StashViewerPlugin : public AdamantPlugin
     Q_INTERFACES(AdamantPlugin)
 
 public:
-    Q_PROPERTY(StashViewer* Viewer MEMBER _viewer)
+    Q_PROPERTY(StashViewer* stashViewer MEMBER _viewer)
+    Q_PROPERTY(CharacterViewer* characterViewer MEMBER _characterViewer)
 
     StashViewerPlugin();
 protected:

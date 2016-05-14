@@ -26,6 +26,7 @@ class StashViewer : public QWidget
 public:
     explicit StashViewer(QWidget *parent = 0, QString league = QString());
     ~StashViewer();
+    QWidget* headerBar();
 
     Q_INVOKABLE void SetTabs(const QString& league, QList<StashItemLocation *> tabs);
 
@@ -40,13 +41,10 @@ public slots:
     void OnLeaguesList(QStringList list);
     void OnViewportChanged();
 private slots:
-    void on_listWidget_itemSelectionChanged();
-    void on_lineEdit_returnPressed();
-
-    void on_lineEdit_textChanged(const QString &text);
-
+    void on_stashListWidget_itemSelectionChanged();
+    void on_searchEdit_returnPressed();
+    void on_searchEdit_textChanged(const QString &text);
     void on_leagueBox_currentIndexChanged(const QString &text);
-
     void on_updateButton_clicked();
 
 signals:

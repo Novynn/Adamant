@@ -76,7 +76,7 @@ void StashViewer::OnViewportChanged() {
         auto listItem = data->getItem();
 
         if (filtered.contains(grid)) {
-            ui->listWidget->scrollToItem(listItem); // Ensures the item is visible
+            ui->stashListWidget->scrollToItem(listItem); // Ensures the item is visible
         }
         else {
             listItem->setTextAlignment(Qt::AlignLeft);
@@ -108,6 +108,10 @@ void StashViewer::OnLeaguesList(QStringList list) {
 
 StashViewer::~StashViewer() {
     delete ui;
+}
+
+QWidget* StashViewer::headerBar() {
+    return ui->headerBar;
 }
 
 void StashViewer::LoadTabItem(const QString &tabId) {
@@ -159,7 +163,7 @@ void StashViewer::SetTabs(const QString &league, QList<StashItemLocation*> tabs)
         StashViewData* data = _tabs.take(id);
         Q_ASSERT(data);
 
-        ui->listWidget->removeItemWidget(data->getItem());
+        ui->stashListWidget->removeItemWidget(data->getItem());
         _scene->removeItem(data->getGrid());
 
         delete data;
@@ -174,8 +178,8 @@ void StashViewer::AddTab(const QString &league, const ItemLocation* tab)
     const QString header = tab->header();
 
 
-    QListWidgetItem* item = new QListWidgetItem(header, ui->listWidget);
-    ui->listWidget->addItem(item);
+    QListWidgetItem* item = new QListWidgetItem(header, ui->stashListWidget);
+    ui->stashListWidget->addItem(item);
 
     // Setup Grid Items
     QGraphicsPixmapItem* gridItem = _scene->addPixmap(grid);
@@ -234,12 +238,12 @@ void StashViewer::LoadTab(const QString &league, const ItemLocation* tab) {
     LoadTab(data);
 }
 
-void StashViewer::on_listWidget_itemSelectionChanged() {
-    QList<QListWidgetItem*> items = ui->listWidget->selectedItems();
+void StashViewer::on_stashListWidget_itemSelectionChanged() {
+    QList<QListWidgetItem*> items = ui->stashListWidget->selectedItems();
 
     // Sort into the same order that the QListWidget contains them as
     std::sort(items.begin(), items.end(), [this](const QListWidgetItem* a, const QListWidgetItem* b) -> bool {
-        return ui->listWidget->row(a) < ui->listWidget->row(b);
+        return ui->stashListWidget->row(a) < ui->stashListWidget->row(b);
     });
 
     static QPixmap grid(":/images/StashPanelGrid.png");
@@ -274,13 +278,13 @@ void StashViewer::on_listWidget_itemSelectionChanged() {
         index++;
     }
 
-    emit ui->lineEdit->returnPressed();
+    emit ui->searchEdit->returnPressed();
 }
 
-void StashViewer::on_lineEdit_returnPressed() {
-    const QString &text = ui->lineEdit->text();
-    for (int i = 0; i < ui->listWidget->count(); i++) {
-        QListWidgetItem* item = ui->listWidget->item(i);
+void StashViewer::on_searchEdit_returnPressed() {
+    const QString &text = ui->searchEdit->text();
+    for (int i = 0; i < ui->stashListWidget->count(); i++) {
+        QListWidgetItem* item = ui->stashListWidget->item(i);
 
         StashViewData* data = item->data(StashViewData::ListItemDataIndex).value<StashViewData*>();
         Q_ASSERT(data);
@@ -309,9 +313,9 @@ void StashViewer::on_lineEdit_returnPressed() {
     OnViewportChanged();
 }
 
-void StashViewer::on_lineEdit_textChanged(const QString &text) {
+void StashViewer::on_searchEdit_textChanged(const QString &text) {
     if (text.isEmpty()) {
-        emit ui->lineEdit->returnPressed();
+        emit ui->searchEdit->returnPressed();
     }
 }
 
@@ -325,18 +329,18 @@ void StashViewer::on_leagueBox_currentIndexChanged(const QString &text) {
         StashViewData* data = _tabs.take(id);
         Q_ASSERT(data);
 
-        ui->listWidget->removeItemWidget(data->getItem());
+        ui->stashListWidget->removeItemWidget(data->getItem());
         _scene->removeItem(data->getGrid());
 
         delete data;
     }
-    ui->listWidget->clear();
+    ui->stashListWidget->clear();
     _scene->clear();
     _tabs.clear();
 }
 
 void StashViewer::on_updateButton_clicked() {
-    QList<QListWidgetItem*> items = ui->listWidget->selectedItems();
+    QList<QListWidgetItem*> items = ui->stashListWidget->selectedItems();
     for (QListWidgetItem* item : items) {
         StashViewData* data = item->data(StashViewData::ListItemDataIndex).value<StashViewData*>();
         Q_ASSERT(data);

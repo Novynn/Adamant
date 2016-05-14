@@ -6,8 +6,9 @@ class PluginManager;
 #include <core.h>
 #include <pluginmanager.h>
 #include <stashviewerplugin.h>
-
+#include <stashviewer.h>
 #include <shopviewer.h>
+#include <shop/shop.h>
 
 class AdamantShopPlugin : public AdamantPlugin
 {
@@ -17,23 +18,29 @@ class AdamantShopPlugin : public AdamantPlugin
 
 public:
     AdamantShopPlugin()
-        : _viewer(new ShopViewer()) {
+        : _viewer(new ShopViewer(this)) {
+    }
+    static QDir shopsPath();
 
+    Shop* loadShop(const QString& file);
+    Q_INVOKABLE void loadShops();
+
+    bool saveShop(const Shop* shop) const;
+    Q_INVOKABLE void saveShops() const;
+
+    Q_INVOKABLE ShopList getShops() {
+        return _shops;
     }
 
 public slots:
-    void OnLoad() {
-        AdamantPlugin* plugin = Core()->getPluginManager()->getPluginByIID("com.adamant.plugin.stashviewer");
-        StashViewerPlugin* sPlugin = dynamic_cast<StashViewerPlugin*>(plugin);
-
-        Core()->interface()->window()->registerPage(QIcon(":/icons/dark/cart.png"),
-                                                    "Shops", "Manage shop threads.",
-                                                    _viewer);
-
-//        qDebug() << "Hello?" << plugin << sPlugin;
-    }
+    void OnLoad();
 private:
     ShopViewer* _viewer;
+    ShopList _shops;
+
+    // AdamantPlugin interface
+public slots:
+    void SetupEngine(QScriptEngine* engine, QScriptValue* plugin);
 };
 
 #endif // ADAMANTSHOP_H

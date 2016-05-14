@@ -6,13 +6,15 @@ DEFINES += ADAMANTSHOP_LIBRARY
 
 adamantshop.depends = stashviewer core
 
-QT += core gui widgets network
+QT += core gui widgets network printsupport
 TARGET = com.adamant.plugin.adamantshop
 
 OTHER_FILES += adamantshop.json
 HEADERS += adamantshopplugin.h \
     shopviewer.h \
-    widgets/shopwidget.h
+    widgets/shopwidget.h \
+    external/qcustomplot.h \
+    shop/shop.h
 
 win32: LIBS += -L$$OUT_PWD/../../bin/ -ladamant
 else:unix: LIBS += -L$$OUT_PWD/../../bin/ -ladamant
@@ -32,4 +34,7 @@ FORMS += \
 
 SOURCES += \
     shopviewer.cpp \
-    widgets/shopwidget.cpp
+    widgets/shopwidget.cpp \
+    external/qcustomplot.cpp \
+    adamantshopplugin.cpp \
+    shop/shop.cpp
