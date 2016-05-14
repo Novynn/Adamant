@@ -9,7 +9,7 @@
 #include <QSettings>
 
 #include "session/session.h"
-class UI;
+class AdamantUI;
 class Adamant;
 class PluginManager;
 class ItemManager;
@@ -17,7 +17,7 @@ class ItemManager;
 class CORE_EXTERN CoreService : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(UI* ui MEMBER _ui)
+    Q_PROPERTY(AdamantUI* ui MEMBER _ui)
     Q_PROPERTY(ItemManager* item_manager MEMBER _itemManager)
 public:
     CoreService();
@@ -29,9 +29,22 @@ public:
         return QDir(QStandardPaths::writableLocation(QStandardPaths::DataLocation));
     }
 
+    static QDir dataPath(const QString &folder) {
+        QDir path = CoreService::dataPath();
+        if (!path.cd(folder)) {
+            path.mkdir(folder);
+            path.cd(folder);
+        }
+        return path;
+    }
+
+    static QDir cachePath() {
+        return dataPath("cache");
+    }
+
     bool load();
 
-    Q_INVOKABLE UI* interface() {
+    Q_INVOKABLE AdamantUI* getInterface() {
         return _ui;
     }
 
@@ -65,7 +78,7 @@ private:
     QSettings _settings;
     QSettings _sensitiveSettings;
     ItemManager* _itemManager;
-    UI* _ui;
+    AdamantUI* _ui;
 
     QMap<QString, QMetaObject::Connection> _requiredData;
 };

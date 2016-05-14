@@ -13,7 +13,7 @@ CoreService::CoreService()
     , _itemManager(new ItemManager(this)) {
     Session::SetCoreService(this);
 
-    _ui = new UI(this);
+    _ui = new AdamantUI(this);
 
     connect(_pluginManager, &PluginManager::pluginMessage, [this] (QString msg, QtMsgType type) {
         emit message(msg, type);
@@ -40,19 +40,19 @@ bool CoreService::load() {
     sensitiveSettings()->endGroup();
 
     // Required here so that the setup dialog also gets this palette
-    interface()->setTheme();
+    getInterface()->setTheme();
 
-    interface()->start();
+    getInterface()->start();
 
     while (sessionId.isEmpty()) {
         // Oh no, run setup.
-        int result = interface()->showSetup(); // Blocking
+        int result = getInterface()->showSetup(); // Blocking
         if (result != 0x0) {
-            interface()->window()->close();
+            getInterface()->window()->close();
             return false;
         }
 
-        QVariantMap map = interface()->getSetupDialog()->getData();
+        QVariantMap map = getInterface()->getSetupDialog()->getData();
 
         // Setup completed, we should have valid data
         sensitiveSettings()->beginGroup("session");
@@ -107,10 +107,10 @@ void CoreService::ready() {
     getPluginManager()->loadPlugins();
 
     qInfo() << qPrintable("Adamant Started!");
-    interface()->registerPages();
+    getInterface()->registerPages();
 
     // Set page to home
-    interface()->window()->setPageIndex(0);
+    getInterface()->window()->setPageIndex(0);
 }
 
 void CoreService::loggedMessage(const QString &message, QtMsgType type) {
@@ -123,7 +123,7 @@ void CoreService::loggedMessage(const QString &message, QtMsgType type) {
         case QtFatalMsg:      sType = "FAT"; break;
     }
 
-    interface()->window()->appendScriptOutput(message, sType);
+    getInterface()->window()->appendScriptOutput(message, sType);
 }
 
 QDir CoreService::applicationPath() {

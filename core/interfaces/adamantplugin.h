@@ -8,6 +8,7 @@
 #include <QtScript/QScriptValue>
 
 class CoreService;
+class AdamantUI;
 
 class AdamantPlugin : public QObject
 {

@@ -10,12 +10,13 @@ ImageCache::ImageCache(QObject *parent)
     , _manager(new QNetworkAccessManager(parent))
 {
     connect(_manager, &QNetworkAccessManager::sslErrors, this, [this] (QNetworkReply* reply, const QList<QSslError> &errors) {
+        Q_UNUSED(errors)
         reply->ignoreSslErrors();
     });
 }
 
 QDir ImageCache::cacheDir() const {
-    QDir cacheDir = CoreService::dataPath();
+    QDir cacheDir = CoreService::cachePath();
     if (!cacheDir.cd("image_cache")) {
         cacheDir.mkdir("image_cache");
         cacheDir.cd("image_cache");

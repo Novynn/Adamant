@@ -98,14 +98,13 @@ ScriptSandbox::ScriptSandbox(const PluginManager *parent, const QString &script,
 
     // Register MetaTypes, sometimes Q_DECL doesn't seem to cut it...
     qRegisterMetaType<Session::Request*>("Session::Request");
-    qRegisterMetaType<UI*>("UI");
+    qRegisterMetaType<AdamantUI*>("AdamantUI");
     qRegisterMetaType<ItemManager*>("ItemManager");
-    qRegisterMetaType<UI::ApplicationTheme>("ApplicationTheme");
-
-//    qScriptRegisterMetaType<UI::ApplicationTheme>(&_engine, [](QScriptEngine *engine, const UI::ApplicationTheme &t) -> QScriptValue {
+    qRegisterMetaType<AdamantUI::ApplicationTheme>("ApplicationTheme");
+//    qScriptRegisterMetaType<AdamantUI::ApplicationTheme>(&_engine, [](QScriptEngine *engine, const AdamantUI::ApplicationTheme &t) -> QScriptValue {
 //        return QScriptValue(static_cast<int>(t));
-//    }, [](const QScriptValue &obj, UI::ApplicationTheme &t) {
-//        t = static_cast<UI::ApplicationTheme>(obj.toInt32());
+//    }, [](const QScriptValue &obj, AdamantUI::ApplicationTheme &t) {
+//        t = static_cast<AdamantUI::ApplicationTheme>(obj.toInt32());
 //    });
 
 

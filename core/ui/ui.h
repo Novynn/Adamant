@@ -11,12 +11,12 @@
 
 #include <ui/pages/pluginpage.h>
 
-class CORE_EXTERN UI : public QObject
+class CORE_EXTERN AdamantUI : public QObject
 {
     Q_OBJECT
 public:
-    UI(CoreService* parent);
-    ~UI();
+    AdamantUI(CoreService* parent);
+    ~AdamantUI();
     Q_PROPERTY(SetupDialog* SetupDialog MEMBER _setupDialog)
     Q_PROPERTY(MainWindow* MainWindow MEMBER _window)
     Q_PROPERTY(ApplicationTheme Theme MEMBER _theme NOTIFY applicationThemeChanged)
@@ -67,8 +67,8 @@ private:
     QPalette _lightPalette;
     QPalette _darkPalette;
 };
-Q_DECLARE_METATYPE(UI*)
-Q_DECLARE_METATYPE(UI::ApplicationTheme)
+Q_DECLARE_METATYPE(AdamantUI*)
+Q_DECLARE_METATYPE(AdamantUI::ApplicationTheme)
 
 #endif // UI_H
 

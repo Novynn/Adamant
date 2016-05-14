@@ -8,7 +8,7 @@
 #include <QStyle>
 #include <QStyleFactory>
 
-UI::UI(CoreService *parent)
+AdamantUI::AdamantUI(CoreService *parent)
     : QObject(parent)
     , _core(parent)
     , _theme(ApplicationTheme::Light) {
@@ -19,7 +19,7 @@ UI::UI(CoreService *parent)
             _core->session(), &Session::Request::loginWithSessionId);
     connect(_setupDialog, &SetupDialog::loginRequested,
             _core->session(), &Session::Request::login);
-    connect(this, &UI::requestProfileData,
+    connect(this, &AdamantUI::requestProfileData,
             _core->session(), &Session::Request::loginWithSessionId);
 
     connect(_core->session(), &Session::Request::loginResult,
@@ -65,12 +65,12 @@ UI::UI(CoreService *parent)
     qApp->setPalette(_lightPalette);
 }
 
-UI::~UI() {
+AdamantUI::~AdamantUI() {
     _window->deleteLater();
     _setupDialog->deleteLater();
 }
 
-void UI::setTheme(ApplicationTheme theme) {
+void AdamantUI::setTheme(ApplicationTheme theme) {
     if (theme == _theme) return;
     ApplicationTheme old = _theme;
     _theme = theme;
@@ -97,10 +97,10 @@ void UI::setTheme(ApplicationTheme theme) {
     emit applicationThemeChanged(old, _theme);
 }
 
-void UI::start() {
+void AdamantUI::start() {
     _window->show();
 }
 
-int UI::showSetup() {
+int AdamantUI::showSetup() {
     return _setupDialog->exec();
 }

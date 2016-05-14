@@ -106,7 +106,7 @@ CharacterItemLocation*ItemManager::getCharacterItems(const QString& character) {
 }
 
 QDir ItemManager::StashDataDir(QString league) {
-    QDir dataDir = CoreService::dataPath();
+    QDir dataDir = CoreService::cachePath();
     league = league.toLower();
     QString folder = QString("%1_cache").arg(league);
     if (!dataDir.cd(folder)) {
