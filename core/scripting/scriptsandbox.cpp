@@ -83,7 +83,7 @@ QScriptValue ScriptSandbox::printFunc(QScriptContext *context , QScriptEngine *e
     return context->throwError(QScriptContext::ReferenceError, "could not find script object");
 }
 
-ScriptSandbox::ScriptSandbox(const PluginManager *parent, const QString &script, AdamantPlugin *owner)
+ScriptSandbox::ScriptSandbox(const PluginManager *parent, const QString &file, const QString &script, AdamantPlugin *owner)
     : QObject()
     , _manager(parent)
     , _script(script)
@@ -92,9 +92,8 @@ ScriptSandbox::ScriptSandbox(const PluginManager *parent, const QString &script,
     , _engineDebugger()
     , _errorString()
 {
-    // _engineDebugger.attachTo(&_engine);
-
-    _program = QScriptProgram(_script, "internal.qs");
+    _engineDebugger.attachTo(&_engine);
+    _program = QScriptProgram(_script, file);
 
     // Register MetaTypes, sometimes Q_DECL doesn't seem to cut it...
     qRegisterMetaType<Session::Request*>("Session::Request");
@@ -134,6 +133,11 @@ ScriptSandbox::ScriptSandbox(const PluginManager *parent, const QString &script,
         QScriptValue func = _engine.newFunction(ScriptSandbox::printFunc, this);
         _engine.globalObject().setProperty("print", func);
     }
+}
+
+void ScriptSandbox::setup() {
+    const AdamantUI* ui = _manager->core()->getInterface();
+    _engineDebugger.standardWindow()->setPalette(ui->getLightPalette());
 }
 
 ScriptSandbox::~ScriptSandbox() {

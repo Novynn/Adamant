@@ -82,7 +82,7 @@ signals:
 
     void pluginMessage(QString, QtMsgType) const;
 public slots:
-    ScriptSandbox* addScript(const QString &script, AdamantPlugin *owner = 0);
+    ScriptSandbox* addScript(const QString &file, const QString &script, AdamantPlugin *owner = 0);
     void reloadScripts();
     void onPluginMessage(const AdamantPlugin* plugin, QString message, QtMsgType type) const;
 private slots:

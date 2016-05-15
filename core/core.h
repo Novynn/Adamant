@@ -13,6 +13,7 @@ class AdamantUI;
 class Adamant;
 class PluginManager;
 class ItemManager;
+class ScriptSandbox;
 
 class CORE_EXTERN CoreService : public QObject
 {
@@ -48,6 +49,10 @@ public:
         return _ui;
     }
 
+    Q_INVOKABLE ScriptSandbox* script() {
+        return _script;
+    }
+
     Q_INVOKABLE Session::Request* session() {
         return Session::Global();
     }
@@ -78,6 +83,7 @@ private:
     QSettings _settings;
     QSettings _sensitiveSettings;
     ItemManager* _itemManager;
+    ScriptSandbox* _script;
     AdamantUI* _ui;
 
     QMap<QString, QMetaObject::Connection> _requiredData;

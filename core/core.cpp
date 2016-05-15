@@ -1,16 +1,18 @@
 #include "core.h"
 #include "pluginmanager.h"
-#include "ui/ui.h"
+#include <ui/ui.h>
 #include <items/itemmanager.h>
 #include <ui/pages/pluginpage.h>
-#include "session/sessionrequest.h"
+#include <session/sessionrequest.h>
+#include <scripting/scriptsandbox.h>
 
 CoreService::CoreService()
     : QObject()
     , _pluginManager(new PluginManager(this))
     , _settings("data.ini", QSettings::IniFormat)
     , _sensitiveSettings("sensitive.ini", QSettings::IniFormat)
-    , _itemManager(new ItemManager(this)) {
+    , _itemManager(new ItemManager(this))
+    , _script(new ScriptSandbox(_pluginManager, "console", "")) {
     Session::SetCoreService(this);
 
     _ui = new AdamantUI(this);
@@ -18,6 +20,8 @@ CoreService::CoreService()
     connect(_pluginManager, &PluginManager::pluginMessage, [this] (QString msg, QtMsgType type) {
         emit message(msg, type);
     });
+
+    _script->setup();
 }
 
 CoreService::~CoreService() {

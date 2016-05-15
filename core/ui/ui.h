@@ -56,6 +56,15 @@ public:
                                     new PluginPage(_core, window()), true);
     }
 
+    QPalette getLightPalette() const {
+        return _lightPalette;
+    }
+
+    QPalette getDarkPalette() const {
+        return _darkPalette;
+    }
+
+    void setup();
 signals:
     void requestProfileData(QString sessionId);
     void applicationThemeChanged(ApplicationTheme old, ApplicationTheme now);

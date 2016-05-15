@@ -14,7 +14,6 @@ MainWindow::MainWindow(CoreService *core, QWidget *parent)
     , ui(new Ui::MainWindow)
     , _core(core)
     , _mode(InvalidMode)
-    , _script(new ScriptSandbox(_core->getPluginManager(), ""))
     , _loadingImage(new QMovie(":/images/loading_dark.gif"))
 {
     ui->setupUi(this);
@@ -25,7 +24,7 @@ MainWindow::MainWindow(CoreService *core, QWidget *parent)
 
     _buttonForPage.insert(0, ui->homeButton);
 
-    connect(_script, &ScriptSandbox::scriptOutput, [this] (const QString &message) {
+    connect(_core->script(), &ScriptSandbox::scriptOutput, [this] (const QString &message) {
         appendScriptOutput(message, "===");
     });
 
@@ -89,6 +88,14 @@ MainWindow::MainWindow(CoreService *core, QWidget *parent)
     }
 
     {
+        QShortcut* shortcut = new QShortcut(QKeySequence("Ctrl+R"), this);
+        connect(shortcut, &QShortcut::activated, [this] () {
+            _core->getPluginManager()->reloadScripts();
+            appendScriptOutput("Scripts reloaded!");
+        });
+    }
+
+    {
         QShortcut* shortcut = new QShortcut(QKeySequence("Ctrl+" + QString::number(++_shortcutIndex)), this);
         connect(shortcut, &QShortcut::activated, [this] () {
             if (_mode == HomeMode || _mode == ElsewhereMode)
@@ -122,9 +129,11 @@ void MainWindow::on_lineEdit_returnPressed() {
 
     // Reset index
     _currentIndex = -1;
-    _scriptHistory.prepend(text);
-    while (_scriptHistory.size() >= 100) _scriptHistory.takeLast();
-    _script->addLine(text);
+    if (_scriptHistory.isEmpty() || (_scriptHistory.first() != text)) {
+        _scriptHistory.prepend(text);
+        while (_scriptHistory.size() >= 100) _scriptHistory.takeLast();
+    }
+    _core->script()->addLine(text);
 }
 
 void MainWindow::onProfileBadgeImage(const QString &badge, QImage image) {

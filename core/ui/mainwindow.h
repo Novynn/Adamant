@@ -14,7 +14,6 @@ class MainWindow;
 class CoreService;
 class QLabel;
 class CommandButton;
-class ScriptSandbox;
 
 class CORE_EXTERN MainWindow : public QMainWindow
 {
@@ -63,8 +62,6 @@ private:
 
     QMap<int, CommandButton*> _buttonForPage;
     int _shortcutIndex = 0;
-
-    ScriptSandbox* _script;
 
     QLabel* _statusBarLabel;
     QProgressBar* _statusBarProgress;

@@ -12,6 +12,7 @@ AdamantUI::AdamantUI(CoreService *parent)
     : QObject(parent)
     , _core(parent)
     , _theme(ApplicationTheme::Light) {
+    setup();
     _window = new MainWindow(parent);
     _setupDialog = new SetupDialog(_window, _core);
 
@@ -42,7 +43,9 @@ AdamantUI::AdamantUI(CoreService *parent)
             _window->updateAccountMessagesCount(doc.object().value("messages").toInt());
         }
     });
+}
 
+void AdamantUI::setup() {
     qApp->setStyle(QStyleFactory::create("fusion"));
 
     _lightPalette = qApp->palette();
@@ -62,7 +65,7 @@ AdamantUI::AdamantUI(CoreService *parent)
     _darkPalette.setColor(QPalette::Disabled,           QPalette::Text, Qt::darkGray);
     _darkPalette.setColor(QPalette::Disabled,           QPalette::ButtonText, Qt::darkGray);
 
-    qApp->setPalette(_lightPalette);
+    //qApp->setPalette(_lightPalette);
 }
 
 AdamantUI::~AdamantUI() {

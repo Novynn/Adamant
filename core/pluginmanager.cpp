@@ -139,15 +139,15 @@ void PluginManager::loadScripts() {
         QFile file(info.absoluteFilePath());
         if (file.open(QFile::ReadOnly | QFile::Text)) {
             QString script = file.readAll();
-            ScriptSandbox* s = addScript(script);
+            ScriptSandbox* s = addScript(file.fileName(), script);
             if (s) s->evaluateProgram();
             file.close();
         }
     }
 }
 
-ScriptSandbox* PluginManager::addScript(const QString &script, AdamantPlugin* owner) {
-    ScriptSandbox* s = new ScriptSandbox(this, script, owner);
+ScriptSandbox* PluginManager::addScript(const QString &file, const QString &script, AdamantPlugin* owner) {
+    ScriptSandbox* s = new ScriptSandbox(this, file, script, owner);
     if (s->isValid()) {
         connect(s, &ScriptSandbox::terminating, [this, s] () {
             onScriptFinished(s);
@@ -224,7 +224,7 @@ void PluginManager::preparePlugins() {
                     const QString script = scriptFile.readAll();
                     scriptFile.close();
 
-                    data->script = addScript(script, data->instance);
+                    data->script = addScript(scriptFile.fileName(), script, data->instance);
                 }
 
                 _plugins.append(data);

@@ -27,7 +27,7 @@ class ScriptSandbox : public QObject
 {
     Q_OBJECT
 public:
-    explicit ScriptSandbox(const PluginManager *manager, const QString &script, AdamantPlugin *owner = 0);
+    explicit ScriptSandbox(const PluginManager *manager, const QString& file, const QString &script, AdamantPlugin *owner = 0);
     ~ScriptSandbox();
 
     QScriptValue addGlobalObject(const QString &name, QObject *object);
@@ -49,6 +49,7 @@ public:
     }
 
     bool addLine(const QString &script);
+    void setup();
 public slots:
     void evaluateProgram();
     void terminate();
