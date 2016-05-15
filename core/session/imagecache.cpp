@@ -70,7 +70,9 @@ void ImageCache::fetchImage(QString path) {
 }
 
 QString ImageCache::generateFileName(const QString &path) {
-    return QString(QCryptographicHash::hash(path.toLatin1(), QCryptographicHash::Md5).toHex()).append(".png");
+    int index = path.lastIndexOf(".");
+    QString extension = (index == -1) ? ".png" : path.mid(index);
+    return QString(QCryptographicHash::hash(path.toLatin1(), QCryptographicHash::Md5).toHex()).append(extension);
 }
 
 void ImageCache::save(const QString &file, const QImage &image) {

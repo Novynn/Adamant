@@ -129,16 +129,6 @@ void SetupDialog::on_importButton_clicked() {
     setPage(SetupDialog::FinishPage);
 }
 
-void SetupDialog::on_changeNameButton_clicked(){
-   bool ok;
-   QString text = QInputDialog::getText(this, "Adamant - Account Name Input",
-                                        "Account Name:", QLineEdit::Normal,
-                                        _accountName, &ok);
-   if (ok && !text.isEmpty()) {
-       updateAccountName(text);
-   }
-}
-
 void SetupDialog::on_poeConfigBrowseButton_clicked() {
     QString directory = QFileDialog::getOpenFileName(this, "Adamant - Path of Exile Config Directory", QString(),
                                                      "Config (production_Config.ini)");

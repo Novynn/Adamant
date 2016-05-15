@@ -473,13 +473,6 @@
            </spacer>
           </item>
           <item>
-           <widget class="QCommandLinkButton" name="changeNameButton">
-            <property name="text">
-             <string>Change Name</string>
-            </property>
-           </widget>
-          </item>
-          <item>
            <widget class="QCommandLinkButton" name="continueNameButton">
             <property name="text">
              <string>Continue</string>
@@ -1035,7 +1028,6 @@
   <tabstop>poeLoginButton</tabstop>
   <tabstop>sessionIdLoginButton</tabstop>
   <tabstop>steamLoginButton</tabstop>
-  <tabstop>changeNameButton</tabstop>
   <tabstop>continueNameButton</tabstop>
   <tabstop>poeEdit</tabstop>
   <tabstop>poeBrowseButton</tabstop>

@@ -218,11 +218,9 @@ void Session::Request::onAccountPageResult() {
 
         // Request Avatar
         {
-            const QString url = BaseUrl().toString() + avatar;
-            const QString avatar = _cache->generateFileName(url);
             if (!_avatars.contains(avatar))
                 _avatars.append(avatar);
-            fetchImage(url);
+            fetchImage(avatar);
         }
         // Request Badges
         for (const QString &key : badges.uniqueKeys()){
@@ -313,7 +311,8 @@ const QString Session::Request::getAccountAvatar(const QByteArray &data) {
     QRegularExpression expr("<img\\s+src=\\\"(?<image>.+?)\\\"\\s+alt=\\\"Avatar\\\"");
     QRegularExpressionMatch match = expr.match(data);
     if (match.isValid() && match.hasMatch()) {
-        return match.captured("image");
+        const QString image = match.captured("image");
+        return image.startsWith("/") ? BaseUrl().toString() + image : image;
     }
     return QString();
 }

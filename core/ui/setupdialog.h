@@ -66,7 +66,6 @@ private slots:
     void on_skipButton_clicked();
     void on_importButton_clicked();
     void on_backButton_clicked();
-    void on_changeNameButton_clicked();
 
     void on_poeConfigBrowseButton_clicked();
 
