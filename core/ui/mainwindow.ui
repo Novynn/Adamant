@@ -15,7 +15,7 @@
   </property>
   <property name="styleSheet">
    <string notr="true">#MainWindow {
-	border-image: url(:/images/background2.jpg);
+	
 }
 
 
