@@ -135,6 +135,13 @@ public:
 
     bool save(QJsonObject &object) const;
     bool load(const QJsonObject &object);
+    Q_INVOKABLE inline QByteArray save() {
+        QJsonObject object;
+        save(object);
+        QJsonDocument doc(object);
+        return doc.toJson();
+    }
+
 signals:
 
 public slots:
