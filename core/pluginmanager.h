@@ -41,7 +41,7 @@ public:
                 return data->instance;
             }
         }
-        return 0;
+        return nullptr;
     }
 
     QList<AdamantPluginInfo*> getPluginContainers() const {

@@ -28,7 +28,7 @@ public:
     }
 public slots:
     virtual void OnLoad() {}
-    virtual void SetupEngine(QScriptEngine* engine, QScriptValue* plugin) {Q_UNUSED(engine); Q_UNUSED(plugin);}
+    virtual void setupEngine(QScriptEngine* engine, QScriptValue* plugin) {Q_UNUSED(engine); Q_UNUSED(plugin);}
     virtual void OnScriptResult(const QString &result) {Q_UNUSED(result);}
 
     virtual const QString GetPluginScript() {return QString();}
@@ -55,7 +55,7 @@ private:
     CoreService* _core;
 };
 
-Q_DECLARE_INTERFACE(AdamantPlugin, "com.adamant.plugin/1.0")
+Q_DECLARE_INTERFACE(AdamantPlugin, "adamant.plugin/1.0")
 Q_DECLARE_OPAQUE_POINTER(AdamantPlugin*)
 Q_DECLARE_METATYPE(AdamantPlugin*)
 

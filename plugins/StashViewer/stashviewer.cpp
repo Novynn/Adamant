@@ -281,8 +281,12 @@ void StashViewer::on_stashListWidget_itemSelectionChanged() {
     emit ui->searchEdit->returnPressed();
 }
 
-void StashViewer::on_searchEdit_returnPressed() {
-    const QString &text = ui->searchEdit->text();
+void StashViewer::search(const QString &text) {
+    if (ui->searchEdit->text() != text) {
+        ui->searchEdit->blockSignals(true);
+        ui->searchEdit->setText(text);
+        ui->searchEdit->blockSignals(false);
+    }
     for (int i = 0; i < ui->stashListWidget->count(); i++) {
         QListWidgetItem* item = ui->stashListWidget->item(i);
 
@@ -313,9 +317,14 @@ void StashViewer::on_searchEdit_returnPressed() {
     OnViewportChanged();
 }
 
+void StashViewer::on_searchEdit_returnPressed() {
+    const QString &text = ui->searchEdit->text();
+    search(text);
+}
+
 void StashViewer::on_searchEdit_textChanged(const QString &text) {
     if (text.isEmpty()) {
-        emit ui->searchEdit->returnPressed();
+        search();
     }
 }
 
@@ -337,6 +346,7 @@ void StashViewer::on_leagueBox_currentIndexChanged(const QString &text) {
     ui->stashListWidget->clear();
     _scene->clear();
     _tabs.clear();
+    ui->searchEdit->clear();
 }
 
 void StashViewer::on_updateButton_clicked() {

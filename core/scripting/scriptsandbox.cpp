@@ -39,7 +39,7 @@ QScriptValue ScriptSandbox::importFunc(QScriptContext *context , QScriptEngine *
         AdamantPlugin* plugin = instance->_manager->getPluginByIID(import);
         if (plugin) {
             QScriptValue value = engine->newQObject(plugin, QScriptEngine::QtOwnership, QScriptEngine::ExcludeDeleteLater);
-            plugin->SetupEngine(engine, &value);
+            plugin->setupEngine(engine, &value);
             return value;
         }
         return context->throwError(QScriptContext::ReferenceError, "could not find plugin [" + import + "]");

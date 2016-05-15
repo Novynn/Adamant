@@ -1,0 +1,12 @@
+#ifndef STASHVIEWER_GLOBAL_H
+#define STASHVIEWER_GLOBAL_H
+
+#include <QtCore/QtGlobal>
+
+#ifdef STASHVIEWER_LIBRARY
+    #define STASHVIEWER_EXTERN Q_DECL_EXPORT
+#else
+    #define STASHVIEWER_EXTERN Q_DECL_IMPORT
+#endif
+
+#endif // STASHVIEWER_GLOBAL_H

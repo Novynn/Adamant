@@ -17,12 +17,16 @@
 class StashViewerPlugin : public AdamantPlugin
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID "com.adamant.plugin.stashviewer" FILE "stashviewer.json")
+    Q_PLUGIN_METADATA(IID "adamant.stashviewer" FILE "stashviewer.json")
     Q_INTERFACES(AdamantPlugin)
 
 public:
     Q_PROPERTY(StashViewer* stashViewer MEMBER _viewer)
     Q_PROPERTY(CharacterViewer* characterViewer MEMBER _characterViewer)
+
+    StashViewer* getStashViewer() {
+        return _viewer;
+    }
 
     StashViewerPlugin();
 protected:

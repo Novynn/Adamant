@@ -9,11 +9,11 @@ class PluginManager;
 class GlobalHotkeyPlugin : public AdamantPlugin
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID "com.adamant.plugin.globalhotkey" FILE "globalhotkey.json")
+    Q_PLUGIN_METADATA(IID "adamant.globalhotkey" FILE "globalhotkey.json")
     Q_INTERFACES(AdamantPlugin)
 
 public:
-    static QScriptValue Listen(QScriptContext *context , QScriptEngine *engine, void *arg) {
+    static QScriptValue listen(QScriptContext *context , QScriptEngine *engine, void *arg) {
         GlobalHotkeyPlugin* instance = qobject_cast<GlobalHotkeyPlugin*>((QObject*)arg);
         if (instance) {
             if (context->argumentCount() != 2) {
@@ -44,8 +44,8 @@ public:
         return context->throwError(QScriptContext::ReferenceError, "could not find script object");
     }
 public slots:
-    void SetupEngine(QScriptEngine* engine, QScriptValue* plugin) {
-        plugin->setProperty("Listen", engine->newFunction(GlobalHotkeyPlugin::Listen, this));
+    void setupEngine(QScriptEngine* engine, QScriptValue* plugin) {
+        plugin->setProperty("listen", engine->newFunction(GlobalHotkeyPlugin::listen, this));
     }
 private:
     QMap<QString, QxtGlobalShortcut*> shortcuts;

@@ -13,12 +13,13 @@ class PluginManager;
 class AdamantShopPlugin : public AdamantPlugin
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID "com.adamant.plugin.adamantshop" FILE "adamantshop.json")
+    Q_PLUGIN_METADATA(IID "adamant.shop" FILE "adamantshop.json")
     Q_INTERFACES(AdamantPlugin)
 
 public:
     AdamantShopPlugin()
-        : _viewer(new ShopViewer(this)) {
+        : _viewer(nullptr)
+        , _stashViewer(nullptr) {
     }
     static QDir shopsPath();
 
@@ -38,9 +39,11 @@ private:
     ShopViewer* _viewer;
     ShopList _shops;
 
-    // AdamantPlugin interface
+    StashViewer* _stashViewer;
 public slots:
-    void SetupEngine(QScriptEngine* engine, QScriptValue* plugin);
+    void setupEngine(QScriptEngine* engine, QScriptValue* plugin);
+
+    friend class ShopViewer;
 };
 
 #endif // ADAMANTSHOP_H

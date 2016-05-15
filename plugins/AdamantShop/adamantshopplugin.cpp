@@ -1,4 +1,6 @@
 #include "adamantshopplugin.h"
+#include <QHBoxLayout>
+#include <QPushButton>
 #include <core.h>
 
 QDir AdamantShopPlugin::shopsPath() {
@@ -68,15 +70,17 @@ bool AdamantShopPlugin::saveShop(const Shop* shop) const {
 }
 
 void AdamantShopPlugin::OnLoad() {
-    AdamantPlugin* plugin = Core()->getPluginManager()->getPluginByIID("com.adamant.plugin.stashviewer");
-    StashViewerPlugin* sPlugin = dynamic_cast<StashViewerPlugin*>(plugin);
-    if (!sPlugin) {
-        // Error, requires StashViewerPlugins
-
+    StashViewerPlugin* plugin = dynamic_cast<StashViewerPlugin*>(Core()->getPluginManager()->getPluginByIID("adamant.stashviewer"));
+    if (plugin == nullptr) {
+        // Error, requires StashViewerPlugin
         return;
     }
-    //        StashViewer* viewer = sPlugin->property("stashViewer").value<StashViewer*>();
-
+    _stashViewer = plugin->getStashViewer();
+    if (_stashViewer == nullptr) {
+        // Couldn't fetch StashViewer
+        return;
+    }
+    _viewer = new ShopViewer(this, _stashViewer);
     Core()->getInterface()->window()->registerPage(QIcon(":/icons/dark/cart.png"),
                                                    "Shops", "Manage shop threads.",
                                                    _viewer);
@@ -96,7 +100,7 @@ void AdamantShopPlugin::OnLoad() {
     }
 }
 
-void AdamantShopPlugin::SetupEngine(QScriptEngine* engine, QScriptValue* plugin) {
+void AdamantShopPlugin::setupEngine(QScriptEngine* engine, QScriptValue* plugin) {
     qRegisterMetaType<Shop*>();
     qRegisterMetaType<ShopList>();
     qScriptRegisterSequenceMetaType<ShopList>(engine);

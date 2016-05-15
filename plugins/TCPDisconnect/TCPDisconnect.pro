@@ -6,7 +6,7 @@ DEFINES += TCPDISCONNECTPLUGIN_LIBRARY
 QT += core network
 QT -= gui
 
-TARGET = com.adamant.plugin.tcpdisconnect
+TARGET = adamant.tcpdisconnect
 
 OTHER_FILES += tcpdisconnect.json
 

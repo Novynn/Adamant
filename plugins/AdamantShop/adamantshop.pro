@@ -7,7 +7,7 @@ DEFINES += ADAMANTSHOP_LIBRARY
 adamantshop.depends = stashviewer core
 
 QT += core gui widgets network printsupport
-TARGET = com.adamant.plugin.adamantshop
+TARGET = adamant.shop
 
 OTHER_FILES += adamantshop.json
 HEADERS += adamantshopplugin.h \
@@ -22,8 +22,8 @@ else:unix: LIBS += -L$$OUT_PWD/../../bin/ -ladamant
 INCLUDEPATH += $$PWD/../../core
 DEPENDPATH += $$PWD/../../core
 
-win32: LIBS += -L$$OUT_PWD/../../bin/plugins/ -lcom.adamant.plugin.stashviewer
-else:unix: LIBS += -L$$OUT_PWD/../../bin/plugins/ -lcom.adamant.plugin.stashviewer
+win32: LIBS += -L$$OUT_PWD/../../bin/plugins/ -ladamant.stashviewer
+else:unix: LIBS += -L$$OUT_PWD/../../bin/plugins/ ladamant.stashviewer
 
 INCLUDEPATH += $$PWD/../../plugins/StashViewer
 DEPENDPATH += $$PWD/../../plugins/StashViewer

@@ -5,7 +5,7 @@
 DEFINES += STASHVIEWER_LIBRARY
 
 QT += core widgets gui network
-TARGET = com.adamant.plugin.stashviewer
+TARGET = adamant.stashviewer
 
 OTHER_FILES += stashviewer.json
 HEADERS += stashviewerplugin.h \
@@ -16,7 +16,8 @@ HEADERS += stashviewerplugin.h \
     dialogs/itemtooltip.h \
     graphicitemfactory.h \
     widgets/characterwidget.h \
-    stash/stashviewdata.h
+    stash/stashviewdata.h \
+    stashviewer_global.h
 
 FORMS += \
     stashviewer.ui \

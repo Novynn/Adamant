@@ -1,11 +1,13 @@
 #include "shopviewer.h"
 #include "ui_shopviewer.h"
 #include "adamantshopplugin.h"
+#include "stashviewer.h"
 #include <core.h>
 
-ShopViewer::ShopViewer(AdamantShopPlugin* plugin, QWidget *parent)
+ShopViewer::ShopViewer(AdamantShopPlugin* plugin, StashViewer* viewer, QWidget *parent)
     : QWidget(parent)
     , _plugin(plugin)
+    , _stashViewer(viewer)
     , ui(new Ui::ShopViewer) {
     ui->setupUi(this);
 
@@ -26,8 +28,16 @@ ShopViewer::ShopViewer(AdamantShopPlugin* plugin, QWidget *parent)
     ui->plot->xAxis->setRange(-1, 1);
     ui->plot->yAxis->setRange(0, 1);
     ui->plot->replot();
+
+    setupStashIntegration();
 }
 
+void ShopViewer::setupStashIntegration() {
+    QHBoxLayout* layout = dynamic_cast<QHBoxLayout*>(_stashViewer->headerBar()->layout());
+    if (layout) {
+        layout->insertWidget(0, new QPushButton("Set Tab-wide Price..."));
+    }
+}
 
 
 ShopViewer::~ShopViewer() {
@@ -83,4 +93,9 @@ void ShopViewer::on_listWidget_currentItemChanged(QListWidgetItem *current, QLis
         ui->nameLabel->setText(shop->name());
         ui->leagueLabel->setText(shop->league());
     }
+}
+
+void ShopViewer::on_viewItemsButton_clicked() {
+    _stashViewer->search(ui->nameLabel->text());
+    _plugin->Core()->getInterface()->window()->setPageIndex(3);
 }

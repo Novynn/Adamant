@@ -6,7 +6,7 @@ DEFINES += GLOBALHOTKEYPLUGIN_LIBRARY \
            QXT_STATIC
 
 QT += core
-TARGET = com.adamant.plugin.globalhotkey
+TARGET = adamant.globalhotkey
 
 OTHER_FILES += globalhotkey.json
 HEADERS += globalhotkeyplugin.h \
