@@ -76,9 +76,9 @@ QString ImageCache::generateFileName(const QString &path) {
 }
 
 void ImageCache::save(const QString &file, const QImage &image) {
-    // Keep only 1000 images in cache
+    // Keep only 10000 images in cache
     // TODO(rory): Allow this to be variable?
-    while (_cache.size() > 1000) _cache.remove(_cache.keys().first());
+    while (_cache.size() > 10000) _cache.remove(_cache.keys().first());
     _cache.insert(file, image);
     image.save(cacheDir().absoluteFilePath(file));
 }
