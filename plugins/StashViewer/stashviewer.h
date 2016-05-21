@@ -31,7 +31,7 @@ public:
 
     Q_INVOKABLE void SetTabs(const QString& league, QList<StashItemLocation *> tabs);
 
-    void AddTab(const QString& league, const ItemLocation* tab);
+    void AddTab(const QString& league, const StashItemLocation* tab);
     void LoadTabItem(const QString& tabId);
     void LoadTabItem(StashViewData* data);
     void LoadTab(StashViewData* data);
@@ -67,8 +67,6 @@ private:
 
     GraphicItemFactory* _factory;
     QThread* _factoryThread;
-
-    QGraphicsProxyWidget* _optionsBarProxy;
 };
 Q_DECLARE_METATYPE(StashViewer*)
 

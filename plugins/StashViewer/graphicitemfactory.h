@@ -36,7 +36,7 @@ public slots:
             }
             QString path = _imageCache->generateFileName(icon);
 
-            GraphicItem* gItem = new GraphicItem(0, item, path);
+            GraphicItem* gItem = new GraphicItem(0, location, item, path);
             // Set to always show links
             gItem->ShowLinks(true, GraphicItem::ShowLinkReason::Always);
 

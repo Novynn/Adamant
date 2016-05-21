@@ -5,6 +5,7 @@
 #include <QGraphicsSceneHoverEvent>
 #include <QStack>
 class Item;
+class ItemLocation;
 
 class GraphicItem : public QGraphicsPixmapItem
 {
@@ -25,7 +26,8 @@ public:
         Currency    = 5
     };
 
-    GraphicItem(QGraphicsItem* parent, const Item *item, const QString &imagePath);
+    GraphicItem(QGraphicsItem* parent, const ItemLocation* location, const Item *item, const QString &imagePath);
+    ~GraphicItem();
 
     bool IsWaitingForImage(QString imagePath=QString()) const;
     const QString getImagePath() const {
@@ -68,6 +70,7 @@ private:
     int _height;
 
     const Item* _item;
+    const ItemLocation* _location;
 };
 
 #endif // GRAPHICITEM_H

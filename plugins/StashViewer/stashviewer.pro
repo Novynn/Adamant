@@ -17,7 +17,8 @@ HEADERS += stashviewerplugin.h \
     graphicitemfactory.h \
     widgets/characterwidget.h \
     stash/stashviewdata.h \
-    stashviewer_global.h
+    stashviewer_global.h \
+    widgets/stashlistwidgetitem.h
 
 FORMS += \
     stashviewer.ui \

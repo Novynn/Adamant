@@ -90,5 +90,6 @@ void StashViewerPlugin::OnLoad() {
         Core()->getItemManager()->fetchStashTab(league, "");
     }
 
+    //Core()->getItemManager()->fe();
     Core()->session()->fetchAccountCharacters(Core()->session()->accountName());
 }

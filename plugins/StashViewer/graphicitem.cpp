@@ -1,5 +1,6 @@
 #include "graphicitem.h"
 #include <items/item.h>
+#include <items/itemlocation.h>
 #include <QPainter>
 #include <QDebug>
 #include <QCursor>
@@ -11,19 +12,18 @@
 #include <QGraphicsView>
 #include <dialogs/itemtooltip.h>
 
-GraphicItem::GraphicItem(QGraphicsItem *parent, const Item* item, const QString &imagePath)
+GraphicItem::GraphicItem(QGraphicsItem *parent, const ItemLocation* location, const Item* item, const QString &imagePath)
     : QGraphicsPixmapItem(parent)
     , _waitingForImage(true)
     , _imagePath(imagePath)
     , _linkOverlay(nullptr)
     , _tooltip(nullptr)
     , _tooltipText(QString())
-    , _item(item) {
+    , _item(item)
+    , _location(location) {
 
-    qreal x = (qreal) item->data("x").toInt();
-    qreal y = (qreal) item->data("y").toInt();
-    int w = item->data("w").toInt();
-    int h = item->data("h").toInt();
+    QPointF pos = location->itemPos(item);
+    QSize size = location->itemSize(item);
 
     static QMap<QString, QPointF> inventoryMap;
     if (inventoryMap.isEmpty()) {
@@ -44,33 +44,45 @@ GraphicItem::GraphicItem(QGraphicsItem *parent, const Item* item, const QString 
 
     QString inventoryId = item->data("inventoryId").toString();
     if (inventoryMap.contains(inventoryId)) {
-        x += inventoryMap.value(inventoryId).x();
-        y += inventoryMap.value(inventoryId).y();
+        pos += inventoryMap.value(inventoryId);
 
         if (inventoryId.startsWith("Weapon") ||
             inventoryId.startsWith("Offhand")) {
-            w = 2;
-            h = 4;
+            size.setWidth(2);
+            size.setHeight(4);
         }
     }
     else if (inventoryId == "MainInventory") {
-        y += 9;
+        pos += QPointF(0, 9);
     }
-    setX(x * 47.4645);
-    setY(y * 47.4645);
+    setPos(pos * 47.4645);
 
-    _width = w;
-    _height = h;
+    _width = size.width();
+    _height = size.height();
 
     static QPixmap normalBack = QPixmap(":/images/inventory_item_background.png", "png");
     static QPixmap unidentifiedBack = QPixmap(":/images/item_bg_unidentified.png", "png");
 
-    setPixmap((item->data("identified").toBool()) ? normalBack.scaled(w * 47, h * 47) : unidentifiedBack.scaled(w * 47, h * 47));
+    setPixmap((item->data("identified").toBool()) ? normalBack.scaled(size * 47) : unidentifiedBack.scaled(size * 47));
 
     setAcceptHoverEvents(true);
     setShapeMode(BoundingRectShape);
     setCursor(QCursor(Qt::PointingHandCursor));
     setFlags(ItemIsSelectable);
+}
+
+GraphicItem::~GraphicItem()
+{
+    // The overlay is a child, so we should delete it ourselves
+    if (_linkOverlay != nullptr)
+        delete _linkOverlay;
+    if (_tooltip != nullptr) {
+        // The tooltip is a child of the scene, so we have to remove it manually before deleting (or do we?)
+        if (_tooltip->scene() != 0) {
+            _tooltip->scene()->removeItem(_tooltip);
+        }
+        delete _tooltip;
+    }
 }
 
 bool GraphicItem::IsWaitingForImage(QString imagePath) const {
@@ -390,7 +402,9 @@ bool GraphicItem::GenerateItemTooltip() {
     if (_tooltip == nullptr) {
         auto data = GraphicItem::GenerateItemTooltip(_item);
         if (!data.first.isEmpty() && !data.second.isNull()) {
+            // Parented to the scene in order to stack on top of all other elements
             _tooltip = new QGraphicsPixmapItem(data.second);
+            _tooltip->setZValue(1);
             _tooltipText = data.first;
             scene()->addItem(_tooltip);
             return true;
@@ -426,9 +440,9 @@ void GraphicItem::ShowLinks(bool show, ShowLinkReason reason) {
 void GraphicItem::ShowTooltip(bool show) {
     if (show) {
         if (GenerateItemTooltip()) {
-            const QPointF p = scenePos();
-            _tooltip->setPos(p.x() - (_tooltip->boundingRect().width() / 2) + (boundingRect().width() / 2),
-                             p.y() - _tooltip->boundingRect().height());
+            QPointF p = QPointF(scenePos().x() - (_tooltip->boundingRect().width() / 2) + (boundingRect().width() / 2),
+                                scenePos().y() - _tooltip->boundingRect().height());
+            _tooltip->setPos(p);
 
             if (!scene()->views().isEmpty()) {
                 // Get the viewport's rect converted to scene co-ordinates
@@ -440,7 +454,7 @@ void GraphicItem::ShowTooltip(bool show) {
 
                 // Get the tooltip's rect converted to scene co-ordinates
                 QRectF sceneTooltipRect = _tooltip->boundingRect();
-                QPointF pos = _tooltip->pos();
+                QPointF pos = _tooltip->scenePos();
                 sceneTooltipRect.moveTo(pos);
 
                 // Check if the tooltip needs to be adjusted

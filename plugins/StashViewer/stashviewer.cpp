@@ -11,6 +11,8 @@
 #include <items/item.h>
 #include <items/stashitemlocation.h>
 
+#include <widgets/stashlistwidgetitem.h>
+
 StashViewer::StashViewer(QWidget *parent, QString league)
     : QWidget(parent)
     , ui(new Ui::StashViewer)
@@ -52,8 +54,6 @@ StashViewer::StashViewer(QWidget *parent, QString league)
     _scene->setBackgroundBrush(QBrush(Qt::transparent));
     ui->graphicsView->setBackgroundBrush(QBrush(Qt::transparent));
     ui->graphicsView->setScene(_scene);
-
-    _optionsBarProxy = nullptr; //_scene->addWidget(ui->optionsBar, Qt::Widget);
 }
 
 void StashViewer::OnViewportChanged() {
@@ -138,6 +138,10 @@ void StashViewer::LoadTabItem(StashViewData* data) {
     if (data->getItem()->icon().isNull()) {
         data->getItem()->setIcon(QIcon(QString(":/icons/%1/question.png").arg(colorHint)));
     }
+    data->getItem()->setText(data->getLocation()->header());
+
+    // TODO(rory): There must be a better place for this
+    ui->stashListWidget->sortItems();
 }
 
 void StashViewer::SetTabs(const QString &league, QList<StashItemLocation*> tabs) {
@@ -149,8 +153,6 @@ void StashViewer::SetTabs(const QString &league, QList<StashItemLocation*> tabs)
         if (data != nullptr) {
             Q_ASSERT(data->getLocation() == tab);
             LoadTabItem(data);
-//            if (tab->state() == ItemLocation::Loaded)
-//                LoadTab(league, tab);
             ids.removeOne(tab->hash());
             continue;
         }
@@ -172,17 +174,19 @@ void StashViewer::SetTabs(const QString &league, QList<StashItemLocation*> tabs)
     // Realign tabs to fit the new tab map
 }
 
-void StashViewer::AddTab(const QString &league, const ItemLocation* tab)
+void StashViewer::AddTab(const QString &league, const StashItemLocation* tab)
 {
+    // TODO(rory): remove these static images
     static QPixmap grid(":/images/StashPanelGrid.png");
+    static QPixmap currencyGrid(":/images/tabs/StashPanelCurrency.png");
     const QString header = tab->header();
 
 
-    QListWidgetItem* item = new QListWidgetItem(header, ui->stashListWidget);
+    QListWidgetItem* item = new StashListWidgetItem(header, ui->stashListWidget, tab->tabIndex());
     ui->stashListWidget->addItem(item);
 
     // Setup Grid Items
-    QGraphicsPixmapItem* gridItem = _scene->addPixmap(grid);
+    QGraphicsPixmapItem* gridItem = _scene->addPixmap((tab->type() == StashItemLocation::Currency) ? currencyGrid : grid);
     gridItem->setVisible(false);
 
     StashViewData* data = new StashViewData(tab, item, gridItem);
@@ -201,20 +205,20 @@ void StashViewer::AddTab(const QString &league, const ItemLocation* tab)
 
 }
 
-void StashViewer::LoadTab(StashViewData* data)
-{
+void StashViewer::LoadTab(StashViewData* data) {
     // Clear out old items
     QList<QGraphicsItem*> children = data->getGrid()->childItems();
     while (!children.isEmpty()) {
         auto item = children.takeFirst();
-        if (!dynamic_cast<GraphicItem*>(item)) continue;
-        item->setParentItem(nullptr);
-        _scene->removeItem(item);
-        delete item;
+        auto graphicItem = dynamic_cast<GraphicItem*>(item);
+        if (!graphicItem) continue;
+        graphicItem->setParentItem(nullptr);
+        _scene->removeItem(graphicItem);
+        delete graphicItem;
     }
+    qDebug() << data->getLocation()->header() << "Loaded: " << data->getLocation()->state();
 
     data->setLoaded(false);
-//    item->setIcon(QIcon(QString(":/icons/%1/cloud-download.png").arg(iconType)));
     QMetaObject::invokeMethod(_factory,
                               "SubmitLocation",
                               Qt::QueuedConnection,
@@ -234,8 +238,8 @@ void StashViewer::UpdateTab(const QString &league, const ItemLocation* tab, bool
 void StashViewer::LoadTab(const QString &league, const ItemLocation* tab) {
     if (_currentLeague != league) return;
     auto data = _tabs.value(tab->hash(), nullptr);
-    Q_ASSERT(data != nullptr);
-    LoadTab(data);
+    if (data != nullptr)
+        LoadTab(data);
 }
 
 void StashViewer::on_stashListWidget_itemSelectionChanged() {

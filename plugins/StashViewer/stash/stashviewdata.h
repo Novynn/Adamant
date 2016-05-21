@@ -41,17 +41,24 @@ public:
 
     void setLoaded(bool loaded=true, bool throttled=false) {
         const QString colorHint = (getTab()->tabColor().lightnessF() > 0.5) ? "light" : "dark";
+        QString icon = "";
         if (loaded) {
+            icon = getTab()->state() == StashItemLocation::LoadedFromDisk ? "database" : "cloud-check";
             _gridRequirement->hide();
-            _item->setIcon(QIcon(QString(":/icons/%1/cloud-check.png").arg(colorHint)));
+
+            const StashItemLocation* tab = dynamic_cast<const StashItemLocation*>(_tab);
+            if (tab && tab->type() == StashItemLocation::Currency) {
+                static QPixmap currencyGrid(":/images/tabs/StashPanelCurrency.png");
+                _grid->setPixmap(currencyGrid);
+            }
         }
         else {
-            _gridRequirement->show();
+            icon = throttled ? "pause" : "cloud-download";
             _gridRequirement->setPos(_grid->boundingRect().center() - _gridRequirement->boundingRect().center());
+            _gridRequirement->show();
 
-            const QString icon = throttled ? "pause" : "cloud-download";
-            _item->setIcon(QIcon(QString(":/icons/%1/%2.png").arg(colorHint).arg(icon)));
         }
+        _item->setIcon(QIcon(QString(":/icons/%1/%2.png").arg(colorHint).arg(icon)));
     }
 
 private:
