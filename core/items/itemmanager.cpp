@@ -117,10 +117,12 @@ QDir ItemManager::StashDataDir(QString league) {
 }
 
 void ItemManager::saveStash(ItemManagerInstance* instance) {
+    StashItemLocation* tab = dynamic_cast<StashItemLocation*>(instance->location);
+    if (!tab) return;
     QDir dataDir = ItemManager::StashDataDir(instance->tab->league);
 
     QString filePath = dataDir.absoluteFilePath(QString("%1.tab").arg(instance->tab->tabId));
-    QJsonDocument doc(instance->location->toJson());
+    QJsonDocument doc(tab->toJson());
     const QByteArray data = doc.toJson(QJsonDocument::Indented);
 
     QFile file(filePath);
@@ -135,6 +137,30 @@ void ItemManager::saveStash(const QString &league, const QString &tabId) {
     if (instance != nullptr && instance->tab->league == league){
         saveStash(instance);
     }
+}
+
+bool ItemManager::loadStash(ItemManagerInstance* instance) {
+    QDir dataDir = ItemManager::StashDataDir(instance->tab->league);
+
+    QString filePath = dataDir.absoluteFilePath(QString("%1.tab").arg(instance->tab->tabId));
+    QByteArray data;
+    QFile file(filePath);
+    if (file.open(QFile::Text | QFile::ReadOnly)) {
+        data = file.readAll();
+        file.close();
+    }
+
+    QJsonDocument doc = QJsonDocument::fromJson(data);
+    if (doc.isEmpty() || doc.isNull() || !doc.isObject()) return false;
+    return instance->location->fromJson(doc.object());
+}
+
+bool ItemManager::loadStash(const QString &league, const QString &tabId) {
+    ItemManagerInstance* instance = _currentTabInstances.value(tabId, nullptr);
+    if (instance != nullptr && instance->tab->league == league){
+        return loadStash(instance);
+    }
+    return false;
 }
 
 void ItemManager::printIndexMap(QString league) {
@@ -291,6 +317,9 @@ void ItemManager::onStashTabResult(QString league, QByteArray json, QVariant dat
         }
     }
 
+    // The list of instances that have been loaded from the disk this update
+    QList<ItemManagerInstance*> loadedInstances;
+
     _tabIndexMap[league].clear();
     for (QJsonValue tabVal : tabs) {
         QJsonObject tab = tabVal.toObject();
@@ -327,11 +356,18 @@ void ItemManager::onStashTabResult(QString league, QByteArray json, QVariant dat
                 currentInstance->manager = this;
                 currentInstance->throttled = false;
                 currentInstance->location = new StashItemLocation(tab);
+                currentInstance->location->setState(ItemLocation::Unknown);
                 currentInstance->type = ItemManagerInstance::Type::StashTab;
                 currentInstance->tab = new ItemManagerInstance::StashTab;
                 currentInstance->tab->tabId = id;
                 currentInstance->tab->tabIndex = index;
                 currentInstance->tab->league = league;
+
+                // Attempt to load from disk
+                if (loadStash(currentInstance)) {
+                    currentInstance->location->setState(ItemLocation::LoadedFromDisk);
+                    loadedInstances << currentInstance;
+                }
             }
             _currentTabInstances[id] = currentInstance;
         }
@@ -349,6 +385,14 @@ void ItemManager::onStashTabResult(QString league, QByteArray json, QVariant dat
 
     emit onStashTabIndexMapUpdate(league);
 
+    // This is required to be here so that anyone wanting this stash can get it once it's loaded from the disk
+    // As well as after they have the index set up!
+    for (ItemManagerInstance* i : loadedInstances) {
+        if (i->location && i->location->state() == ItemLocation::LoadedFromDisk) {
+            emit onStashTabUpdate(i->tab->league, i->tab->tabId);
+        }
+    }
+
     // Actually delete
     while (!currentInstances.isEmpty()) {
         auto i = currentInstances.takeFirst();
@@ -360,13 +404,14 @@ void ItemManager::onStashTabResult(QString league, QByteArray json, QVariant dat
     // TODO(rory): Currently we waste a stash tab fetch when we index, this could be made smarter
     if (foundIndex != -1 && foundIndex == instance->tab->tabIndex) {
         if (!error) {
+            QJsonObject layout = doc.object().value("currencyLayout").toObject();
             QJsonArray items = doc.object().value("items").toArray();
             ItemList itemObjects;
             for (QJsonValue itemVal : items) {
                 QJsonObject item = itemVal.toObject();
                 itemObjects.append(new Item(item));
             }
-            instance->location->setItems(itemObjects);
+            instance->location->setItems(itemObjects, layout);
             instance->location->setState(ItemLocation::Loaded);
         }
 

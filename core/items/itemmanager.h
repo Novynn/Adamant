@@ -64,6 +64,8 @@ public:
 
     Q_INVOKABLE void saveStash(ItemManagerInstance* instance);
     Q_INVOKABLE void saveStash(const QString& league, const QString& tabId);
+    Q_INVOKABLE bool loadStash(ItemManagerInstance* instance);
+    Q_INVOKABLE bool loadStash(const QString& league, const QString& tabId);
     Q_INVOKABLE void printIndexMap(QString league = QString());
 
     static QDir StashDataDir(QString league);
