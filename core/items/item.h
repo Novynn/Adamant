@@ -1,6 +1,7 @@
 #ifndef ITEM_H
 #define ITEM_H
 
+#include <core_global.h>
 #include <QJsonArray>
 #include <QJsonValue>
 #include <QJsonObject>
@@ -13,7 +14,7 @@ struct ItemSocket {
     QString attr;
 };
 
-class Item
+class CORE_EXTERN Item
 {
 public:
     Item(QJsonObject data);

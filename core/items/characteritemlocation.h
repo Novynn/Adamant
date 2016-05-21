@@ -5,8 +5,9 @@
 #include <QJsonObject>
 #include <QString>
 
-class CharacterItemLocation : public ItemLocation
+class CORE_EXTERN CharacterItemLocation : public ItemLocation
 {
+    Q_GADGET
 public:
     CharacterItemLocation(const QJsonObject &data);
 

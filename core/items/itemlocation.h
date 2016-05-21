@@ -5,9 +5,13 @@
 #include <QList>
 #include <QJsonObject>
 #include "item.h"
+#include <QDebug>
+#include <QPointF>
+#include <QSize>
 typedef QList<const Item*> ItemList;
 
 class CORE_EXTERN ItemLocation {
+    Q_GADGET
 public:
     enum LocationType {
         StashLocation,
@@ -34,7 +38,16 @@ public:
     virtual bool operator<(const ItemLocation &other) const = 0;
     virtual bool operator==(const ItemLocation &other) const = 0;
 
-    virtual void setItems(ItemList items) {
+    virtual QPointF itemPos(const Item* item) const {
+        return QPointF(item->data("x").toFloat(), item->data("y").toFloat());
+    }
+
+    virtual QSize itemSize(const Item* item) const {
+        return QSize(item->data("w").toInt(), item->data("h").toInt());
+    }
+
+    virtual void setItems(ItemList items, const QJsonObject &layout = QJsonObject()) {
+        Q_UNUSED(layout);
         _items.clear();
         _items.append(items);
     }
@@ -58,7 +71,20 @@ public:
             items.append(item->toJson());
         }
         result.insert("items", items);
+        //qDebug() << header() << "Saved to disk";
         return result;
+    }
+
+    virtual bool fromJson(const QJsonObject &object) {
+        if (state() != ItemLocation::Unknown) return false; // Only load if in unknown state
+        //qDebug() << header() << "Loaded from disk";
+        qDeleteAll(_items);
+        _items.clear();
+        QJsonArray items = object.value("items").toArray();
+        for (QJsonValue value : items) {
+            _items << new Item(value.toObject());
+        }
+        return true;
     }
 
 protected:
