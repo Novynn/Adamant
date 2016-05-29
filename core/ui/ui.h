@@ -5,11 +5,14 @@
 #include <QObject>
 #include <QApplication>
 #include <QDateTime>
+#include <QUuid>
 
 #include <ui/mainwindow.h>
 #include <ui/setupdialog.h>
 
 #include <ui/pages/pluginpage.h>
+
+class AdamantPlugin;
 
 class CORE_EXTERN AdamantUI : public QObject
 {
@@ -39,6 +42,8 @@ public:
         return _setupDialog;
     }
 
+    QUuid registerPluginPage(AdamantPlugin* plugin, const QIcon &icon, const QString &title, const QString &description, QWidget *widget);
+
     void start();
     int showSetup();
     Q_INVOKABLE void setTheme(ApplicationTheme theme = ApplicationTheme::Dark);
@@ -53,7 +58,7 @@ public:
 //                                    new QWidget(), true);
 
         window()->registerPage(QIcon(":/icons/dark/make-group.png"), "Plugins", "Manage plugins and updates.",
-                                    new PluginPage(_core, window()), true);
+                                    new PluginPage(_core, window()));
     }
 
     QPalette getLightPalette() const {

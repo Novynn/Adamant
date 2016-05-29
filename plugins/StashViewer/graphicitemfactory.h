@@ -38,7 +38,7 @@ public slots:
 
             GraphicItem* gItem = new GraphicItem(0, location, item, path);
             // Set to always show links
-            gItem->ShowLinks(true, GraphicItem::ShowLinkReason::Always);
+            // gItem->ShowLinks(true, GraphicItem::ShowLinkReason::Always);
 
             if (_imageCache->hasLocalImage(icon)) {
                 gItem->SetImage(_imageCache->getImage(icon));

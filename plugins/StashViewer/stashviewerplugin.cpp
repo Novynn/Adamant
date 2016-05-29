@@ -14,14 +14,12 @@ void StashViewerPlugin::OnLoad() {
     const QString league = Settings()->value("league").toString();
     _viewer = new StashViewer(Core()->getInterface()->window(), league);
     _characterViewer = new CharacterViewer(Core()->getInterface()->window());
-    {
-        QIcon icon(":/icons/dark/stack.png");
-        Core()->getInterface()->window()->registerPage(icon, "Browse Stash", "View your stash tabs and items.", _viewer);
-    }
-    {
-        QIcon icon(":/icons/dark/user.png");
-        Core()->getInterface()->window()->registerPage(icon, "Characters", "View your characters.", _characterViewer);
-    }
+    Core()->getInterface()->registerPluginPage(this, QIcon(":/icons/dark/stack.png"),
+                                               "Browse Stash", "View your stash tabs and items.",
+                                               _viewer);
+    Core()->getInterface()->registerPluginPage(this, QIcon(":/icons/dark/user.png"),
+                                               "Characters", "View your characters.",
+                                               _characterViewer);
 
     connect(Core()->getItemManager(), &ItemManager::onStashTabIndexMapUpdate, [this] (QString league) {
         QList<StashItemLocation*> tabs = Core()->getItemManager()->getStashTabs(league);

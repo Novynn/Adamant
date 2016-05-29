@@ -25,38 +25,7 @@ GraphicItem::GraphicItem(QGraphicsItem *parent, const ItemLocation* location, co
     QPointF pos = location->itemPos(item);
     QSize size = location->itemSize(item);
 
-    static QMap<QString, QPointF> inventoryMap;
-    if (inventoryMap.isEmpty()) {
-        inventoryMap.insert("Weapon", QPointF(0,0));
-        inventoryMap.insert("Offhand", QPointF(2,0));
-        inventoryMap.insert("Weapon2", QPointF(8,0));
-        inventoryMap.insert("Offhand2", QPointF(10,0));
-        inventoryMap.insert("Helm", QPointF(5,0));
-        inventoryMap.insert("BodyArmour", QPointF(5,2));
-        inventoryMap.insert("Belt", QPointF(5,5));
-        inventoryMap.insert("Gloves", QPointF(3,4));
-        inventoryMap.insert("Boots", QPointF(7,4));
-        inventoryMap.insert("Ring", QPointF(4,3));
-        inventoryMap.insert("Ring2", QPointF(7,3));
-        inventoryMap.insert("Amulet", QPointF(7,2));
-        inventoryMap.insert("Flask", QPointF(3.5,6));
-    }
-
-    QString inventoryId = item->data("inventoryId").toString();
-    if (inventoryMap.contains(inventoryId)) {
-        pos += inventoryMap.value(inventoryId);
-
-        if (inventoryId.startsWith("Weapon") ||
-            inventoryId.startsWith("Offhand")) {
-            size.setWidth(2);
-            size.setHeight(4);
-        }
-    }
-    else if (inventoryId == "MainInventory") {
-        pos += QPointF(0, 9);
-    }
     setPos(pos * 47.4645);
-
     _width = size.width();
     _height = size.height();
 
@@ -503,7 +472,7 @@ void GraphicItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     // TODO(rory): Do this another time (linking in dynamically from another plugin etc.)
     QMenu menu;
     QAction *setAction = menu.addAction("Set Price...");
-    QAction *clearAction = menu.addAction("Clear Price");
+    QAction *clearAction = menu.addAction("Clear Prices");
     Q_UNUSED(setAction)
     Q_UNUSED(clearAction)
     menu.addSeparator();

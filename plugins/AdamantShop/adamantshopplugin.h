@@ -29,8 +29,18 @@ public:
     bool saveShop(const Shop* shop) const;
     Q_INVOKABLE void saveShops() const;
 
+    Q_INVOKABLE bool deleteShop(const Shop* shop);
+
     Q_INVOKABLE ShopList getShops() {
         return _shops;
+    }
+
+    Q_INVOKABLE bool hasShop(const QString &shopName) {
+        return _shops.contains(shopName);
+    }
+
+    Q_INVOKABLE Shop* getShop(const QString &shopName) {
+        return _shops.value(shopName, nullptr);
     }
 
 public slots:

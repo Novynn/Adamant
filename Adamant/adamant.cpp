@@ -7,8 +7,8 @@
 
 Adamant::Adamant(QObject *parent)
     : QObject(parent)
-    , _loggingSystem(LoggingSystem::Get())
-    , _core(new CoreService) {
+    , _loggingSystem(LoggingSystem::Get()) {
+    _core = new CoreService();
     connect(_core, &CoreService::message, _loggingSystem, &LoggingSystem::message);
     connect(_loggingSystem, &LoggingSystem::onMessage, _core, &CoreService::loggedMessage);
 }

@@ -314,5 +314,22 @@
   </layout>
  </widget>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>autoUpdate</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>autoUpdateInterval</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>774</x>
+     <y>23</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>852</x>
+     <y>24</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>

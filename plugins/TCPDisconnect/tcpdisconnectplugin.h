@@ -19,6 +19,24 @@ class TcpDisconnectPlugin : public AdamantPlugin
     Q_INTERFACES(AdamantPlugin)
 
 public:
+    static bool isElevated() {
+        bool elevated = false;
+#ifdef Q_OS_WIN32
+        HANDLE hToken = NULL;
+        if(OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken)) {
+            TOKEN_ELEVATION Elevation;
+            DWORD cbSize = sizeof(TOKEN_ELEVATION);
+            if(GetTokenInformation( hToken, TokenElevation, &Elevation, sizeof(Elevation), &cbSize)) {
+                elevated = Elevation.TokenIsElevated;
+            }
+        }
+        if(hToken) {
+            CloseHandle(hToken);
+        }
+#endif
+        return elevated;
+    }
+
     static QString getProcessNameByPID(DWORD pid) {
         QString result;
 #ifdef Q_OS_WIN32
@@ -66,7 +84,7 @@ public:
 #endif
     }
 
-    static QScriptValue disconnect(QScriptContext *context , QScriptEngine *engine) {
+    static QScriptValue disconnect(QScriptContext *context, QScriptEngine *engine) {
         Q_UNUSED(context);
 #ifdef Q_OS_WIN32
         bool success = TcpDisconnectPlugin::disconnect();
@@ -75,9 +93,16 @@ public:
         return context->throwError(QScriptContext::UnknownError, "The TCP Disconnect plugin currently only works on Windows.");
 #endif
     }
+
+    static QScriptValue isElevated(QScriptContext *context, QScriptEngine *engine) {
+        Q_UNUSED(context);
+        return engine->toScriptValue(isElevated());
+    }
+
 public slots:
     void setupEngine(QScriptEngine* engine, QScriptValue* plugin) {
         plugin->setProperty("disconnect", engine->newFunction(TcpDisconnectPlugin::disconnect));
+        plugin->setProperty("elevated", engine->newFunction(TcpDisconnectPlugin::isElevated));
     }
 };
 

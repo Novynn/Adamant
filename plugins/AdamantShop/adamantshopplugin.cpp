@@ -13,9 +13,14 @@ void AdamantShopPlugin::loadShops() {
     for (QFileInfo info : list) {
         auto shop = loadShop(info.absoluteFilePath());
         if (shop == nullptr) continue;
-        _shops << shop;
+        if (_shops.contains(shop->name())) {
+            qWarning() << "Duplicate shop name detected: " << shop->name();
+            delete shop;
+            continue;
+        }
+        _shops.insert(shop->name(), shop);
+        _viewer->addShop(shop);
     }
-    _viewer->setShops(_shops);
 }
 
 Shop* AdamantShopPlugin::loadShop(const QString &file) {
@@ -51,6 +56,20 @@ void AdamantShopPlugin::saveShops() const {
 
 }
 
+bool AdamantShopPlugin::deleteShop(const Shop* shop) {
+    if (shop->name().isEmpty()) return false;
+    QString path = shopsPath().absoluteFilePath(QString("%1.shop").arg(shop->name()));
+    QFile shopFile(path);
+    if (shopFile.exists()) {
+        if (shopFile.remove()) {
+            _shops.remove(shop->name());
+            delete shop;
+            return true;
+        }
+    }
+    return false;
+}
+
 bool AdamantShopPlugin::saveShop(const Shop* shop) const {
     if (shop->name().isEmpty()) return false;
     QJsonObject object;
@@ -81,10 +100,12 @@ void AdamantShopPlugin::OnLoad() {
         return;
     }
     _viewer = new ShopViewer(this, _stashViewer);
-    Core()->getInterface()->window()->registerPage(QIcon(":/icons/dark/cart.png"),
+    Core()->getInterface()->registerPluginPage(this, QIcon(":/icons/dark/cart.png"),
                                                    "Shops", "Manage shop threads.",
                                                    _viewer);
-
+    Core()->getInterface()->registerPluginPage(this, QIcon(":/icons/dark/embed.png"),
+                                                   "Shop Templates", "Manage shop templates.",
+                                                   new QWidget());
     Core()->settings()->beginGroup("data");
     const QStringList leagues = Core()->settings()->value("leagues").toStringList();
     Core()->settings()->endGroup();
@@ -97,11 +118,13 @@ void AdamantShopPlugin::OnLoad() {
     if (_shops.empty()) {
         Shop* shop = new Shop("Testirino", "Standard");
         saveShop(shop);
+        _viewer->addShop(shop);
     }
 }
 
 void AdamantShopPlugin::setupEngine(QScriptEngine* engine, QScriptValue* plugin) {
+    Q_UNUSED(engine)
+    Q_UNUSED(plugin)
     qRegisterMetaType<Shop*>();
     qRegisterMetaType<ShopList>();
-    qScriptRegisterSequenceMetaType<ShopList>(engine);
 }

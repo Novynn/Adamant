@@ -8,6 +8,7 @@
 #include "pluginmanager.h"
 #include "scripting/scriptsandbox.h"
 #include <items/itemmanager.h>
+#include <ui/widgets/custompage.h>
 
 MainWindow::MainWindow(CoreService *core, QWidget *parent)
     : QMainWindow(parent)
@@ -21,8 +22,6 @@ MainWindow::MainWindow(CoreService *core, QWidget *parent)
     ui->consoleButton->click();
 
     setMode(LoadingMode);
-
-    _buttonForPage.insert(0, ui->homeButton);
 
     connect(_core->script(), &ScriptSandbox::scriptOutput, [this] (const QString &message) {
         appendScriptOutput(message, "===");
@@ -171,13 +170,14 @@ void MainWindow::on_homeButton_clicked() {
 }
 
 void MainWindow::setCurrentPageButton(int index) {
-    for (int page : _buttonForPage.keys()) {
-        CommandButton* button = _buttonForPage.value(page);
-        if (button) {
-            bool isSelectedIndex = page == index;
-            button->setChecked(isSelectedIndex);
-        }
+    QUuid id = _customPagesIndex.key(index, QUuid());
+    for (QUuid pageIndex : _customPages.keys()) {
+        auto page = _customPages.value(pageIndex);
+        CommandButton* button = page->button();
+        if (button)
+            button->setChecked(pageIndex == id);
     }
+    ui->homeButton->setChecked(id.isNull());
 }
 
 void MainWindow::setPageIndex(int index) {
@@ -192,46 +192,56 @@ void MainWindow::setPageIndex(int index) {
     setCurrentPageButton(index);
 }
 
-int MainWindow::registerPage(const QIcon &icon, const QString &title, const QString &description,
-                                         QWidget *widget, bool lower) {
-    int initialCount = ui->stackedWidget->count();
-    int index = ui->stackedWidget->addWidget(widget);
+void MainWindow::setPageByUuid(QUuid id) {
+    setPageIndex(_customPagesIndex.value(id, 0));
+}
 
-    // If the amount of pages changed, then the widget was new.
-    // Otherwise, the widget is already registered and we don't need to remake the button.
-    if (initialCount != ui->stackedWidget->count()) {
-        CommandButton* button = new CommandButton(widget);
-        button->setText(title);
-        button->setDescription(description);
-        button->setToolTip(description);
-        button->setIcon(icon);
-        button->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-        button->setMinimumSize(30, 36);
-        button->setMaximumSize(16777215, 36);
-        button->setCheckable(true);
-
-        _buttonForPage.insert(index, button);
-        if (lower) {
-            ui->lowerNavWidget->layout()->addWidget(button);
+void MainWindow::regeneratePageIndex() {
+    _customPagesIndex.clear();
+    for (CustomPage* page : _customPages.values()) {
+        for (int i = 0; i < ui->stackedWidget->count(); i++) {
+            if (ui->stackedWidget->widget(i) == page->widget()) {
+                _customPagesIndex.insert(page->id(), i);
+            }
         }
-        else {
-            ui->navWidget->layout()->addWidget(button);
-
-            QShortcut* shortcut = new QShortcut(QKeySequence("Ctrl+" + QString::number(++_shortcutIndex)), this);
-            connect(shortcut, &QShortcut::activated, [this, index] () {
-                if (_mode == HomeMode || _mode == ElsewhereMode)
-                    setPageIndex(index);
-            });
-        }
-
-        button->setIconOnly(!ui->toggleButton->isChecked());
-
-        connect(button, &CommandButton::clicked, [this, index] () {
-            setPageIndex(index);
-        });
     }
+}
 
-    return index;
+QUuid MainWindow::registerPage(const QIcon &icon, const QString &title, const QString &description,
+                                         QWidget *widget, QObject* owner) {
+    ui->stackedWidget->addWidget(widget);
+
+    QUuid id = QUuid::createUuid();
+    auto page = new CustomPage(id, icon, title, description, widget, owner);
+    auto button = page->button();
+
+    QLayout* layout = (page->owner() != nullptr) ? ui->navWidget->layout() : ui->lowerNavWidget->layout();
+    layout->addWidget(button);
+    button->setIconOnly(!ui->toggleButton->isChecked());
+
+    connect(page, &CustomPage::activated, this, &MainWindow::setPageByUuid);
+
+    _customPages.insert(id, page);
+    regeneratePageIndex();
+
+    return id;
+}
+
+bool MainWindow::removePage(QUuid id) {
+    auto page = _customPages.take(id);
+    if (page) {
+        ui->stackedWidget->removeWidget(page->widget());
+        QLayout* layout = (page->owner() != nullptr) ? ui->navWidget->layout() : ui->lowerNavWidget->layout();
+        layout->removeWidget(page->button());
+        page->disconnect(this);
+        disconnect(page);
+        // Now we recalculate indicies?
+        regeneratePageIndex();
+        delete page;
+
+        return true;
+    }
+    return false;
 }
 
 void MainWindow::setMenuExpanded(bool expanded) {

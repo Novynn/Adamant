@@ -6,6 +6,7 @@
 #include <QMap>
 #include <QProgressBar>
 #include <QMovie>
+#include <QUuid>
 
 namespace Ui {
 class MainWindow;
@@ -14,6 +15,7 @@ class MainWindow;
 class CoreService;
 class QLabel;
 class CommandButton;
+class CustomPage;
 
 class CORE_EXTERN MainWindow : public QMainWindow
 {
@@ -32,14 +34,17 @@ public:
 
     void setPageIndex(int index);
 
-    Q_INVOKABLE int registerPage(const QIcon &icon, const QString &title, const QString &description,
-                                 QWidget* widget, bool lower = false);
+    Q_INVOKABLE QUuid registerPage(const QIcon &icon, const QString &title, const QString &description,
+                                 QWidget* widget, QObject* owner = nullptr);
     void setCurrentPageButton(int index);
     void setMenuExpanded(bool expanded);
+    Q_INVOKABLE bool removePage(QUuid id);
 public slots:
     void onProfileBadgeImage(const QString &badge, QImage image);
     void updateAccountMessagesCount(int messages);
     void appendScriptOutput(const QString &output, const QString &type = "LOG");
+    void setPageByUuid(QUuid id);
+    void regeneratePageIndex();
 private slots:
     void on_lineEdit_returnPressed();
     void on_messagesButton_clicked();
@@ -60,7 +65,8 @@ private:
 
     QMap<QString, QLabel*> _badgeMap;
 
-    QMap<int, CommandButton*> _buttonForPage;
+    QMap<QUuid, CustomPage*> _customPages;
+    QMap<QUuid, int> _customPagesIndex;
     int _shortcutIndex = 0;
 
     QLabel* _statusBarLabel;

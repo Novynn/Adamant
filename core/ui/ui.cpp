@@ -7,6 +7,7 @@
 #include <QJsonArray>
 #include <QStyle>
 #include <QStyleFactory>
+#include <interfaces/adamantplugin.h>
 
 AdamantUI::AdamantUI(CoreService *parent)
     : QObject(parent)
@@ -71,6 +72,16 @@ void AdamantUI::setup() {
 AdamantUI::~AdamantUI() {
     _window->deleteLater();
     _setupDialog->deleteLater();
+}
+
+QUuid AdamantUI::registerPluginPage(AdamantPlugin* plugin, const QIcon& icon, const QString& title, const QString& description, QWidget* widget) {
+    QUuid id = window()->registerPage(icon, title, description, widget, plugin);
+    connect(plugin, &AdamantPlugin::destroyed, this, [this, id]() {
+        // Plugin is about to be destroyed, clean up quick!
+        window()->removePage(id);
+    });
+
+    return id;
 }
 
 void AdamantUI::setTheme(ApplicationTheme theme) {

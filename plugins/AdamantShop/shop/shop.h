@@ -12,6 +12,10 @@
 class ShopThread {
     Q_GADGET
 public:
+    ShopThread(const QString &id = QString())
+        : _id(id) {
+    }
+
     Q_PROPERTY(QString id MEMBER _id)
     Q_PROPERTY(QDateTime updated MEMBER _updated)
     Q_PROPERTY(QDateTime bumped MEMBER _bumped)
@@ -80,7 +84,7 @@ private:
     friend class Shop;
 };
 
-typedef QList<ShopThread> ShopThreadList;
+typedef QMap<QString, ShopThread> ShopThreadList;
 typedef QMap<QString, ShopItem> ShopItemMap;
 typedef QMap<QString, ShopTab> ShopTabMap;
 
@@ -91,12 +95,45 @@ public:
     explicit Shop(QObject *parent = 0);
     Shop(const QString &name, const QString &league, QObject *parent = 0);
 
+    static qint64 dateToInt(QDateTime time) {
+        return time.isNull() ? 0 : time.toMSecsSinceEpoch();
+    }
+
+    static QDateTime intToDate(qint64 time) {
+        return time ? QDateTime::fromMSecsSinceEpoch(time) : QDateTime();
+    }
+
     const QString name() const {
         return _name;
     }
 
     const QString league() const {
         return _league;
+    }
+
+    bool hasHistory() const {
+        return false;
+    }
+
+    const QStringList threads() const {
+        return _threads.uniqueKeys();
+    }
+
+    const QDateTime threadUpdated(const QString &id) const {
+        return _threads.value(id, ShopThread(id))._updated;
+    }
+
+    const QDateTime threadBumped(const QString &id) const {
+        return _threads.value(id, ShopThread(id))._bumped;
+    }
+
+    void addThread(const QString &id) {
+        if (_threads.contains(id)) return;
+        _threads.insert(id, ShopThread(id));
+    }
+
+    void removeThread(const QString &id) {
+        _threads.remove(id);
     }
 
     Q_PROPERTY(QString name MEMBER _name)
@@ -155,7 +192,7 @@ private:
     ShopTabMap _tabs;
 };
 
-typedef QList<Shop*> ShopList;
+typedef QMap<QString, Shop*> ShopList;
 
 Q_DECLARE_METATYPE(Shop*)
 Q_DECLARE_METATYPE(ShopThread*)

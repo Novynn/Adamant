@@ -18,11 +18,16 @@ public:
     bool operator<(const ItemLocation &other) const final;
     bool operator==(const ItemLocation &other) const final;
     QJsonObject toJson() const final;
+    QPointF itemPos(const Item* item) const;
+    QSize itemSize(const Item* item) const;
+
 private:
     QString _name;
     QString _league;
     QString _class;
     int _level;
+
+    static QMap<QString, QPointF> InventoryLayout;
 };
 
 #endif // CHARACTERITEMLOCATION_H

@@ -30,7 +30,8 @@ HEADERS += \
     session/sessionrequest.h \
     items/characteritemlocation.h \
     ui/dialogs/loginsessiondialog.h \
-    ui/dialogs/ilogindialog.h
+    ui/dialogs/ilogindialog.h \
+    ui/widgets/custompage.h
 
 SOURCES += \
     core.cpp \
@@ -49,7 +50,8 @@ SOURCES += \
     ui/widgets/pluginitemdelegate.cpp \
     session/sessionrequest.cpp \
     items/characteritemlocation.cpp \
-    ui/dialogs/loginsessiondialog.cpp
+    ui/dialogs/loginsessiondialog.cpp \
+    ui/widgets/custompage.cpp
 
 RESOURCES += \
     ui/res.qrc
