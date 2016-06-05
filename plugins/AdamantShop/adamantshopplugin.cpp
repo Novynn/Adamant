@@ -23,6 +23,12 @@ void AdamantShopPlugin::loadShops() {
     }
 }
 
+bool AdamantShopPlugin::addShop(Shop* shop) {
+    if (shop == nullptr) return false;
+    _shops.insert(shop->name(), shop);
+    return saveShop(shop);
+}
+
 Shop* AdamantShopPlugin::loadShop(const QString &file) {
     QFile shopFile(file);
     if (shopFile.exists() && shopFile.open(QFile::ReadOnly)) {

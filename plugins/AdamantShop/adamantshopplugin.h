@@ -26,10 +26,16 @@ public:
     Shop* loadShop(const QString& file);
     Q_INVOKABLE void loadShops();
 
+    bool addShop(Shop* shop);
+
     bool saveShop(const Shop* shop) const;
     Q_INVOKABLE void saveShops() const;
 
     Q_INVOKABLE bool deleteShop(const Shop* shop);
+
+    Q_INVOKABLE QStringList getShopNames() {
+        return _shops.uniqueKeys();
+    }
 
     Q_INVOKABLE ShopList getShops() {
         return _shops;
