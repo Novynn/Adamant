@@ -57,6 +57,10 @@ public:
         return Session::Global();
     }
 
+    Q_INVOKABLE Session::ForumRequest* forum() {
+        return Session::Forum();
+    }
+
     Q_INVOKABLE QSettings* settings() {
         return &_settings;
     }

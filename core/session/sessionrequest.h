@@ -1,6 +1,7 @@
 #ifndef SESSIONREQUEST_H
 #define SESSIONREQUEST_H
 
+#include <core_global.h>
 #include "imagecache.h"
 #include "session.h"
 #include <QNetworkReply>
@@ -35,7 +36,6 @@ public:
 
     Q_PROPERTY(QString sessionId MEMBER _sessionId NOTIFY sessionIdChanged READ sessionId)
     Q_PROPERTY(QString accountName MEMBER _accountName READ accountName)
-
 public slots:
     void login(const QString &username, const QString &password);
     void loginWithSessionId(const QString &sessionId);
@@ -111,6 +111,13 @@ private:
     inline QVariant getAttribute(QNetworkRequest* request, AttributeData attr) {
         return request->attribute((QNetworkRequest::Attribute)(QNetworkRequest::User + attr));
     }
+
+    inline QVariant getAttribute(QNetworkRequest request, AttributeData attr) {
+        return request.attribute((QNetworkRequest::Attribute)(QNetworkRequest::User + attr));
+    }
+
+    friend class ForumRequest;
+    friend class Session;
 };
 Q_DECLARE_METATYPE(Session::Request*)
 

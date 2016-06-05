@@ -4,12 +4,14 @@
 #include <core_global.h>
 #include <QUrl>
 
+
 class CoreService;
 
 class CORE_EXTERN Session
 {
 public:
     class Request;
+    class ForumRequest;
 
     enum AttributeData {
         LoginUsername = 0x01,
@@ -18,7 +20,8 @@ public:
         Badge,
         UserData,
         League,
-        Character
+        Character,
+        ForumSubmissionData
     };
 
     static QUrl BaseUrl() {
@@ -63,10 +66,13 @@ public:
 
     static Request* Global();
 
+    static ForumRequest* Forum();
+
     static Request* NewRequest(QObject* parent = 0);
 
 private:
     static Request* _globalRequest;
+    static ForumRequest* _forumRequest;
     static CoreService* _core;
 
     explicit Session() {}
