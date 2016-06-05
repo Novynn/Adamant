@@ -329,6 +329,13 @@
           </widget>
          </item>
          <item>
+          <widget class="QPushButton" name="previewButton">
+           <property name="text">
+            <string>Preview...</string>
+           </property>
+          </widget>
+         </item>
+         <item>
           <widget class="QPushButton" name="updateButton">
            <property name="text">
             <string>Update Now</string>
