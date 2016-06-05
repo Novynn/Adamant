@@ -18,6 +18,10 @@ LoggingSystem *LoggingSystem::Get() {
 }
 
 void LoggingSystem::qtMessage(QtMsgType type, const QMessageLogContext &context, const QString &msg) {
+#ifndef QT_DEBUG
+    // Redirect debug for now
+    if (type == QtDebugMsg) type = QtInfoMsg;
+#endif
     QString formatted = qFormatLogMessage(type, context, msg);
     LoggingSystem* t = Get();
     t->message(formatted, type);
