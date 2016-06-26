@@ -3,7 +3,6 @@
 
 #include "adamantplugin.h"
 #include "qxt/qxtglobalshortcut.h"
-#include <memory>
 class PluginManager;
 
 class GlobalHotkeyPlugin : public AdamantPlugin

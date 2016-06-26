@@ -129,6 +129,7 @@ bool CharacterViewer::filterItem(const QString &league) {
 }
 
 void CharacterViewer::on_filterBox_currentIndexChanged(const QString &str) {
+    Q_UNUSED(str);
     for (int i = 0; i < ui->listWidget->count(); i++) {
         auto item = ui->listWidget->item(i);
         if (item) {

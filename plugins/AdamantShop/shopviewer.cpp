@@ -2,8 +2,11 @@
 #include "ui_shopviewer.h"
 #include "adamantshopplugin.h"
 #include "stashviewer.h"
+#include <QDebug>
 #include <dialogs/newshopdialog.h>
 #include <core.h>
+#include <session/session.h>
+#include <session/forum/forumrequest.h>
 
 ShopViewer::ShopViewer(AdamantShopPlugin* plugin, StashViewer* viewer, QWidget *parent)
     : QWidget(parent)
@@ -47,6 +50,26 @@ ShopViewer::ShopViewer(AdamantShopPlugin* plugin, StashViewer* viewer, QWidget *
 
     setupStashIntegration();
     showShop(nullptr);
+
+    connect(_plugin->Core()->forum(), &Session::ForumRequest::requestReady, this, [this](const ForumSubmission* submission) {
+        if (!_submissions.contains(submission)) return;
+        ForumSubmission* sub = (ForumSubmission*)submission;
+        sub->data.insert("content", "actually no, this data!");
+    });
+
+    connect(_plugin->Core()->forum(), &Session::ForumRequest::requestError, this, [this](const ForumSubmission* submission, const QString &error) {
+        if (!_submissions.contains(submission)) return;
+        qDebug() << "Error!" << submission->threadId << error;
+        _submissions.removeOne(submission);
+        delete submission;
+    });
+
+    connect(_plugin->Core()->forum(), &Session::ForumRequest::requestFinished, this, [this](const ForumSubmission* submission) {
+        if (!_submissions.contains(submission)) return;
+        qDebug() << "Finished!" << submission->threadId;
+        _submissions.removeOne(submission);
+        delete submission;
+    });
 }
 
 void ShopViewer::setupStashIntegration() {
@@ -154,7 +177,7 @@ void ShopViewer::on_newShopButton_clicked() {
         _shopDialog->reset();
 
         const Shop* shop = new Shop(name, league);
-        _plugin->saveShop(shop);
+        _plugin->addShop((Shop*)shop); // Goodbye const
         addShop(shop, true);
     }
 }
@@ -170,6 +193,7 @@ void ShopViewer::on_listWidget_customContextMenuRequested(const QPoint &pos) {
             auto shop = listItem->data(Qt::UserRole + 1).value<Shop*>();
             if (shop == nullptr) return;
             ui->listWidget->removeItemWidget(listItem);
+            showShop(nullptr);
             if (!_plugin->deleteShop(shop)) {
                 qWarning() << "Failed to delete shop: " << shop->name();
             }
@@ -187,7 +211,18 @@ void ShopViewer::on_addThreadButton_clicked() {
     if (thread != 0) {
         // Validation?
         _currentShop->addThread(QString::number(thread));
+        // Save
+        _plugin->saveShop(_currentShop);
         // Update view
         showShop(_currentShop);
     }
+}
+
+void ShopViewer::on_updateButton_clicked() {
+    if (_currentShop == nullptr) return;
+    ForumSubmission* s = new ForumSubmission();
+    s->threadId = "1440653";
+    s->data.insert("content", "test");
+    _submissions << s;
+    _plugin->Core()->forum()->beginRequest(s);
 }

@@ -41,12 +41,19 @@ public:
     bool operator==(const ItemLocation &other) const;
 
     void setItems(ItemList items, const QJsonObject &layout);
-
     QJsonObject toJson();
     bool fromJson(const QJsonObject& object);
     QPointF itemPos(const Item* item) const;
     QSize itemSize(const Item* item) const;
     int tabIndex() const;
+
+    int getAutoUpdateInterval() const {
+        return _updateInterval;
+    }
+
+    void setAutoUpdateInterval(int interval) {
+        _updateInterval = interval;
+    }
 
 private:
     int _tabIndex;
@@ -57,6 +64,8 @@ private:
     QColor _color;
     Type _type;
     QJsonObject _layout;
+
+    int _updateInterval;
 };
 
 #endif // STASHITEMLOCATION_H

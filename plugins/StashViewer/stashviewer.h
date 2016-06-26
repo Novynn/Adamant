@@ -37,6 +37,8 @@ public:
     void LoadTab(StashViewData* data);
     void LoadTab(const QString& league, const ItemLocation* tab);
     void UpdateTab(const QString& league, const ItemLocation* tab, bool throttled);
+protected:
+    void timerEvent(QTimerEvent *);
 public slots:
     void search(const QString& query = QString());
     void OnImage(const QString &path, QImage image);
@@ -49,11 +51,16 @@ private slots:
     void on_leagueBox_currentIndexChanged(const QString &text);
     void on_updateButton_clicked();
 
+    void on_autoUpdate_toggled(bool checked);
+
+    void on_autoUpdateInterval_valueChanged(int val);
+
 signals:
+    void saveStash(const QString &league, const QString &id);
     void RequestLeaguesList();
-    void RequestStashTabList(QString league);
-    void RequestStashTab(QString league, QString id);
-    void LeagueDetailsChanged(QString league);
+    void RequestStashTabList(const QString &league);
+    void RequestStashTab(const QString &league, const QString &id);
+    void LeagueDetailsChanged(const QString &league);
 private:
     Ui::StashViewer *ui;
 
@@ -67,6 +74,8 @@ private:
 
     GraphicItemFactory* _factory;
     QThread* _factoryThread;
+
+    int _autoUpdateTimer;
 };
 Q_DECLARE_METATYPE(StashViewer*)
 

@@ -70,6 +70,10 @@ void StashViewerPlugin::OnLoad() {
         _characterViewer->setCharacterItems(character, location);
     });
 
+    connect(_viewer, &StashViewer::saveStash, this, [this](const QString &league, const QString &id) {
+        Core()->getItemManager()->saveStash(league, id);
+    });
+
     connect(_viewer, &StashViewer::RequestLeaguesList, Core()->session(), &Session::Request::fetchLeagues);
     connect(_viewer, &StashViewer::RequestStashTabList, [this](QString league) {
         Core()->getItemManager()->fetchStashTab(league, "");

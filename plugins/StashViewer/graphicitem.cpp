@@ -494,7 +494,7 @@ QVariant GraphicItem::itemChange(QGraphicsItem::GraphicsItemChange change, const
             setOpacity(1.0);
         else {
             // Disabled
-            setOpacity(0.5);
+            setOpacity(0.2);
             ShowTooltip(false);
         }
     }

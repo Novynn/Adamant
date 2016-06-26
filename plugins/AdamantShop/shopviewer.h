@@ -14,6 +14,7 @@ class Shop;
 class QListWidgetItem;
 class StashViewer;
 class NewShopDialog;
+class ForumSubmission;
 
 class ShopViewer : public QWidget
 {
@@ -38,11 +39,14 @@ private slots:
 
     void on_addThreadButton_clicked();
 
+    void on_updateButton_clicked();
+
 private:
     AdamantShopPlugin* _plugin;
     StashViewer* _stashViewer;
     QList<Shop*> _shops;
     Shop* _currentShop;
+    QList<const ForumSubmission*> _submissions;
     Ui::ShopViewer *ui;
     NewShopDialog* _shopDialog;
     QStringList _leagues;

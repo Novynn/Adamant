@@ -2,7 +2,8 @@
 
 StashItemLocation::StashItemLocation(const QJsonObject &tabData)
     : ItemLocation()
-    , _type(Normal) {
+    , _type(Normal)
+    , _updateInterval(0) {
     _tabId = tabData.value("id").toString();
     update(tabData);
 }
@@ -123,6 +124,7 @@ QJsonObject StashItemLocation::toJson() {
     result.insert("label", _tabLabel);
     result.insert("league", _league);
     result.insert("color", (qint64) _color.rgb());
+    result.insert("update_interval", (qint64)_updateInterval);
 
     // TODO(rory): Save mapping data somehow ???
     result.insert("type", StashItemLocation::TypeToName(_type));
@@ -135,6 +137,7 @@ QJsonObject StashItemLocation::toJson() {
 bool StashItemLocation::fromJson(const QJsonObject &object) {
     QString type = object.value("type").toString();
     _type = StashItemLocation::NameToType(type);
+    _updateInterval = object.value("update_interval").toInt();
 
     // We only care about the items
     return ItemLocation::fromJson(object);

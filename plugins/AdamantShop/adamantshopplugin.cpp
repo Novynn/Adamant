@@ -106,12 +106,13 @@ void AdamantShopPlugin::OnLoad() {
         return;
     }
     _viewer = new ShopViewer(this, _stashViewer);
+    _templateViewer = new TemplateViewer(this);
     Core()->getInterface()->registerPluginPage(this, QIcon(":/icons/dark/cart.png"),
                                                    "Shops", "Manage shop threads.",
                                                    _viewer);
     Core()->getInterface()->registerPluginPage(this, QIcon(":/icons/dark/embed.png"),
                                                    "Shop Templates", "Manage shop templates.",
-                                                   new QWidget());
+                                                   _templateViewer);
     Core()->settings()->beginGroup("data");
     const QStringList leagues = Core()->settings()->value("leagues").toStringList();
     Core()->settings()->endGroup();

@@ -23,9 +23,6 @@ StashViewer::StashViewer(QWidget *parent, QString league)
     , _factoryThread(new QThread(this))
 {
     ui->setupUi(this);
-//    ui->viewWidget->layout()->removeWidget(ui->optionsBar);
-//    ui->optionsBar->setParent(nullptr);
-
 
     connect(_imageCache, &ImageCache::onImage, this, &StashViewer::OnImage);
 
@@ -54,6 +51,12 @@ StashViewer::StashViewer(QWidget *parent, QString league)
     _scene->setBackgroundBrush(QBrush(Qt::transparent));
     ui->graphicsView->setBackgroundBrush(QBrush(Qt::transparent));
     ui->graphicsView->setScene(_scene);
+
+    // Start auto update timer
+    _autoUpdateTimer = startTimer(60000);
+
+    // Required for tab status tips
+    ui->stashListWidget->setMouseTracking(true);
 }
 
 void StashViewer::OnViewportChanged() {
@@ -235,6 +238,17 @@ void StashViewer::UpdateTab(const QString &league, const ItemLocation* tab, bool
     }
 }
 
+void StashViewer::timerEvent(QTimerEvent* event) {
+    if (event->timerId() == _autoUpdateTimer) {
+        for (auto tab : _tabs.values()) {
+            if (tab->autoUpdateTick()) {
+                emit RequestStashTab(_currentLeague, tab->getLocation()->hash());
+            }
+        }
+        event->accept();
+    }
+}
+
 void StashViewer::LoadTab(const QString &league, const ItemLocation* tab) {
     if (_currentLeague != league) return;
     auto data = _tabs.value(tab->hash(), nullptr);
@@ -269,9 +283,25 @@ void StashViewer::on_stashListWidget_itemSelectionChanged() {
         else data->getGrid()->show();
     }
 
+    int autoUpdateState = -1;
+    int autoUpdateInterval = -1;
     for (QListWidgetItem* item : items) {
         StashViewData* data = item->data(StashViewData::ListItemDataIndex).value<StashViewData*>();
         Q_ASSERT(data);
+
+        if (autoUpdateState == -1) {
+            autoUpdateState = (int)(data->getAutoUpdateMax() > 0) * 2;
+        }
+        else if (autoUpdateState != 1 && autoUpdateState != ((int)(data->getAutoUpdateMax() > 0) * 2)) {
+            autoUpdateState = 1;
+        }
+
+        if (autoUpdateInterval == -1) {
+            autoUpdateInterval = data->getAutoUpdateMax();
+        }
+        else if (autoUpdateInterval != data->getAutoUpdateMax()){
+            autoUpdateInterval = 0;
+        }
 
         // Save label
         tabLabels.append(item->text());
@@ -280,6 +310,31 @@ void StashViewer::on_stashListWidget_itemSelectionChanged() {
         int height = (stashPanelSize.height() + Padding) * index;
         data->getGrid()->setPos(0, height);
         index++;
+    }
+
+    /* Resolve auto update state for selection*/ {
+        bool autoUpdateBlock = ui->autoUpdate->blockSignals(true);
+        bool autoUpdateBlockInterval = ui->autoUpdateInterval->blockSignals(true);
+        if (autoUpdateState < 0) {
+            ui->autoUpdate->setEnabled(false);
+        }
+        else {
+            ui->autoUpdate->setEnabled(true);
+            ui->autoUpdate->setCheckState((Qt::CheckState)autoUpdateState);
+            ui->autoUpdateInterval->setEnabled(autoUpdateState);
+        }
+
+        if (autoUpdateInterval > 0) {
+            ui->autoUpdateInterval->setSpecialValueText("");
+            ui->autoUpdateInterval->setValue(autoUpdateInterval);
+        }
+        else {
+            // Multiple different values
+            ui->autoUpdateInterval->setSpecialValueText("...");
+            ui->autoUpdateInterval->setValue(ui->autoUpdateInterval->minimum());
+        }
+        ui->autoUpdate->blockSignals(autoUpdateBlock);
+        ui->autoUpdateInterval->blockSignals(autoUpdateBlockInterval);
     }
 
     emit ui->searchEdit->returnPressed();
@@ -358,6 +413,36 @@ void StashViewer::on_updateButton_clicked() {
     for (QListWidgetItem* item : items) {
         StashViewData* data = item->data(StashViewData::ListItemDataIndex).value<StashViewData*>();
         Q_ASSERT(data);
+        data->resetAutoUpdateIndex();
         emit RequestStashTab(_currentLeague, data->getLocation()->hash());
     }
+}
+
+void StashViewer::on_autoUpdate_toggled(bool checked) {
+    ui->autoUpdateInterval->setSpecialValueText("");
+    QList<QListWidgetItem*> items = ui->stashListWidget->selectedItems();
+    for (QListWidgetItem* item : items) {
+        StashViewData* data = item->data(StashViewData::ListItemDataIndex).value<StashViewData*>();
+        Q_ASSERT(data);
+        data->setAutoUpdateMax(checked ? ui->autoUpdateInterval->value(): 0);
+    }
+
+    // Set proper state
+    auto b = ui->autoUpdate->blockSignals(true);
+    ui->autoUpdate->setCheckState(checked ? Qt::Checked : Qt::Unchecked);
+    ui->autoUpdate->blockSignals(b);
+}
+
+void StashViewer::on_autoUpdateInterval_valueChanged(int val) {
+    ui->autoUpdateInterval->setSpecialValueText("");
+    QList<QListWidgetItem*> items = ui->stashListWidget->selectedItems();
+    for (QListWidgetItem* item : items) {
+        StashViewData* data = item->data(StashViewData::ListItemDataIndex).value<StashViewData*>();
+        Q_ASSERT(data);
+        data->setAutoUpdateMax(val);
+
+        // Save the stash
+        emit saveStash(_currentLeague, data->getTab()->hash());
+    }
+    ui->autoUpdate->setCheckState(Qt::Checked);
 }

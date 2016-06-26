@@ -8,6 +8,7 @@ class PluginManager;
 #include <stashviewerplugin.h>
 #include <stashviewer.h>
 #include <shopviewer.h>
+#include <templateviewer.h>
 #include <shop/shop.h>
 
 class AdamantShopPlugin : public AdamantPlugin
@@ -19,6 +20,7 @@ class AdamantShopPlugin : public AdamantPlugin
 public:
     AdamantShopPlugin()
         : _viewer(nullptr)
+        , _templateViewer(nullptr)
         , _stashViewer(nullptr) {
     }
     static QDir shopsPath();
@@ -53,6 +55,7 @@ public slots:
     void OnLoad();
 private:
     ShopViewer* _viewer;
+    TemplateViewer* _templateViewer;
     ShopList _shops;
 
     StashViewer* _stashViewer;

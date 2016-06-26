@@ -15,7 +15,11 @@ HEADERS += adamantshopplugin.h \
     widgets/shopwidget.h \
     external/qcustomplot.h \
     shop/shop.h \
-    dialogs/newshopdialog.h
+    dialogs/newshopdialog.h \
+    external/mustache.hpp \
+    shoptemplate.h \
+    templateviewer.h \
+    dialogs/pricedialog.h
 
 win32: LIBS += -L$$OUT_PWD/../../bin/ -ladamant
 else:unix: LIBS += -L$$OUT_PWD/../../bin/ -ladamant
@@ -32,7 +36,9 @@ DEPENDPATH += $$PWD/../../plugins/StashViewer
 FORMS += \
     shopviewer.ui \
     widgets/shopwidget.ui \
-    dialogs/newshopdialog.ui
+    dialogs/newshopdialog.ui \
+    templateviewer.ui \
+    dialogs/pricedialog.ui
 
 SOURCES += \
     shopviewer.cpp \
@@ -40,4 +46,6 @@ SOURCES += \
     external/qcustomplot.cpp \
     adamantshopplugin.cpp \
     shop/shop.cpp \
-    dialogs/newshopdialog.cpp
+    dialogs/newshopdialog.cpp \
+    templateviewer.cpp \
+    dialogs/pricedialog.cpp
