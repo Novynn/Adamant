@@ -14,7 +14,7 @@ class ILoginDialog;
 class SetupDialog : public QDialog
 {
     Q_OBJECT
-
+public:
     enum Page {
         LoginMethodPage,
         AccountPage,
@@ -27,6 +27,7 @@ class SetupDialog : public QDialog
     enum LoginMethod {
         LoginEmail,
         LoginSessionId,
+        LoginOAuth,
         LoginSteam
     };
 
@@ -39,6 +40,7 @@ public:
     QVariantMap getData() const {
         QVariantMap map;
         map.insert("id", _sessionId);
+        map.insert("access_token", _accessToken);
         map.insert("email", _email);
         map.insert("method", (int)_method);
         map.insert("account", _accountName);
@@ -73,6 +75,8 @@ private slots:
 
     void on_analyticsCheckbox_toggled(bool checked);
 
+    void on_oauthLoginButton_clicked();
+
 signals:
     void loginRequested(const QString &username, const QString &password);
     void loginByIdRequested(const QString &sessionId);
@@ -83,6 +87,7 @@ private:
     LoginMethod _method;
     QString _email;
     QString _sessionId;
+    QString _accessToken;
     QString _accountName;
     QString _poePath;
     QString _poeConfigPath;

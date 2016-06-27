@@ -36,6 +36,10 @@ public:
         return QUrl(BaseUrl().toString() + "/news");
     }
 
+    static QUrl ProfileDataUrl() {
+        return QUrl(APIUrl().toString() + "/account");
+    }
+
     static QUrl AccountUrl() {
         return QUrl(BaseUrl().toString() + "/my-account");
     }
@@ -53,7 +57,7 @@ public:
     }
 
     static QUrl LeaguesUrl() {
-        return QUrl("http://poe.rory.io/api/v1/leagues");
+        return QUrl("https://poe.rory.io/api/v1/leagues");
     }
 
     static QString SessionIdCookie() {

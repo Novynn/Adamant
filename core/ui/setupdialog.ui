@@ -187,7 +187,7 @@
       <number>0</number>
      </property>
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="loginPage">
       <layout class="QHBoxLayout" name="horizontalLayout">
@@ -296,6 +296,13 @@
             </property>
             <property name="textFormat">
              <enum>Qt::RichText</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCommandLinkButton" name="oauthLoginButton">
+            <property name="text">
+             <string>OAuth</string>
             </property>
            </widget>
           </item>

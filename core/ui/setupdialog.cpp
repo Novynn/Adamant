@@ -10,6 +10,7 @@
 #include <session/sessionrequest.h>
 
 #include <ui/dialogs/loginsessiondialog.h>
+#include <ui/dialogs/loginoauthdialog.h>
 
 #undef STEAM_SUPPORT
 
@@ -32,6 +33,7 @@ SetupDialog::SetupDialog(QWidget *parent, CoreService* core)
     setPage(SetupDialog::LoginMethodPage);
 
     _loginMethods.insert(SetupDialog::LoginEmail, new LoginSessionDialog(this, core));
+    _loginMethods.insert(SetupDialog::LoginOAuth, new LoginOAuthDialog(this, core));
 }
 
 void SetupDialog::closeEvent(QCloseEvent* event) {
@@ -62,6 +64,7 @@ void SetupDialog::loginSuccess(const QString &sessionId) {
     }
     setPage(SetupDialog::AccountPage);
     _sessionId = sessionId;
+    _accessToken = _core->session()->accessToken();
 }
 
 void SetupDialog::loginFailed(const QString &message) {
@@ -88,6 +91,11 @@ void SetupDialog::on_poeLoginButton_clicked() {
 void SetupDialog::on_sessionIdLoginButton_clicked() {
     attemptLogin(SetupDialog::LoginSessionId);
 }
+
+void SetupDialog::on_oauthLoginButton_clicked() {
+    attemptLogin(SetupDialog::LoginOAuth);
+}
+
 
 void SetupDialog::attemptLogin(LoginMethod method) {
     _method = method;

@@ -41,6 +41,7 @@ CoreService::~CoreService() {
 bool CoreService::load() {
     sensitiveSettings()->beginGroup("session");
     QString sessionId = sensitiveSettings()->value("id").toString();
+    QString accessToken = sensitiveSettings()->value("access_token").toString();
     sensitiveSettings()->endGroup();
 
     // Required here so that the setup dialog also gets this palette
@@ -48,7 +49,12 @@ bool CoreService::load() {
 
     getInterface()->start();
 
-    while (sessionId.isEmpty()) {
+    SetupDialog::LoginMethod method = SetupDialog::LoginSessionId;
+    if (!accessToken.isEmpty()) {
+        method = SetupDialog::LoginOAuth;
+    }
+
+    while (sessionId.isEmpty() && accessToken.isEmpty()) {
         // Oh no, run setup.
         int result = getInterface()->showSetup(); // Blocking
         if (result != 0x0) {
@@ -63,8 +69,13 @@ bool CoreService::load() {
         for (QString key : map.uniqueKeys()) {
             sensitiveSettings()->setValue(key, map.value(key));
         }
-        sessionId = sensitiveSettings()->value("id").toString();
+        sessionId = map.value("id").toString();
         sensitiveSettings()->endGroup();
+
+        method = (SetupDialog::LoginMethod)map.value("method").toInt();
+        if (method == SetupDialog::LoginOAuth && !map.value("access_token").toString().isEmpty()) {
+            break;
+        }
     }
 
     // These are requirements for data we need before the application loads
@@ -76,9 +87,26 @@ bool CoreService::load() {
     getPluginManager()->preparePlugins();
 
     // Load the main application!
+
+    /* Require leagues list */ {
+        ADD_REQUIREMENT(session(), Session::Request::leaguesList, QStringList, leagues);
+        session()->fetchLeagues();
+    }
+
     /* Require profile data */ {
         ADD_REQUIREMENT(session(), Session::Request::profileData, QString, profile);
-        session()->loginWithSessionId(sessionId);
+
+        switch (method) {
+            case SetupDialog::LoginSessionId:
+            case SetupDialog::LoginEmail:
+            case SetupDialog::LoginSteam:
+                session()->loginWithSessionId(sessionId);
+                break;
+            case SetupDialog::LoginOAuth:
+                session()->fetchProfileData();
+                break;
+        }
+
 
         // TODO(rory): Improve this
         connect(session(), &Session::Request::loginResult,
@@ -90,11 +118,6 @@ bool CoreService::load() {
                 qDebug() << "Failed to log in: " << resultString;
             }
         });
-    }
-
-    /* Require leagues list */ {
-        ADD_REQUIREMENT(session(), Session::Request::leaguesList, QStringList, leagues);
-        session()->fetchLeagues();
     }
 
     return true;

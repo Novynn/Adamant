@@ -30,16 +30,23 @@ public:
         return _sessionId;
     }
 
+    QString accessToken() const {
+        return _accessToken;
+    }
+
     QString accountName() const {
         return _accountName;
     }
 
     Q_PROPERTY(QString sessionId MEMBER _sessionId NOTIFY sessionIdChanged READ sessionId)
     Q_PROPERTY(QString accountName MEMBER _accountName READ accountName)
+    void loginWithOAuth(const QString &authorizationCode);
 public slots:
     void login(const QString &username, const QString &password);
     void loginWithSessionId(const QString &sessionId);
     void clear();
+
+    void fetchProfileData();
 
     void fetchAccountBadge(const QString &badge, const QString &url);
     void fetchImage(const QString &url);
@@ -61,6 +68,7 @@ public slots:
     //void setListenToAll();
 
 private slots:
+    void onOAuthResultPath();
     void onLoginPage();
     void onLoginPageResult();
     void onAccountPageResult();
@@ -71,6 +79,7 @@ private slots:
 
     void onImageResult(const QString &path, const QImage &image);
 
+    void onProfileData();
 protected:
     static const QString getCSRFToken(const QByteArray& data);
     static const QString getAccountAvatar(const QByteArray &data);
@@ -100,6 +109,7 @@ private:
     ImageCache* _cache;
     QString _accountName;
     QString _sessionId;
+    QString _accessToken;
 
     QHash<QString, QString> _badges;
     QStringList _avatars;
@@ -114,6 +124,14 @@ private:
 
     inline QVariant getAttribute(QNetworkRequest request, AttributeData attr) {
         return request.attribute((QNetworkRequest::Attribute)(QNetworkRequest::User + attr));
+    }
+
+    inline QNetworkRequest createRequest(const QUrl &url) {
+        auto request = QNetworkRequest(url);
+        if (!_accessToken.isEmpty()) {
+            request.setRawHeader("Authorization", QString("Bearer %1").arg(_accessToken).toUtf8());
+        }
+        return request;
     }
 
     friend class ForumRequest;
