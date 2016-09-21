@@ -312,9 +312,25 @@ void Session::Request::onImageResult(const QString &path, const QImage &image) {
 }
 
 void Session::Request::onAccountStashTabsResult() {
-    CHECK_REPLY;
+    QNetworkReply *reply = qobject_cast<QNetworkReply*>(QObject::sender());
+    QByteArray response;
+    if (reply->error()) {
+        const QString errorMessage = QString("Network error in %1: %2").arg(__FUNCTION__).arg(reply->errorString());
+        Session::LogError(errorMessage);
+        QJsonObject error({
+            {
+                "error", QJsonObject({
+                    {"message", errorMessage},
+                    {"internal", true}
+                })
+            }
+        });
+        response = QJsonDocument(error).toJson();
+    }
+    else {
+        response = reply->readAll();
+    }
 
-    QByteArray response = reply->readAll();
     QNetworkRequest request = reply->request();
     QVariant data = getAttribute(&request, UserData);
     QString league = getAttribute(&request, League).toString();

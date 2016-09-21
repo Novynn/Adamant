@@ -11,7 +11,7 @@
 #include <items/item.h>
 #include <items/stashitemlocation.h>
 
-#include <widgets/stashlistwidgetitem.h>
+#include <ui/stashlistwidgetitem.h>
 
 StashViewer::StashViewer(QWidget *parent, QString league)
     : QWidget(parent)
@@ -219,7 +219,6 @@ void StashViewer::LoadTab(StashViewData* data) {
         _scene->removeItem(graphicItem);
         delete graphicItem;
     }
-    qDebug() << data->getLocation()->header() << "Loaded: " << data->getLocation()->state();
 
     data->setLoaded(false);
     QMetaObject::invokeMethod(_factory,

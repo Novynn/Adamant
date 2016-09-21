@@ -28,6 +28,10 @@ public:
         return QUrl("https://www.pathofexile.com");
     }
 
+    static QUrl APIUrl() {
+        return QUrl("https://www.pathofexile.com/api");
+    }
+
     static QUrl LoginUrl() {
         return QUrl(BaseUrl().toString() + "/login");
     }

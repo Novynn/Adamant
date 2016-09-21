@@ -1,0 +1,11 @@
+{
+    "name" : "AdamantSkillTree",
+    "version" : "0.0.1",
+    "compatVersion" : "0.0.1",
+    "vendor" : "Novynn",
+    "copyright" : "(C) Novynn",
+    "license" : "",
+    "description" : "Nondescript",
+    "url" : "http://poe.rory.io",
+    "role" : "service"
+}

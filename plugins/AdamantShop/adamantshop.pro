@@ -16,7 +16,7 @@ HEADERS += adamantshopplugin.h \
     external/qcustomplot.h \
     shop/shop.h \
     dialogs/newshopdialog.h \
-    external/mustache.hpp \
+    external/mustache.h \
     shoptemplate.h \
     templateviewer.h \
     dialogs/pricedialog.h
@@ -48,4 +48,5 @@ SOURCES += \
     shop/shop.cpp \
     dialogs/newshopdialog.cpp \
     templateviewer.cpp \
-    dialogs/pricedialog.cpp
+    dialogs/pricedialog.cpp \
+    external/mustache.cpp

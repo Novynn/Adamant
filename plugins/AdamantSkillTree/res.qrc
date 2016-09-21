@@ -1,0 +1,54 @@
+<RCC>
+    <qresource prefix="/assets">
+        <file alias="skill_sprite-0-e46e21e8104612e85a87f11eca79b314.jpg">res/skill_sprite-0-e46e21e8104612e85a87f11eca79b314.jpg</file>
+        <file alias="skill_sprite-1-910d1201cd0b2c0d45424bc650579c40.jpg">res/skill_sprite-1-910d1201cd0b2c0d45424bc650579c40.jpg</file>
+        <file alias="skill_sprite-2-ce8de32abee09b43d0598798f98843ad.jpg">res/skill_sprite-2-ce8de32abee09b43d0598798f98843ad.jpg</file>
+        <file alias="skill_sprite-3-6340617adde92c3d2a6d908b53092cb4.jpg">res/skill_sprite-3-6340617adde92c3d2a6d908b53092cb4.jpg</file>
+        <file alias="skill_sprite-active-0-5089b9560769eb371bf7f5b785428052.jpg">res/skill_sprite-active-0-5089b9560769eb371bf7f5b785428052.jpg</file>
+        <file alias="skill_sprite-active-0-c78068605e748933d4dfb61c70310c39.png">res/skill_sprite-active-0-c78068605e748933d4dfb61c70310c39.png</file>
+        <file alias="skill_sprite-active-1-4f658029af52b106e66c46318bc6ac4d.jpg">res/skill_sprite-active-1-4f658029af52b106e66c46318bc6ac4d.jpg</file>
+        <file alias="skill_sprite-active-1-56eb4b65145ca4f0d5a6d72bdf4e94ac.png">res/skill_sprite-active-1-56eb4b65145ca4f0d5a6d72bdf4e94ac.png</file>
+        <file alias="skill_sprite-active-2-9bb46c178ca838f38944890b67959096.jpg">res/skill_sprite-active-2-9bb46c178ca838f38944890b67959096.jpg</file>
+        <file alias="skill_sprite-active-2-e04b67ebbbedf5f167719444f70fe2f8.png">res/skill_sprite-active-2-e04b67ebbbedf5f167719444f70fe2f8.png</file>
+        <file alias="skill_sprite-active-3-18ba11635a6d283635c2fbdbfd30e7f6.jpg">res/skill_sprite-active-3-18ba11635a6d283635c2fbdbfd30e7f6.jpg</file>
+        <file alias="skill_sprite-active-3-bcd39673e9d14074c3fc75a13f66d6e6.png">res/skill_sprite-active-3-bcd39673e9d14074c3fc75a13f66d6e6.png</file>
+    </qresource>
+    <qresource prefix="/static">
+        <file alias="NotableFrameAllocated.png">res/NotableFrameAllocated.png</file>
+        <file alias="NotableFrameCanAllocate.png">res/NotableFrameCanAllocate.png</file>
+        <file alias="NotableFrameUnallocated.png">res/NotableFrameUnallocated.png</file>
+        <file alias="KeystoneFrameAllocated.png">res/KeystoneFrameAllocated.png</file>
+        <file alias="KeystoneFrameCanAllocate.png">res/KeystoneFrameCanAllocate.png</file>
+        <file alias="KeystoneFrameUnallocated.png">res/KeystoneFrameUnallocated.png</file>
+        <file alias="Skill_Frame_Allocated.png">res/Skill_Frame_Allocated.png</file>
+        <file alias="Skill_Frame_CanAllocate.png">res/Skill_Frame_CanAllocate.png</file>
+        <file alias="Skill_Frame_Unallocated.png">res/Skill_Frame_Unallocated.png</file>
+        <file alias="PassiveSkillScreenAscendancyFrameLargeAllocated.png">res/PassiveSkillScreenAscendancyFrameLargeAllocated.png</file>
+        <file alias="PassiveSkillScreenAscendancyFrameLargeCanAllocate.png">res/PassiveSkillScreenAscendancyFrameLargeCanAllocate.png</file>
+        <file alias="PassiveSkillScreenAscendancyFrameLargeNormal.png">res/PassiveSkillScreenAscendancyFrameLargeNormal.png</file>
+        <file alias="PassiveSkillScreenAscendancyFrameSmallAllocated.png">res/PassiveSkillScreenAscendancyFrameSmallAllocated.png</file>
+        <file alias="PassiveSkillScreenAscendancyFrameSmallCanAllocate.png">res/PassiveSkillScreenAscendancyFrameSmallCanAllocate.png</file>
+        <file alias="PassiveSkillScreenAscendancyFrameSmallNormal.png">res/PassiveSkillScreenAscendancyFrameSmallNormal.png</file>
+        <file alias="PassiveSkillScreenAscendancyMiddle.png">res/PassiveSkillScreenAscendancyMiddle.png</file>
+        <file alias="Guardian.png">res/Guardian.png</file>
+        <file alias="Hierophant.png">res/Hierophant.png</file>
+        <file alias="Inquisitor.png">res/Inquisitor.png</file>
+        <file alias="Ascendant.png">res/Ascendant.png</file>
+        <file alias="Champion.png">res/Champion.png</file>
+        <file alias="Gladiator.png">res/Gladiator.png</file>
+        <file alias="Slayer.png">res/Slayer.png</file>
+        <file alias="Chieftain.png">res/Chieftain.png</file>
+        <file alias="Berserker.png">res/Berserker.png</file>
+        <file alias="Juggernaut.png">res/Juggernaut.png</file>
+        <file alias="Necromancer.png">res/Necromancer.png</file>
+        <file alias="Elementalist.png">res/Elementalist.png</file>
+        <file alias="Occultist.png">res/Occultist.png</file>
+        <file alias="Saboteur.png">res/Saboteur.png</file>
+        <file alias="Trickster.png">res/Trickster.png</file>
+        <file alias="Assassin.png">res/Assassin.png</file>
+        <file alias="Pathfinder.png">res/Pathfinder.png</file>
+        <file alias="Deadeye.png">res/Deadeye.png</file>
+        <file alias="Raider.png">res/Raider.png</file>
+        <file alias="JewelFrameUnallocated.png">res/JewelFrameUnallocated.png</file>
+    </qresource>
+</RCC>

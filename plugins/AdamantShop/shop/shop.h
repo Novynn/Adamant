@@ -1,6 +1,7 @@
 #ifndef SHOP_H
 #define SHOP_H
 
+#include <functional>
 #include <QDateTime>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -8,6 +9,10 @@
 #include <QObject>
 #include <QDebug>
 #include <QJsonArray>
+#include <shoptemplate.h>
+#include <QFile>
+
+#include <items/item.h>
 
 class ShopThread {
     Q_GADGET
@@ -20,6 +25,10 @@ public:
     Q_PROPERTY(QDateTime updated MEMBER _updated)
     Q_PROPERTY(QDateTime bumped MEMBER _bumped)
 
+    QString content() const {
+        return _content;
+    }
+
     inline bool operator==(const ShopThread& other){
         return _id == other._id;
     }
@@ -30,6 +39,7 @@ private:
     QString _id;
     QDateTime _updated;
     QDateTime _bumped;
+    QString _content;
 
     friend class Shop;
 };
@@ -87,6 +97,8 @@ private:
 typedef QMap<QString, ShopThread> ShopThreadList;
 typedef QMap<QString, ShopItem> ShopItemMap;
 typedef QMap<QString, ShopTab> ShopTabMap;
+
+typedef std::function<const Item*(const QString &itemId)> ItemResolver;
 
 class Shop : public QObject
 {
@@ -167,6 +179,108 @@ public:
 
     ShopItem getItemData(const QString &id) {
         return _items.value(id);
+    }
+
+    void generateShopContent(const ItemResolver& resolver) {
+        const int MaxThreadSize = 50000;
+
+        QVariantHash data;
+        data["item"] = QVariant::fromValue<Mustache::QtVariantContext::fn_t>([&resolver](const QString& val, Mustache::Renderer* renderer, Mustache::Context* context) -> QString {
+            Q_UNUSED(renderer);
+            Q_UNUSED(context);
+            const Item* item = resolver(val);
+            if (!item)
+                return "[[NOITEM]]";
+            return QString("[linkItem location=\"%1\" character=\"%2\" x=\"%3\" y=\"%4\"]")
+                    .arg(item->data("inventoryId").toString())
+                    .arg(item->data("league").toString())
+                    .arg(item->data("x").toString())
+                    .arg(item->data("y").toString());
+//            // Stash
+//            return "[linkItem location=\"{{inventoryId}}\" league=\"{{league}}\" x=\"{{x}}\" y=\"{{y}}\"]";
+        });
+
+        QHash<QString, QString> partials;
+        partials["items"] = "{{#item}}1234567890{{/item}}{{#item}}1234567890{{/item}}{{#item}}1234567890{{/item}}{{#item}}1234567890{{/item}}";
+
+        Mustache::PartialMap partialMap(partials);
+
+        Mustache::QtVariantContext context(data, &partialMap);
+
+        ShopTemplate renderer;
+        const QString header = renderer.render("<", &context);
+        const QString footer = renderer.render(">", &context);
+        renderer.setMaxLength(50);
+        renderer.resetPages();
+        const QString body = renderer.render("Hi {{>items}}", &context);
+
+        qDebug() << header;
+        qDebug() << renderer.getPages().join("\n-----\n");
+        qDebug() << footer;
+
+//        QList<const ShopThread*> availableThreads;
+//        for (const ShopThread &thread : _threads) {
+//            availableThreads << &thread;
+//        }
+
+//        if (availableThreads.isEmpty()) {
+//            qDebug() << "No threads available";
+//            return;
+//        }
+
+//        auto handler = [&](ShopTemplate::Section section, const QString &part) {
+//            Q_UNUSED(section);
+//            if (part.isEmpty()) return;
+//            auto thread = (ShopThread*)availableThreads.first();
+//            while (true) {
+//                if (thread->_content.isEmpty()) {
+//                    thread->_content = header;
+//                }
+
+//                if ((thread->_content.length() + part.length() + footer.length()) > MaxThreadSize) {
+//                    qDebug() << "Ran out of space in thread " << thread->_id;
+//                    // We overflowed, append footer and switch thread
+//                    thread->_content += footer;
+//                    availableThreads.removeFirst();
+
+//                    if (availableThreads.isEmpty()) {
+//                        qDebug() << "Ran out of space, you need more shop threads!";
+//                        break;
+//                    }
+//                    // Retry with the next thread
+//                    thread = (ShopThread*)availableThreads.first();
+//                }
+//                else {
+//                    thread->_content += part;
+//                    break;
+//                }
+//            }
+//        };
+
+//        templater.set("item", []() {
+//            return "{{#itemId}}{{.}}{{/itemId}}";
+//        });
+
+//        templater.set("itemId", [&availableItems](const std::string &id) {
+//            auto itemId = QString::fromStdString(id);
+//            if (!availableItems.contains(itemId)) return QString("[[%1]]").arg(itemId).toStdString();
+//            const Item* item = availableItems.value(itemId);
+//            return item->data("id").toString().toStdString();
+
+////            // Character
+////            return "[linkItem location=\"{{inventoryId}}\" character=\"{{character}}\" x=\"{{x}}\" y=\"{{y}}\"]";
+////            // Stash
+////            return "[linkItem location=\"{{inventoryId}}\" league=\"{{league}}\" x=\"{{x}}\" y=\"{{y}}\"]";
+//        });
+
+//        templater.set("items", (QStringList)availableItems.keys());
+
+//        templater.render(handler, {ShopTemplate::Body});
+
+//        for (const ShopThread &thread : _threads) {
+//            qDebug() << thread.content();
+//        }
+        qDebug() << "Fin.";
     }
 
 

@@ -2,7 +2,7 @@
 #include "graphicitemfactory.h"
 #include "stashscene.h"
 #include "ui_characterviewer.h"
-#include <widgets/characterwidget.h>
+#include <ui/characterwidget.h>
 #include <QDebug>
 #include <session/imagecache.h>
 

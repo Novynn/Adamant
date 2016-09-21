@@ -318,6 +318,12 @@
          </item>
          <item>
           <widget class="QComboBox" name="templateBox">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="toolTip">
+            <string>Coming soon!</string>
+           </property>
            <property name="currentText">
             <string>Select Template...</string>
            </property>

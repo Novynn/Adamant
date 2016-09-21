@@ -2,8 +2,6 @@
 #define ITEMTOOLTIP_H
 
 #include <QWidget>
-
-#include <items/item.h>
 #include "ui_itemtooltip.h"
 
 namespace Ui {
@@ -20,7 +18,7 @@ public:
 
 private:
     Ui::ItemTooltip *ui;
-    friend class GraphicItem;
+    friend class ItemRenderer;
 };
 
 #endif // ITEMTOOLTIP_H

@@ -1,6 +1,7 @@
 #ifndef GRAPHICITEM_H
 #define GRAPHICITEM_H
 
+#include <functional>
 #include <QGraphicsPixmapItem>
 #include <QGraphicsSceneHoverEvent>
 #include <QStack>
@@ -15,15 +16,6 @@ public:
         Hover,
         Alt,
         Always
-    };
-
-    enum class FrameType {
-        Normal      = 0,
-        Magic       = 1,
-        Rare        = 2,
-        Unique      = 3,
-        Gem         = 4,
-        Currency    = 5
     };
 
     GraphicItem(QGraphicsItem* parent, const ItemLocation* location, const Item *item, const QString &imagePath);

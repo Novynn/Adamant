@@ -105,18 +105,28 @@ void AdamantShopPlugin::OnLoad() {
         // Couldn't fetch StashViewer
         return;
     }
-    _viewer = new ShopViewer(this, _stashViewer);
-    _templateViewer = new TemplateViewer(this);
-    Core()->getInterface()->registerPluginPage(this, QIcon(":/icons/dark/cart.png"),
-                                                   "Shops", "Manage shop threads.",
-                                                   _viewer);
-    Core()->getInterface()->registerPluginPage(this, QIcon(":/icons/dark/embed.png"),
-                                                   "Shop Templates", "Manage shop templates.",
-                                                   _templateViewer);
+
     Core()->settings()->beginGroup("data");
     const QStringList leagues = Core()->settings()->value("leagues").toStringList();
     Core()->settings()->endGroup();
-    _viewer->setLeagues(leagues);
+
+    {
+        _viewer = new ShopViewer(this, _stashViewer);
+        Core()->getInterface()->registerPluginPage(this, QIcon(":/icons/dark/cart.png"),
+                                                       "Shops", "Manage shop threads.",
+                                                       _viewer);
+        _viewer->setLeagues(leagues);
+    }
+
+    if (false) {
+        _templateViewer = new TemplateViewer(this);
+        Core()->getInterface()->registerPluginPage(this, QIcon(":/icons/dark/embed.png"),
+                                                       "Shop Templates", "Manage shop templates.",
+                                                       _templateViewer);
+    }
+
+
+
 
     qRegisterMetaType<Shop*>();
     qRegisterMetaType<ShopList>();
@@ -127,6 +137,24 @@ void AdamantShopPlugin::OnLoad() {
         saveShop(shop);
         _viewer->addShop(shop);
     }
+
+    // TODO(rory): Remove this
+
+    Item* item = nullptr;
+
+    QFile file("test.item");
+    if (file.open(QFile::ReadOnly | QFile::Text)) {
+        QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
+        file.close();
+
+        item = new Item(doc.object());
+    }
+
+    for (Shop* shop : _shops.values())
+        shop->generateShopContent([&item](const QString &id) {
+            Q_UNUSED(id);
+            return item;
+        });
 }
 
 void AdamantShopPlugin::setupEngine(QScriptEngine* engine, QScriptValue* plugin) {

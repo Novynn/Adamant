@@ -3,119 +3,145 @@
 
 #include <QString>
 #include <QVariant>
-#include <external/mustache.hpp>
+#include <external/mustache.h>
 #include <QDebug>
 
-class ShopTemplate {
+
+using namespace Mustache;
+
+QString escapeHtml(const QString& input);
+QString unescapeHtml(const QString& escaped);
+
+class ShopTemplate : public Renderer {
 public:
-    enum Section {
-        Header,
-        Body,
-        Footer
-    };
-
-    ShopTemplate(const QString &temp)
-        : _template(nullptr) {
-        setTemplate(temp);
-    }
-    ~ShopTemplate() {
-        if (_template != nullptr)
-            delete _template;
+    void setMaxLength(int len) {
+        _maxLength = len;
     }
 
-    void setTemplate(const QString &temp) {
-        if (_template != nullptr)
-            delete _template;
-        _template = new Kainjow::Mustache(temp.toStdString());
-
-        auto sections = QList<QPair<QString, Section>>{{"header", Header}, {"body", Body}, {"footer", Footer}};
-        for (auto section : sections) {
-            auto sectionFunc = [this, section](const std::string &content) {
-                if(_renderableSections.contains(section.second)) {
-                    QString simplified = QString::fromStdString(content);
-                    if (simplified.startsWith("\n")) simplified = simplified.mid(1);
-                    if (simplified.endsWith("\n")) simplified = simplified.left(simplified.length() - 1);
-                    return simplified.toStdString();
-                }
-                return std::string("");
-            };
-            set(section.first, sectionFunc);
-        }
+    void resetPages() {
+        _pages.clear();
     }
 
-    Kainjow::Mustache::Data resolveData(const QVariant &variant) {
-        Kainjow::Mustache::Data data;
-
-        switch (variant.type()) {
-            case QVariant::Bool: {
-                data = Kainjow::Mustache::Data(variant.toBool() ? Kainjow::Mustache::Data::Type::True : Kainjow::Mustache::Data::Type::False);
-            } break;
-            case QVariant::String: {
-                data = Kainjow::Mustache::Data(variant.toString().toStdString());
-            } break;
-            case QVariant::StringList:
-            case QVariant::List: {
-                QVariantList list = variant.toList();
-                std::vector<Kainjow::Mustache::Data> dest;
-                for (QVariant variant : list) {
-                    dest.push_back(resolveData(variant));
-                }
-                data = Kainjow::Mustache::Data(dest);
-            } break;
-            case QVariant::Map: {
-                QVariantMap map = variant.toMap();
-                for (const QString &key : map.uniqueKeys()) {
-                    QVariant item = map.value(key);
-                    data.set(key.toStdString(), resolveData(item));
-                }
-            } break;
-            case QVariant::Hash: {
-                QVariantHash hash = variant.toHash();
-                for (const QString &key : hash.uniqueKeys()) {
-                    QVariant item = hash.value(key);
-                    data.set(key.toStdString(), resolveData(item));
-                }
-            } break;
-            default: {
-                qWarning() << "Unknown type: " << variant;
-            }
-        }
-        return data;
+    QStringList getPages() {
+        return _pages;
     }
 
-    void set(const QString& key, const QVariant &variant) {
-        _data.set(key.toStdString(), resolveData(variant));
-    }
-
-    void set(const QString &key, const Kainjow::Mustache::Data::LambdaType &lambda) {
-        _data.set(key.toStdString(), lambda);
-    }
-
-    QString render(QList<Section> sections = {}) {
-        _renderableSections = sections;
-        return QString::fromStdString(_template->render(_data));
-    }
-
-    bool isValid() const {
-        return _template->isValid();
-    }
-
-    const QString errorMessage() const {
-        return QString::fromStdString(_template->errorMessage());
-    }
-
-    void render(const std::function<void(const QString&)>& handler, QList<Section> sections = {}) {
-        _renderableSections = sections;
-        _template->render(_data, [handler](const std::string& part) {
-            handler(QString::fromStdString(part));
-        });
+    QString render(const QString& _template, Context* context) {
+        return Renderer::render(_template, context);
     }
 
 private:
-    Kainjow::Mustache* _template;
-    Kainjow::Mustache::Data _data;
+    QStringList _pages;
+    int _maxLength;
 
-    QList<Section> _renderableSections;
+    QString render(const QString& _template, int startPos, int endPos, Context* context) {
+        QString output;
+        int lastTagEnd = startPos;
+
+        while (m_errorPos == -1) {
+            if (output.length() > _maxLength) {
+                // Uh oh, we went over...
+                _pages << output;
+                output.clear();
+            }
+
+            Tag tag = findTag(_template, lastTagEnd, endPos);
+            if (tag.type == Tag::Null) {
+                output += _template.midRef(lastTagEnd, endPos - lastTagEnd);
+                break;
+            }
+            output += _template.midRef(lastTagEnd, tag.start - lastTagEnd);
+            switch (tag.type) {
+            case Tag::Value:
+            {
+                QString value = context->stringValue(tag.key);
+                if (tag.escapeMode == Tag::Escape) {
+                    value = escapeHtml(value);
+                } else if (tag.escapeMode == Tag::Unescape) {
+                    value = unescapeHtml(value);
+                }
+                output += value;
+                lastTagEnd = tag.end;
+            }
+            break;
+            case Tag::SectionStart:
+            {
+                Tag endTag = findEndTag(_template, tag, endPos);
+                if (endTag.type == Tag::Null) {
+                    if (m_errorPos == -1) {
+                        setError("No matching end tag found for section", tag.start);
+                    }
+                } else {
+                    int listCount = context->listCount(tag.key);
+                    if (listCount > 0) {
+                        for (int i=0; i < listCount; i++) {
+                            context->push(tag.key, i);
+                            output += render(_template, tag.end, endTag.start, context);
+                            context->pop();
+                        }
+                    } else if (context->canEval(tag.key)) {
+                        output += context->eval(tag.key, _template.mid(tag.end, endTag.start - tag.end), this);
+                    } else if (!context->isFalse(tag.key)) {
+                        context->push(tag.key);
+                        output += render(_template, tag.end, endTag.start, context);
+                        context->pop();
+                    }
+                    lastTagEnd = endTag.end;
+                }
+            }
+            break;
+            case Tag::InvertedSectionStart:
+            {
+                Tag endTag = findEndTag(_template, tag, endPos);
+                if (endTag.type == Tag::Null) {
+                    if (m_errorPos == -1) {
+                        setError("No matching end tag found for inverted section", tag.start);
+                    }
+                } else {
+                    if (context->isFalse(tag.key)) {
+                        output += render(_template, tag.end, endTag.start, context);
+                    }
+                    lastTagEnd = endTag.end;
+                }
+            }
+            break;
+            case Tag::SectionEnd:
+                setError("Unexpected end tag", tag.start);
+                lastTagEnd = tag.end;
+                break;
+            case Tag::Partial:
+            {
+                QString tagStartMarker = m_tagStartMarker;
+                QString tagEndMarker = m_tagEndMarker;
+
+                m_tagStartMarker = m_defaultTagStartMarker;
+                m_tagEndMarker = m_defaultTagEndMarker;
+
+                m_partialStack.push(tag.key);
+
+                QString partial = context->partialValue(tag.key);
+                output += render(partial, 0, partial.length(), context);
+                lastTagEnd = tag.end;
+
+                m_partialStack.pop();
+
+                m_tagStartMarker = tagStartMarker;
+                m_tagEndMarker = tagEndMarker;
+            }
+            break;
+            case Tag::SetDelimiter:
+                lastTagEnd = tag.end;
+                break;
+            case Tag::Comment:
+                lastTagEnd = tag.end;
+                break;
+            case Tag::Null:
+                break;
+            }
+        }
+
+        return output;
+    }
 };
 
 #endif // SHOPTEMPLATE_H

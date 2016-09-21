@@ -24,7 +24,6 @@ private slots:
 private:
     Ui::TemplateViewer *ui;
     ShopTemplate _template;
-    std::function<void(const QString&)> _handler;
 };
 
 #endif // TEMPLATEVIEWER_H
