@@ -4,6 +4,7 @@
 #include "stashviewer.h"
 #include <QDebug>
 #include <dialogs/newshopdialog.h>
+#include <dialogs/pricedialog.h>
 #include <core.h>
 #include <session/session.h>
 #include <session/forum/forumrequest.h>
@@ -14,7 +15,9 @@ ShopViewer::ShopViewer(AdamantShopPlugin* plugin, StashViewer* viewer, QWidget *
     , _stashViewer(viewer)
     , _currentShop(nullptr)
     , ui(new Ui::ShopViewer)
-    , _shopDialog(new NewShopDialog(this)) {
+    , _shopDialog(new NewShopDialog(this))
+    , _tabWidePriceButton(new QPushButton("Set Tab-wide Price..."))
+    , _priceDialog(new PriceDialog(this)) {
     ui->setupUi(this);
 
     // Beautiful (nvm doesn't work LOL!)
@@ -70,12 +73,18 @@ ShopViewer::ShopViewer(AdamantShopPlugin* plugin, StashViewer* viewer, QWidget *
         _submissions.removeOne(submission);
         delete submission;
     });
+
+    connect(_tabWidePriceButton, &QPushButton::pressed, this, [this]() {
+        _priceDialog->setWindowTitle("Set Tab-Wide Price");
+        // NOTE(rory): Should get stash tabs that are selected here!
+        _priceDialog->show();
+    });
 }
 
 void ShopViewer::setupStashIntegration() {
     QHBoxLayout* layout = dynamic_cast<QHBoxLayout*>(_stashViewer->headerBar()->layout());
     if (layout) {
-        layout->insertWidget(0, new QPushButton("Set Tab-wide Price..."));
+        layout->insertWidget(0, _tabWidePriceButton);
     }
 }
 
@@ -221,7 +230,7 @@ void ShopViewer::on_addThreadButton_clicked() {
 void ShopViewer::on_updateButton_clicked() {
     if (_currentShop == nullptr) return;
     ForumSubmission* s = new ForumSubmission();
-    s->threadId = "1440653";
+    s->threadId = "96";
     s->data.insert("content", "test");
     _submissions << s;
     _plugin->Core()->forum()->beginRequest(s);
