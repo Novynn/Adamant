@@ -177,6 +177,19 @@ void StashViewer::SetTabs(const QString &league, QList<StashItemLocation*> tabs)
     // Realign tabs to fit the new tab map
 }
 
+QStringList StashViewer::getSelectedTabs() {
+    QStringList selectedTabIds;
+    auto items = ui->stashListWidget->selectedItems();
+
+    for (QListWidgetItem* item : items) {
+        StashViewData* data = item->data(StashViewData::ListItemDataIndex).value<StashViewData*>();
+        Q_ASSERT(data);
+
+        selectedTabIds << data->getTab()->hash();
+    }
+    return selectedTabIds;
+}
+
 void StashViewer::AddTab(const QString &league, const StashItemLocation* tab)
 {
     // TODO(rory): remove these static images

@@ -31,6 +31,8 @@ public:
 
     Q_INVOKABLE void SetTabs(const QString& league, QList<StashItemLocation *> tabs);
 
+    QStringList getSelectedTabs();
+
     void AddTab(const QString& league, const StashItemLocation* tab);
     void LoadTabItem(const QString& tabId);
     void LoadTabItem(StashViewData* data);
@@ -50,9 +52,7 @@ private slots:
     void on_searchEdit_textChanged(const QString &text);
     void on_leagueBox_currentIndexChanged(const QString &text);
     void on_updateButton_clicked();
-
     void on_autoUpdate_toggled(bool checked);
-
     void on_autoUpdateInterval_valueChanged(int val);
 
 signals:

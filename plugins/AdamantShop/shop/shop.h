@@ -57,6 +57,10 @@ public:
         return !(*this == other);
     }
 
+    QString getData() const {
+        return _data;
+    }
+
     enum Type {
         Item,
         Tab
@@ -162,7 +166,7 @@ public:
         setTabData(tab);
     }
 
-    ShopTab getTabData(const QString &id) {
+    ShopTab getTabData(const QString &id) const {
         return _tabs.value(id);
     }
 
@@ -177,7 +181,7 @@ public:
         setItemData(item);
     }
 
-    ShopItem getItemData(const QString &id) {
+    ShopItem getItemData(const QString &id) const {
         return _items.value(id);
     }
 

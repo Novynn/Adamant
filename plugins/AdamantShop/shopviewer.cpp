@@ -16,8 +16,7 @@ ShopViewer::ShopViewer(AdamantShopPlugin* plugin, StashViewer* viewer, QWidget *
     , _currentShop(nullptr)
     , ui(new Ui::ShopViewer)
     , _shopDialog(new NewShopDialog(this))
-    , _tabWidePriceButton(new QPushButton("Set Tab-wide Price..."))
-    , _priceDialog(new PriceDialog(this)) {
+    , _tabWidePriceButton(new QPushButton("Set Tab-wide Price...")) {
     ui->setupUi(this);
 
     // Beautiful (nvm doesn't work LOL!)
@@ -74,10 +73,25 @@ ShopViewer::ShopViewer(AdamantShopPlugin* plugin, StashViewer* viewer, QWidget *
         delete submission;
     });
 
-    connect(_tabWidePriceButton, &QPushButton::pressed, this, [this]() {
-        _priceDialog->setWindowTitle("Set Tab-Wide Price");
-        // NOTE(rory): Should get stash tabs that are selected here!
-        _priceDialog->show();
+    connect(_tabWidePriceButton, &QPushButton::released, this, [this]() {
+        QStringList selected = _stashViewer->getSelectedTabs();
+        PriceDialog dialog(_plugin->getShops(), selected, true, this);
+        dialog.setWindowTitle("Set Tab-Wide Price");
+
+        if (dialog.exec()) {
+            auto result = dialog.getValues();
+            for (Shop* shop : result.uniqueKeys()) {
+                QString value = result.value(shop);
+                if (value == "...") continue;
+
+                for (QString id : selected) {
+                    shop->setTabData(id, value);
+                }
+                _plugin->saveShop(shop);
+            }
+
+            _stashViewer->update();
+        }
     });
 }
 

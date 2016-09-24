@@ -16,7 +16,6 @@ class StashViewer;
 class NewShopDialog;
 class ForumSubmission;
 class QPushButton;
-class PriceDialog;
 
 class ShopViewer : public QWidget
 {
@@ -54,7 +53,6 @@ private:
     QStringList _leagues;
 
     QPushButton* _tabWidePriceButton;
-    PriceDialog* _priceDialog;
 };
 
 #endif // SHOPVIEWER_H
