@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>300</height>
+    <width>444</width>
+    <height>30</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,82 +16,132 @@
   <property name="modal">
    <bool>true</bool>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
+  <layout class="QHBoxLayout" name="horizontalLayout">
+   <property name="spacing">
+    <number>6</number>
+   </property>
+   <property name="leftMargin">
+    <number>3</number>
+   </property>
+   <property name="topMargin">
+    <number>3</number>
+   </property>
+   <property name="rightMargin">
+    <number>3</number>
+   </property>
+   <property name="bottomMargin">
+    <number>3</number>
+   </property>
    <item>
-    <widget class="QTableWidget" name="tableWidget">
-     <property name="columnCount">
-      <number>1</number>
-     </property>
-     <attribute name="horizontalHeaderVisible">
-      <bool>true</bool>
-     </attribute>
-     <attribute name="horizontalHeaderHighlightSections">
-      <bool>false</bool>
-     </attribute>
-     <attribute name="horizontalHeaderStretchLastSection">
-      <bool>true</bool>
-     </attribute>
-     <attribute name="verticalHeaderVisible">
-      <bool>true</bool>
-     </attribute>
-     <attribute name="verticalHeaderCascadingSectionResizes">
-      <bool>false</bool>
-     </attribute>
-     <attribute name="verticalHeaderHighlightSections">
-      <bool>false</bool>
-     </attribute>
-     <attribute name="verticalHeaderMinimumSectionSize">
-      <number>30</number>
-     </attribute>
-     <attribute name="verticalHeaderStretchLastSection">
-      <bool>false</bool>
-     </attribute>
-     <column>
+    <widget class="QComboBox" name="entryType">
+     <item>
       <property name="text">
-       <string>Price</string>
+       <string>None</string>
       </property>
-     </column>
+     </item>
+     <item>
+      <property name="text">
+       <string>Inherit</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>~price</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>~b/o</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>~c/o</string>
+      </property>
+     </item>
     </widget>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout">
+    <widget class="QDoubleSpinBox" name="entryValue">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="buttonSymbols">
+      <enum>QAbstractSpinBox::NoButtons</enum>
+     </property>
+     <property name="specialValueText">
+      <string>...</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QComboBox" name="entryCurrency">
+     <property name="editable">
+      <bool>true</bool>
+     </property>
      <item>
-      <widget class="QPushButton" name="clearButton">
-       <property name="text">
-        <string>Clear All</string>
-       </property>
-       <property name="flat">
-        <bool>false</bool>
-       </property>
-      </widget>
+      <property name="text">
+       <string>Chaos</string>
+      </property>
      </item>
      <item>
-      <spacer name="horizontalSpacer">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
+      <property name="text">
+       <string>Exalted</string>
+      </property>
      </item>
-     <item>
-      <widget class="QPushButton" name="saveButton">
-       <property name="text">
-        <string>Save</string>
-       </property>
-       <property name="default">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-    </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QPushButton" name="saveButton">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+     <property name="icon">
+      <iconset resource="../../../core/ui/res/res.qrc">
+       <normaloff>:/icons/dark/checkmark.png</normaloff>:/icons/dark/checkmark.png</iconset>
+     </property>
+     <property name="default">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QPushButton" name="cancelButton">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+     <property name="icon">
+      <iconset resource="../../../core/ui/res/res.qrc">
+       <normaloff>:/icons/dark/cross.png</normaloff>:/icons/dark/cross.png</iconset>
+     </property>
+    </widget>
    </item>
   </layout>
  </widget>
- <resources/>
+ <tabstops>
+  <tabstop>entryType</tabstop>
+  <tabstop>entryValue</tabstop>
+  <tabstop>entryCurrency</tabstop>
+  <tabstop>saveButton</tabstop>
+  <tabstop>cancelButton</tabstop>
+ </tabstops>
+ <resources>
+  <include location="../../../core/ui/res/res.qrc"/>
+ </resources>
  <connections/>
 </ui>

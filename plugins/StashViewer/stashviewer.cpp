@@ -177,7 +177,25 @@ void StashViewer::SetTabs(const QString &league, QList<StashItemLocation*> tabs)
     // Realign tabs to fit the new tab map
 }
 
-QStringList StashViewer::getSelectedTabs() {
+QString StashViewer::getCurrentLeague() const {
+    return _currentLeague;
+}
+
+QStringList StashViewer::getSelectedItems() const {
+    QStringList selectedItemIds;
+    auto items = _scene->selectedItems();
+
+    for (QGraphicsItem* item : items) {
+        auto graphicItem = dynamic_cast<GraphicItem*>(item);
+        if (graphicItem) {
+            selectedItemIds << graphicItem->GetItem()->data("id").toString();
+        }
+
+    }
+    return selectedItemIds;
+}
+
+QStringList StashViewer::getSelectedTabs() const {
     QStringList selectedTabIds;
     auto items = ui->stashListWidget->selectedItems();
 

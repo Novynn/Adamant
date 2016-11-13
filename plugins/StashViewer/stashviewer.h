@@ -31,7 +31,9 @@ public:
 
     Q_INVOKABLE void SetTabs(const QString& league, QList<StashItemLocation *> tabs);
 
-    QStringList getSelectedTabs();
+    QString getCurrentLeague() const;
+    QStringList getSelectedItems() const;
+    QStringList getSelectedTabs() const;
 
     void AddTab(const QString& league, const StashItemLocation* tab);
     void LoadTabItem(const QString& tabId);

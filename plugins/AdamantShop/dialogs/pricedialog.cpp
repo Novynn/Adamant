@@ -2,68 +2,57 @@
 #include "ui_pricedialog.h"
 #include <QLineEdit>
 
-PriceDialog::PriceDialog(ShopList shops, QStringList selectedIds, bool tab, QWidget *parent)
+PriceDialog::PriceDialog(Shop* shop, QStringList selectedIds, bool tab, QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::PriceDialog)
-    , _shops(shops) {
+    , _shop(shop) {
     ui->setupUi(this);
 
-    for (const Shop* shop : _shops.values()) {
-        int row = ui->tableWidget->rowCount();
-        ui->tableWidget->insertRow(row);
+    ui->entryType->clear();
+    if (tab)    ui->entryType->addItems({"@none", "~price", "~b/o"});
+    else        ui->entryType->addItems({"@none", "@inherit", "~price", "~b/o", "~c/o"});
 
-        auto edit = new QLineEdit;
-        QString value;
-        for (QString id : selectedIds) {
-            QString selectedValue = tab ? shop->getTabData(id).getData() : shop->getItemData(id).getData();
+    setWindowFlags(windowFlags() |= Qt::FramelessWindowHint);
 
-            if (value.isEmpty() || selectedValue == value) {
-                value = selectedValue;
-            }
-            else {
-                value = "...";
-                break;
-            }
-        }
-        edit->setText(value);
+    // TODO(rory): Figure out a good way to do this
+//    double value;
+//    ui->entryValue->setSpecialValueText("");
+//    for (QString id : selectedIds) {
+//        QString selectedValue = tab ? shop->getTabData(id).getData() : shop->getItemData(id).getData();
 
-        auto item = new QTableWidgetItem(shop->league());
-        item->setData(Qt::UserRole + 1, QVariant::fromValue<void*>((void*)shop));
+//        if (value.isEmpty() || selectedValue == value) {
+//            value = selectedValue;
+//        }
+//        else {
+//            ui->entryValue->setSpecialValueText("...");
+//            break;
+//        }
+//    }
+//    ui->entryValue->setValue(value);
 
-        ui->tableWidget->setVerticalHeaderItem(row, item);
-        ui->tableWidget->setCellWidget(row, 0, edit);
-    }
-
-    ui->tableWidget->verticalHeader()->show();
+    ui->entryType->setFocus(Qt::ActiveWindowFocusReason);
 }
 
 PriceDialog::~PriceDialog() {
     delete ui;
 }
 
-QHash<Shop*, QString> PriceDialog::getValues() {
-    QHash<Shop*, QString> result;
-    for (int i = 0; i < ui->tableWidget->rowCount(); i++) {
-        Shop* shop = static_cast<Shop*>(ui->tableWidget->verticalHeaderItem(i)->data(Qt::UserRole + 1).value<void*>());
-        if (shop) {
-            QLineEdit* edit = dynamic_cast<QLineEdit*>(ui->tableWidget->cellWidget(i, 0));
-            if (edit) {
-                result.insert(shop, edit->text());
-            }
-        }
-    }
-    return result;
+QString PriceDialog::getType() {
+    return ui->entryType->currentText();
+}
+
+double PriceDialog::getValue() {
+    return ui->entryValue->value();
+}
+
+QString PriceDialog::getCurrency() {
+    return ui->entryCurrency->currentText();
 }
 
 void PriceDialog::on_saveButton_clicked() {
     accept();
 }
 
-void PriceDialog::on_clearButton_clicked() {
-    for (int i = 0; i < ui->tableWidget->rowCount(); i++) {
-        QLineEdit* edit = dynamic_cast<QLineEdit*>(ui->tableWidget->cellWidget(i, 0));
-        if (edit) {
-            edit->clear();
-        }
-    }
+void PriceDialog::on_cancelButton_clicked() {
+    reject();
 }

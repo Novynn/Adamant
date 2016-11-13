@@ -8,6 +8,7 @@
 #include <session/session.h>
 #include <session/forum/forumrequest.h>
 #include <widgets/shopwidget.h>
+#include <graphicitem.h>
 
 ShopViewer::ShopViewer(AdamantShopPlugin* plugin, StashViewer* viewer, QWidget *parent)
     : QWidget(parent)
@@ -70,23 +71,73 @@ ShopViewer::ShopViewer(AdamantShopPlugin* plugin, StashViewer* viewer, QWidget *
 
     connect(_tabWidePriceButton, &QPushButton::released, this, [this]() {
         QStringList selected = _stashViewer->getSelectedTabs();
-        PriceDialog dialog(_plugin->getShops(), selected, true, this);
+        auto shop = _plugin->getShop(_stashViewer->getCurrentLeague());
+        PriceDialog dialog(shop, selected, true, this);
         dialog.setWindowTitle("Set Tab-Wide Price");
 
         if (dialog.exec()) {
-            auto result = dialog.getValues();
-            for (Shop* shop : result.uniqueKeys()) {
-                QString value = result.value(shop);
-                if (value == "...") continue;
-
-                for (QString id : selected) {
-                    shop->setTabData(id, value);
-                }
-                _plugin->saveShop(shop);
+            QString value;
+            if (dialog.getType() == "@none") {
+                value = "";
             }
+            else {
+                value = QString("%1 %2 %3").arg(dialog.getType()).arg(dialog.getValue()).arg(dialog.getCurrency());
+            }
+
+            for (QString id : selected) {
+                if (value.isEmpty())
+                    shop->clearTabData(id);
+                else
+                    shop->setTabData(id, value);
+            }
+            _plugin->saveShop(shop);
 
             _stashViewer->update();
         }
+    });
+
+    auto setAction = GraphicItem::AddContextAction("Set Price...");
+    connect(setAction, &QAction::triggered, this, [this]() {
+        QStringList selected = _stashViewer->getSelectedItems();
+        auto shop = _plugin->getShop(_stashViewer->getCurrentLeague());
+        PriceDialog dialog(shop, selected, false, this);
+        dialog.setWindowTitle("Set Item Price");
+
+        if (dialog.exec()) {
+            QString value;
+            if (dialog.getType() == "@none") {
+                value = "";
+            }
+            else if (dialog.getType() == "@inherit") {
+                value = "@inherit";
+            }
+            else {
+                value = QString("%1 %2 %3").arg(dialog.getType()).arg(dialog.getValue()).arg(dialog.getCurrency());
+            }
+
+            for (QString id : selected) {
+                if (value.isEmpty())
+                    shop->clearItemData(id);
+                else
+                    shop->setItemData(id, value);
+            }
+            _plugin->saveShop(shop);
+
+            _stashViewer->update();
+        }
+    });
+
+    auto clearAction = GraphicItem::AddContextAction("Clear Prices");
+    connect(clearAction, &QAction::triggered, this, [this]() {
+        QStringList selected = _stashViewer->getSelectedItems();
+        auto shop = _plugin->getShop(_stashViewer->getCurrentLeague());
+
+        for (QString id : selected) {
+            shop->clearItemData(id);
+        }
+        _plugin->saveShop(shop);
+
+        _stashViewer->update();
     });
 }
 

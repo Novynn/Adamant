@@ -2,13 +2,15 @@
 #define GRAPHICITEM_H
 
 #include <functional>
+#include "stashviewer_global.h"
 #include <QGraphicsPixmapItem>
 #include <QGraphicsSceneHoverEvent>
 #include <QStack>
+#include <QMenu>
 class Item;
 class ItemLocation;
 
-class GraphicItem : public QGraphicsPixmapItem
+class STASHVIEWER_EXTERN GraphicItem : public QGraphicsPixmapItem
 {
 public:
     enum class ShowLinkReason {
@@ -44,12 +46,15 @@ public:
 
     void ShowLinks(bool show=true, ShowLinkReason reason=ShowLinkReason::Hover);
     void ShowTooltip(bool show=true);
+
+    static QAction* AddContextAction(const QString &label, const QKeySequence &sequence = QKeySequence());
 protected:
     void hoverEnterEvent(QGraphicsSceneHoverEvent *event);
     void hoverLeaveEvent(QGraphicsSceneHoverEvent *event);
     void contextMenuEvent(QGraphicsSceneContextMenuEvent *event);
     QVariant itemChange(GraphicsItemChange change, const QVariant & value);
 private:
+    static QMenu* _contextMenu;
     bool _waitingForImage;
     QString _imagePath;
 

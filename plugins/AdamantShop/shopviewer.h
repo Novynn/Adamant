@@ -4,6 +4,7 @@
 #include <QDir>
 #include <QMenu>
 #include <QWidget>
+#include "stashviewer_global.h"
 
 namespace Ui {
 class ShopViewer;

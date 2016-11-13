@@ -12,6 +12,8 @@
 #include <QGraphicsView>
 #include "itemrenderer.h"
 
+QMenu* GraphicItem::_contextMenu = nullptr;
+
 GraphicItem::GraphicItem(QGraphicsItem *parent, const ItemLocation* location, const Item* item, const QString &imagePath)
     : QGraphicsPixmapItem(parent)
     , _waitingForImage(true)
@@ -274,6 +276,18 @@ void GraphicItem::ShowTooltip(bool show) {
     }
 }
 
+QAction* GraphicItem::AddContextAction(const QString& label, const QKeySequence& sequence) {
+    if (!GraphicItem::_contextMenu) {
+        GraphicItem::_contextMenu = new QMenu;
+    }
+
+    auto action = GraphicItem::_contextMenu->addAction(label);
+    if (!sequence.isEmpty()) {
+        action->setShortcut(sequence);
+    }
+    return action;
+}
+
 void GraphicItem::hoverEnterEvent(QGraphicsSceneHoverEvent *event) {
     event->accept();
     ShowLinks(true, ShowLinkReason::Hover);
@@ -290,22 +304,15 @@ void GraphicItem::hoverLeaveEvent(QGraphicsSceneHoverEvent *event) {
 
 void GraphicItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     setSelected(true);
-    // TODO(rory): Do this another time (linking in dynamically from another plugin etc.)
-    QMenu menu;
-    QAction *setAction = menu.addAction("Set Price...");
-    QAction *clearAction = menu.addAction("Clear Prices");
-    Q_UNUSED(setAction)
-    Q_UNUSED(clearAction)
-    menu.addSeparator();
-    QAction *dumpAction = menu.addAction("Dump JSON to Console");
-    QAction *selectedAction = menu.exec(event->screenPos());
 
+    if (!GraphicItem::_contextMenu) {
+        GraphicItem::_contextMenu = new QMenu;
+    }
+
+    QAction *selectedAction = GraphicItem::_contextMenu->exec(event->screenPos());
     if (selectedAction != nullptr) {
-        scene()->clearSelection();
-
-        if (selectedAction == dumpAction) {
-            qInfo() << qPrintable(_item->dump());
-        }
+//        selectedAction->activate(QAction::Trigger);
+//        scene()->clearSelection();
     }
 }
 

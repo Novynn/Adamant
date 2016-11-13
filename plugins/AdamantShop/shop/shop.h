@@ -162,6 +162,10 @@ public:
         setTabData(tab);
     }
 
+    Q_INVOKABLE inline int clearTabData(const QString &id) {
+        return _tabs.remove(id);
+    }
+
     ShopTab getTabData(const QString &id) const {
         return _tabs.value(id);
     }
@@ -175,6 +179,10 @@ public:
         item._updated = updated;
         item._inherit = inherited;
         setItemData(item);
+    }
+
+    Q_INVOKABLE inline int clearItemData(const QString &id) {
+        return _items.remove(id);
     }
 
     ShopItem getItemData(const QString &id) const {
