@@ -21,6 +21,25 @@
         <file alias="shadow.png">images/character/shadow.png</file>
         <file alias="templar.png">images/character/templar.png</file>
         <file alias="witch.png">images/character/witch.png</file>
+        <file alias="ascendant.png">images/character/ascendant.png</file>
+        <file alias="assassin.png">images/character/assassin.png</file>
+        <file alias="berserker.png">images/character/berserker.png</file>
+        <file alias="champion.png">images/character/champion.png</file>
+        <file alias="chieftain.png">images/character/chieftain.png</file>
+        <file alias="deadeye.png">images/character/deadeye.png</file>
+        <file alias="elementalist.png">images/character/elementalist.png</file>
+        <file alias="gladiator.png">images/character/gladiator.png</file>
+        <file alias="guardian.png">images/character/guardian.png</file>
+        <file alias="hierophant.png">images/character/hierophant.png</file>
+        <file alias="inquisitor.png">images/character/inquisitor.png</file>
+        <file alias="juggernaut.png">images/character/juggernaut.png</file>
+        <file alias="necromancer.png">images/character/necromancer.png</file>
+        <file alias="occultist.png">images/character/occultist.png</file>
+        <file alias="pathfinder.png">images/character/pathfinder.png</file>
+        <file alias="raider.png">images/character/raider.png</file>
+        <file alias="saboteur.png">images/character/saboteur.png</file>
+        <file alias="slayer.png">images/character/slayer.png</file>
+        <file alias="trickster.png">images/character/trickster.png</file>
     </qresource>
     <qresource prefix="/tooltip">
         <file alias="ItemHeaderCurrencyLeft.png">images/items/ItemHeaderCurrencyLeft.png</file>
