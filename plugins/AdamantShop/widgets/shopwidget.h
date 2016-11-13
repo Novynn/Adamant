@@ -12,7 +12,7 @@ class ShopWidget : public QWidget
     Q_OBJECT
 
 public:
-    explicit ShopWidget(QWidget *parent = 0);
+    explicit ShopWidget(QWidget *parent, QString league);
     ~ShopWidget();
 
 private:

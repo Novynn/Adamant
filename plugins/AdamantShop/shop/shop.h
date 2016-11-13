@@ -109,7 +109,8 @@ class Shop : public QObject
     Q_OBJECT
 public:
     explicit Shop(QObject *parent = 0);
-    Shop(const QString &name, const QString &league, QObject *parent = 0);
+    Shop(const QString &league, QObject *parent = 0);
+    ~Shop() {}
 
     static qint64 dateToInt(QDateTime time) {
         return time.isNull() ? 0 : time.toMSecsSinceEpoch();
@@ -117,10 +118,6 @@ public:
 
     static QDateTime intToDate(qint64 time) {
         return time ? QDateTime::fromMSecsSinceEpoch(time) : QDateTime();
-    }
-
-    const QString name() const {
-        return _name;
     }
 
     const QString league() const {
@@ -152,7 +149,6 @@ public:
         _threads.remove(id);
     }
 
-    Q_PROPERTY(QString name MEMBER _name)
     Q_PROPERTY(QString league MEMBER _league)
     Q_PROPERTY(QString template MEMBER _template)
     Q_PROPERTY(QDateTime created MEMBER _created)
@@ -216,75 +212,11 @@ public:
         const QString footer = renderer.render(">", &context);
         renderer.setMaxLength(50);
         renderer.resetPages();
-        const QString body = renderer.render("Hi {{>items}}", &context);
+        renderer.render("Hi {{>items}}", &context);
 
         qDebug() << header;
         qDebug() << renderer.getPages().join("\n-----\n");
         qDebug() << footer;
-
-//        QList<const ShopThread*> availableThreads;
-//        for (const ShopThread &thread : _threads) {
-//            availableThreads << &thread;
-//        }
-
-//        if (availableThreads.isEmpty()) {
-//            qDebug() << "No threads available";
-//            return;
-//        }
-
-//        auto handler = [&](ShopTemplate::Section section, const QString &part) {
-//            Q_UNUSED(section);
-//            if (part.isEmpty()) return;
-//            auto thread = (ShopThread*)availableThreads.first();
-//            while (true) {
-//                if (thread->_content.isEmpty()) {
-//                    thread->_content = header;
-//                }
-
-//                if ((thread->_content.length() + part.length() + footer.length()) > MaxThreadSize) {
-//                    qDebug() << "Ran out of space in thread " << thread->_id;
-//                    // We overflowed, append footer and switch thread
-//                    thread->_content += footer;
-//                    availableThreads.removeFirst();
-
-//                    if (availableThreads.isEmpty()) {
-//                        qDebug() << "Ran out of space, you need more shop threads!";
-//                        break;
-//                    }
-//                    // Retry with the next thread
-//                    thread = (ShopThread*)availableThreads.first();
-//                }
-//                else {
-//                    thread->_content += part;
-//                    break;
-//                }
-//            }
-//        };
-
-//        templater.set("item", []() {
-//            return "{{#itemId}}{{.}}{{/itemId}}";
-//        });
-
-//        templater.set("itemId", [&availableItems](const std::string &id) {
-//            auto itemId = QString::fromStdString(id);
-//            if (!availableItems.contains(itemId)) return QString("[[%1]]").arg(itemId).toStdString();
-//            const Item* item = availableItems.value(itemId);
-//            return item->data("id").toString().toStdString();
-
-////            // Character
-////            return "[linkItem location=\"{{inventoryId}}\" character=\"{{character}}\" x=\"{{x}}\" y=\"{{y}}\"]";
-////            // Stash
-////            return "[linkItem location=\"{{inventoryId}}\" league=\"{{league}}\" x=\"{{x}}\" y=\"{{y}}\"]";
-//        });
-
-//        templater.set("items", (QStringList)availableItems.keys());
-
-//        templater.render(handler, {ShopTemplate::Body});
-
-//        for (const ShopThread &thread : _threads) {
-//            qDebug() << thread.content();
-//        }
-        qDebug() << "Fin.";
     }
 
 
@@ -297,17 +229,42 @@ public:
         return doc.toJson();
     }
 
-signals:
+    void setDisabled(bool disabled = true) {
+        _disabled = disabled;
+    }
 
-public slots:
+    bool isDisabled() const {
+        return _disabled;
+    }
+
+    void setUnused(bool unused = true) {
+        _unused = unused;
+    }
+
+    bool isUnused() const {
+        return _unused;
+    }
+
+    void clear() {
+        _template = QString();
+        _created = QDateTime();
+        _threads.clear();
+        _items.clear();
+        _tabs.clear();
+
+        _disabled = false;
+        _unused = false;
+    }
 private:
-    QString _name;
     QString _league;
     QString _template;
     QDateTime _created;
     ShopThreadList _threads;
     ShopItemMap _items;
     ShopTabMap _tabs;
+
+    bool _disabled;
+    bool _unused;
 };
 
 typedef QMap<QString, Shop*> ShopList;

@@ -26,14 +26,22 @@ public:
         return _pages;
     }
 
-    QString render(const QString& _template, Context* context) {
-        return Renderer::render(_template, context);
-    }
+    QString render(const QString& _template, Context* context)
+    {
+        m_error.clear();
+        m_errorPos = -1;
+        m_errorPartial.clear();
 
+        m_tagStartMarker = m_defaultTagStartMarker;
+        m_tagEndMarker = m_defaultTagEndMarker;
+
+        return render(_template, 0, _template.length(), context);
+    }
 private:
     QStringList _pages;
     int _maxLength;
 
+protected:
     QString render(const QString& _template, int startPos, int endPos, Context* context) {
         QString output;
         int lastTagEnd = startPos;

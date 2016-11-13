@@ -58,7 +58,7 @@ SOURCES += \
     ui/dialogs/loginoauthdialog.cpp
 
 RESOURCES += \
-    ui/res.qrc
+    ui/res/res.qrc
 
 FORMS += \
     ui/mainwindow.ui \

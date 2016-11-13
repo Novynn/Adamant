@@ -1,19 +1,19 @@
 #include "shop.h"
 
 Shop::Shop(QObject *parent)
-    : Shop(QString(), QString(), parent) {
+    : Shop(QString(), parent) {
 }
 
 
-Shop::Shop(const QString &name, const QString &league, QObject *parent)
+Shop::Shop(const QString &league, QObject *parent)
     : QObject(parent)
-    , _name(name)
     , _league(league)
-    , _created(QDateTime::currentDateTime()) {
+    , _created(QDateTime::currentDateTime())
+    , _disabled(false)
+    , _unused(false) {
 }
 
 bool Shop::save(QJsonObject& object) const {
-    object["name"] = _name;
     object["league"] = _league;
     object["template"] = _template;
     object["created"] = dateToInt(_created);
@@ -52,7 +52,6 @@ bool Shop::save(QJsonObject& object) const {
 }
 
 bool Shop::load(const QJsonObject& object) {
-    _name = object.value("name").toString();
     _league = object.value("league").toString();
     _template = object.value("template").toString();
     _created = intToDate(object.value("created").toVariant().toLongLong());

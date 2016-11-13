@@ -7,25 +7,39 @@ QDir AdamantShopPlugin::shopsPath() {
     return CoreService::dataPath("shops");
 }
 
-void AdamantShopPlugin::loadShops() {
+void AdamantShopPlugin::loadShops(const QStringList &currentLeagues) {
     _shops.clear();
+
+    QStringList leagues = currentLeagues;
+
+    // NOTE(rory): Load leagues
     auto list = shopsPath().entryInfoList({"*.shop"});
     for (QFileInfo info : list) {
-        auto shop = loadShop(info.absoluteFilePath());
-        if (shop == nullptr) continue;
-        if (_shops.contains(shop->name())) {
-            qWarning() << "Duplicate shop name detected: " << shop->name();
-            delete shop;
-            continue;
+        if (leagues.contains(info.baseName())) continue;
+        leagues.append(info.baseName());
+    }
+
+    // NOTE(rory):
+    for (const QString& league : leagues) {
+        if (_shops.contains(league)) continue;
+        bool disabled = !currentLeagues.contains(league);
+
+        auto shop = loadShop(shopsPath().absoluteFilePath(QString("%1.shop").arg(league)));
+
+        if (!shop)  {
+            shop = new Shop(league);
+            shop->setUnused();
         }
-        _shops.insert(shop->name(), shop);
+        shop->setDisabled(disabled);
+
+        _shops.insert(shop->league(), shop);
         _viewer->addShop(shop);
     }
 }
 
 bool AdamantShopPlugin::addShop(Shop* shop) {
     if (shop == nullptr) return false;
-    _shops.insert(shop->name(), shop);
+    _shops.insert(shop->league(), shop);
     return saveShop(shop);
 }
 
@@ -37,10 +51,10 @@ Shop* AdamantShopPlugin::loadShop(const QString &file) {
         QJsonParseError error;
         QJsonDocument doc = QJsonDocument::fromJson(shopFile.readAll(), &error);
         if (error.error == QJsonParseError::NoError && shop->load(doc.object())) {
-            qDebug() << "Loaded shop: " << shop->name() << file;
+            qDebug() << "Loaded shop: " << shop->league() << file;
         }
         else {
-            qDebug() << "Failed to load shop: " << file;
+            qDebug() << "Failed to load shop: " << file << error.errorString();
             shop->deleteLater();
             shop = nullptr;
         }
@@ -62,14 +76,15 @@ void AdamantShopPlugin::saveShops() const {
 
 }
 
-bool AdamantShopPlugin::deleteShop(const Shop* shop) {
-    if (shop->name().isEmpty()) return false;
-    QString path = shopsPath().absoluteFilePath(QString("%1.shop").arg(shop->name()));
+bool AdamantShopPlugin::clearShop(Shop* shop) {
+    const QString league = shop->league();
+    if (league.isEmpty()) return false;
+    QString path = shopsPath().absoluteFilePath(QString("%1.shop").arg(league));
     QFile shopFile(path);
     if (shopFile.exists()) {
         if (shopFile.remove()) {
-            _shops.remove(shop->name());
-            delete shop;
+            shop->clear();
+            shop->setUnused();
             return true;
         }
     }
@@ -77,11 +92,11 @@ bool AdamantShopPlugin::deleteShop(const Shop* shop) {
 }
 
 bool AdamantShopPlugin::saveShop(const Shop* shop) const {
-    if (shop->name().isEmpty()) return false;
+    if (shop->league().isEmpty()) return false;
     QJsonObject object;
     if (shop->save(object)) {
         QJsonDocument doc(object);
-        QString path = shopsPath().absoluteFilePath(QString("%1.shop").arg(shop->name()));
+        QString path = shopsPath().absoluteFilePath(QString("%1.shop").arg(shop->league()));
         QFile shopFile(path);
         if (shopFile.open(QFile::WriteOnly)) {
             shopFile.write(doc.toJson());
@@ -131,30 +146,27 @@ void AdamantShopPlugin::OnLoad() {
     qRegisterMetaType<Shop*>();
     qRegisterMetaType<ShopList>();
 
-    loadShops();
-    if (_shops.empty()) {
-        Shop* shop = new Shop("Testirino", "Standard");
-        saveShop(shop);
-        _viewer->addShop(shop);
-    }
+    loadShops(leagues);
 
     // TODO(rory): Remove this
+    {
+        Item* item = nullptr;
 
-    Item* item = nullptr;
+        QFile file("test.item");
+        if (file.open(QFile::ReadOnly | QFile::Text)) {
+            QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
+            file.close();
 
-    QFile file("test.item");
-    if (file.open(QFile::ReadOnly | QFile::Text)) {
-        QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
-        file.close();
+            item = new Item(doc.object());
+        }
 
-        item = new Item(doc.object());
+        for (Shop* shop : _shops.values()) {
+            shop->generateShopContent([&item](const QString &id) {
+                Q_UNUSED(id);
+                return item;
+            });
+        }
     }
-
-    for (Shop* shop : _shops.values())
-        shop->generateShopContent([&item](const QString &id) {
-            Q_UNUSED(id);
-            return item;
-        });
 }
 
 void AdamantShopPlugin::setupEngine(QScriptEngine* engine, QScriptValue* plugin) {

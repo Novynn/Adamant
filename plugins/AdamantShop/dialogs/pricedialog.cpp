@@ -27,7 +27,7 @@ PriceDialog::PriceDialog(ShopList shops, QStringList selectedIds, bool tab, QWid
         }
         edit->setText(value);
 
-        auto item = new QTableWidgetItem(shop->name());
+        auto item = new QTableWidgetItem(shop->league());
         item->setData(Qt::UserRole + 1, QVariant::fromValue<void*>((void*)shop));
 
         ui->tableWidget->setVerticalHeaderItem(row, item);

@@ -3,11 +3,11 @@
 #include "adamantshopplugin.h"
 #include "stashviewer.h"
 #include <QDebug>
-#include <dialogs/newshopdialog.h>
 #include <dialogs/pricedialog.h>
 #include <core.h>
 #include <session/session.h>
 #include <session/forum/forumrequest.h>
+#include <widgets/shopwidget.h>
 
 ShopViewer::ShopViewer(AdamantShopPlugin* plugin, StashViewer* viewer, QWidget *parent)
     : QWidget(parent)
@@ -15,14 +15,9 @@ ShopViewer::ShopViewer(AdamantShopPlugin* plugin, StashViewer* viewer, QWidget *
     , _stashViewer(viewer)
     , _currentShop(nullptr)
     , ui(new Ui::ShopViewer)
-    , _shopDialog(new NewShopDialog(this))
     , _tabWidePriceButton(new QPushButton("Set Tab-wide Price...")) {
     ui->setupUi(this);
 
-    // Beautiful (nvm doesn't work LOL!)
-//    auto sizePolicy = ui->viewWidget->sizePolicy();
-//    sizePolicy.setRetainSizeWhenHidden(true);
-//    ui->viewWidget->setSizePolicy(sizePolicy);
     ui->viewWidget->hide();
 
     QHeaderView* headerView = ui->tableWidget->horizontalHeader();
@@ -108,36 +103,31 @@ ShopViewer::~ShopViewer() {
 }
 
 void ShopViewer::setLeagues(const QStringList &leagues) {
-    const QString selected = ui->leagueBox->currentText();
-    ui->leagueBox->blockSignals(true);
-    ui->leagueBox->clear();
-    ui->leagueBox->addItem("All");
-    ui->leagueBox->addItems(leagues);
-    if (!selected.isEmpty()) {
-        ui->leagueBox->setCurrentText(selected);
-    }
-    ui->leagueBox->blockSignals(false);
-
     _leagues = leagues;
-
-    // Also set leagues on the new shop dialog
-    _shopDialog->setLeagues(leagues);
 }
 
-void ShopViewer::addShop(const Shop* shop, bool selected) {
-    auto item = new QListWidgetItem(shop->name());
+void ShopViewer::addShop(const Shop* shop) {
+    auto item = new QListWidgetItem;
+
+    auto widget = new ShopWidget(this, shop->league());
+    item->setSizeHint(QSize(item->sizeHint().width(), 80));
+
     item->setData(Qt::UserRole + 1, QVariant::fromValue<Shop*>((Shop*)shop));
     ui->listWidget->addItem(item);
+    ui->listWidget->setItemWidget(item, widget);
 
-    if (!_leagues.contains(shop->league(), Qt::CaseInsensitive)) {
-        item->setText(item->text() + " (Invalid League)");
-        item->setFlags(item->flags() & ~Qt::ItemIsEnabled);
-    }
-    else if (selected) {
-        ui->listWidget->clearSelection();
-        item->setSelected(true);
-        ui->listWidget->setCurrentItem(item);
-    }
+    _shopListItems.insert(shop, item);
+
+    updateShopListItem(shop);
+}
+
+void ShopViewer::updateShopListItem(const Shop* shop) {
+    auto item = _shopListItems.value(shop);
+    Q_ASSERT(item);
+    auto widget = ui->listWidget->itemWidget(item);
+
+    widget->setDisabled(shop->isDisabled());
+    ui->listWidget->repaint();
 }
 
 void ShopViewer::showShop(const Shop* shop) {
@@ -146,8 +136,6 @@ void ShopViewer::showShop(const Shop* shop) {
         ui->viewWidget->hide();
         return;
     }
-    ui->nameLabel->setText(shop->name());
-    ui->leagueLabel->setText(shop->league());
     ui->plot->setVisible(shop->hasHistory());
 
     ui->tableWidget->clearContents();
@@ -164,17 +152,21 @@ void ShopViewer::showShop(const Shop* shop) {
         ui->tableWidget->setItem(row, 2, new QTableWidgetItem(updated.isNull() ? "Never" : updated.toString()));
         ui->tableWidget->setItem(row, 3, new QTableWidgetItem(bumped.isNull() ? "Never" : bumped.toString()));
     }
+    updateShopListItem(shop);
 
     ui->viewWidget->show();
 }
 
-void ShopViewer::on_leagueBox_currentTextChanged(const QString &league) {
-    for (int i = 0; i < ui->listWidget->count(); i++) {
-        auto item = ui->listWidget->item(i);
-        auto shop = item->data(Qt::UserRole + 1).value<Shop*>();
-        if (shop == nullptr) continue;
-        item->setHidden(league != "All" && (shop->league() != league));
+void ShopViewer::removeShop(Shop* shop) {
+    ui->listWidget->clearSelection();
+
+
+    if (!_plugin->clearShop(shop)) {
+        qWarning() << "Failed to delete shop: " << shop->league();
     }
+    updateShopListItem(shop);
+
+    showShop(nullptr);
 }
 
 void ShopViewer::on_listWidget_currentItemChanged(QListWidgetItem *current, QListWidgetItem *previous) {
@@ -187,53 +179,35 @@ void ShopViewer::on_listWidget_currentItemChanged(QListWidgetItem *current, QLis
 }
 
 void ShopViewer::on_viewItemsButton_clicked() {
-    _stashViewer->search(ui->nameLabel->text());
+    _stashViewer->search("League Search Stuff");
     _plugin->Core()->getInterface()->window()->setPageIndex(3);
-}
-
-void ShopViewer::on_newShopButton_clicked() {
-    _shopDialog->setBadNames(_plugin->getShops().uniqueKeys());
-    if (_shopDialog->exec() == QDialog::Accepted) {
-        // Create new shop
-        const QString name = _shopDialog->name();
-        const QString league = _shopDialog->league();
-        _shopDialog->reset();
-
-        const Shop* shop = new Shop(name, league);
-        _plugin->addShop((Shop*)shop); // Goodbye const
-        addShop(shop, true);
-    }
 }
 
 void ShopViewer::on_listWidget_customContextMenuRequested(const QPoint &pos) {
     auto listItem = ui->listWidget->itemAt(pos);
     if (listItem) {
-        QMenu* menu = new QMenu(this);
-        auto deleteAction = menu->addAction("Delete " + listItem->text());
-        // Execute offset so double right clicking doesn't delete
-        // TODO(rory): Replace this with a dialog to confirm deletion
-        if (menu->exec(ui->listWidget->mapToGlobal(pos) + QPoint(5, 0)) == deleteAction) {
-            auto shop = listItem->data(Qt::UserRole + 1).value<Shop*>();
-            if (shop == nullptr) return;
-            ui->listWidget->removeItemWidget(listItem);
-            showShop(nullptr);
-            if (!_plugin->deleteShop(shop)) {
-                qWarning() << "Failed to delete shop: " << shop->name();
+        auto shop = listItem->data(Qt::UserRole + 1).value<Shop*>();
+        if (shop && !shop->isUnused()) {
+            QMenu menu;
+            auto deleteAction = menu.addAction("Delete " + listItem->text());
+            // Execute offset so double right clicking doesn't delete
+            // TODO(rory): Replace this with a dialog to confirm deletion
+            if (menu.exec(ui->listWidget->mapToGlobal(pos) + QPoint(5, 0)) == deleteAction) {
+                removeShop(shop);
             }
-            delete listItem;
         }
-        delete menu;
     }
 }
 
 void ShopViewer::on_addThreadButton_clicked() {
     if (_currentShop == nullptr) return;
     int thread = QInputDialog::getInt(this, "Adamant - Add Thread",
-                                      QString("Add a thread to: %1").arg(_currentShop->name()));
+                                      QString("Add a thread to your %1 shop").arg(_currentShop->league()));
 
     if (thread != 0) {
         // Validation?
         _currentShop->addThread(QString::number(thread));
+        _currentShop->setUnused(false);
         // Save
         _plugin->saveShop(_currentShop);
         // Update view

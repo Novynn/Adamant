@@ -994,5 +994,26 @@
         <file>images/background3.jpg</file>
         <file>images/loading_light.gif</file>
         <file>images/loading_dark.gif</file>
+        <file>banners/BannerBackground.png</file>
+        <file>banners/BannerBloodlines.png</file>
+        <file>banners/BannerEssence.png</file>
+        <file>banners/BannerEssenceHardcore.png</file>
+        <file>banners/BannerHardcore.png</file>
+        <file>banners/BannerHardcoreBreach.png</file>
+        <file>banners/BannerHardcoreEssence.png</file>
+        <file>banners/BannerHardcorePerandus.png</file>
+        <file>banners/BannerHardcoreProphecy.png</file>
+        <file>banners/BannerHardcoreTalisman.png</file>
+        <file>banners/BannerHighlight.png</file>
+        <file>banners/BannerPerandus.png</file>
+        <file>banners/BannerPerandusHardcore.png</file>
+        <file>banners/BannerProphecy.png</file>
+        <file>banners/BannerStandard.png</file>
+        <file>banners/BannerTalisman.png</file>
+        <file>banners/BannerTempest.png</file>
+        <file>banners/BannerTorment.png</file>
+        <file>banners/BannerWarbands.png</file>
+        <file>banners/BannerDomination.png</file>
+        <file>banners/BannerNemesis.png</file>
     </qresource>
 </RCC>

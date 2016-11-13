@@ -26,14 +26,14 @@ public:
     static QDir shopsPath();
 
     Shop* loadShop(const QString& file);
-    Q_INVOKABLE void loadShops();
+    Q_INVOKABLE void loadShops(const QStringList& currentLeagues);
 
     bool addShop(Shop* shop);
 
     bool saveShop(const Shop* shop) const;
     Q_INVOKABLE void saveShops() const;
 
-    Q_INVOKABLE bool deleteShop(const Shop* shop);
+    Q_INVOKABLE bool clearShop(Shop* shop);
 
     Q_INVOKABLE QStringList getShopNames() {
         return _shops.uniqueKeys();
