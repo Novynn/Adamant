@@ -1015,5 +1015,6 @@
         <file>banners/BannerWarbands.png</file>
         <file>banners/BannerDomination.png</file>
         <file>banners/BannerNemesis.png</file>
+        <file>banners/BannerBreach.png</file>
     </qresource>
 </RCC>
