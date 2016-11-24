@@ -230,7 +230,7 @@ void StashViewer::AddTab(const QString &league, const StashItemLocation* tab)
 
     LoadTabItem(data);
 
-    if (!tab->state() == ItemLocation::Loaded) {
+    if (tab->state() != ItemLocation::Loaded) {
         LoadTab(league, tab);
     }
     else {

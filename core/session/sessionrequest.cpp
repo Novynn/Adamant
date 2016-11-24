@@ -51,7 +51,7 @@ void Session::Request::login(const QString &username, const QString &password) {
 }
 
 void Session::Request::loginWithOAuth(const QString &authorizationCode) {
-    QUrl url("https://webdev2.office.grindinggear.com/oauth/token");
+    QUrl url("https://www.pathofexile.com/oauth/token");
     QUrlQuery query;
     query.addQueryItem("client_id", "test");
     query.addQueryItem("client_secret", "testpassword");
@@ -217,7 +217,7 @@ void Session::Request::onLoginPageResult() {
     QNetworkReply *reply = qobject_cast<QNetworkReply*>(QObject::sender());
     int status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
     if (status != 302) {
-        emit loginResult(0x01, "Failed to log in (invalid password or expired session ID).");
+        emit loginResult(0x01, QString("Failed to log in (invalid password or expired session ID, status: %1)").arg(status));
     }
     else {
         QList<QNetworkCookie> cookies = reply->manager()->cookieJar()->cookiesForUrl(MainUrl());
