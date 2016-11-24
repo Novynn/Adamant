@@ -25,11 +25,11 @@ public:
     };
 
     static QUrl BaseUrl() {
-        return QUrl("https://webdev2.office.grindinggear.com");
+        return QUrl("https://www.pathofexile.com");
     }
 
     static QUrl APIUrl() {
-        return QUrl("https://webdev2.office.grindinggear.com/api");
+        return QUrl("https://www.pathofexile.com/api");
     }
 
     static QUrl LoginUrl() {

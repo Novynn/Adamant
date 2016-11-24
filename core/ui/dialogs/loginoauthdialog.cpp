@@ -24,7 +24,7 @@ void LoginOAuthDialog::showError(const QString &error) {
 int LoginOAuthDialog::exec() {
     setEnabled(true);
 
-    QUrl url("https://webdev2.office.grindinggear.com/oauth/authorize");
+    QUrl url("https://www.pathofexile.com/oauth/authorize");
     QUrlQuery query;
     query.addQueryItem("client_id", "test");
     query.addQueryItem("response_type", "code");
