@@ -1,4 +1,5 @@
 #include "loggingsystem.h"
+#include <QLoggingCategory>
 
 LoggingSystem* LoggingSystem::_instance = 0;
 
@@ -7,6 +8,8 @@ LoggingSystem::LoggingSystem()
 {
     qInstallMessageHandler(LoggingSystem::qtMessage);
     qSetMessagePattern("[%{time h:mm:ss.zzz}] %{if-debug}%{file}:%{line} - %{endif}%{message}");
+
+    QLoggingCategory::setFilterRules("qt.network.ssl.warning=false");
 }
 
 

@@ -429,16 +429,16 @@ const QMap<QString, QString> Session::Request::getAccountBadges(const QByteArray
         QRegularExpressionMatch match = iter.next();
         if (match.isValid() && match.hasMatch()) {
             QString url = match.captured("url");
-            if (url.startsWith("/")) url.prepend("https://p7p4m6s5.ssl.hwcdn.net");
+            if (url.startsWith("/")) url.prepend("https://web.poecdn.com");
             result.insert(match.captured("name"), url);
         }
     }
 
-    //        result.insert("Exalted", "https://p7p4m6s5.ssl.hwcdn.net/image/forum/supporter-tag/open-beta/exalted.png?v=2");
-    //        result.insert("Champion", "https://p7p4m6s5.ssl.hwcdn.net/image/forum/supporter-tag/release/champion.png?v=4");
-    //        result.insert("Grandmaster", "https://p7p4m6s5.ssl.hwcdn.net/image/forum/supporter-tag/release2/Grandmaster.png");
-    //        result.insert("Highgate", "https://p7p4m6s5.ssl.hwcdn.net/image/forum/supporter-tag/awakening/Highgate.png");
-    //        result.insert("Ascendant", "https://p7p4m6s5.ssl.hwcdn.net/image/forum/supporter-tag/ascendancy/Ascendant.png");
+    //        result.insert("Exalted", "https://web.poecdn.com/image/forum/supporter-tag/open-beta/exalted.png?v=2");
+    //        result.insert("Champion", "https://web.poecdn.com/image/forum/supporter-tag/release/champion.png?v=4");
+    //        result.insert("Grandmaster", "https://web.poecdn.com/image/forum/supporter-tag/release2/Grandmaster.png");
+    //        result.insert("Highgate", "https://web.poecdn.com/image/forum/supporter-tag/awakening/Highgate.png");
+    //        result.insert("Ascendant", "https://web.poecdn.com/image/forum/supporter-tag/ascendancy/Ascendant.png");
 
     return result;
 }
