@@ -5,8 +5,8 @@
 #include <QDebug>
 #include <QRegularExpression>
 
-const QString POE_EDIT_THREAD = "https://webdev2.office.grindinggear.com/forum/edit-thread/";
-const QString POE_REPLY_THREAD = "https://webdev2.office.grindinggear.com/forum/post-reply/";
+const QString POE_EDIT_THREAD = "https://www.pathofexile.com/forum/edit-thread/";
+const QString POE_REPLY_THREAD = "https://www.pathofexile.com/forum/post-reply/";
 
 Session::ForumRequest::ForumRequest(QObject* parent, QNetworkAccessManager *manager)
     : QObject(parent)
