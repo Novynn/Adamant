@@ -14,16 +14,15 @@ public:
     LocationType location() const final;
     QString header() const final;
     QString hash() const final;
-    QString forumCode(const Item* item) const final;
+    QString forumCode(const Item &item) const final;
     bool operator<(const ItemLocation &other) const final;
     bool operator==(const ItemLocation &other) const final;
     QJsonObject toJson() const final;
-    QPointF itemPos(const Item* item) const;
-    QSize itemSize(const Item* item) const;
+    QPointF itemPos(const Item &item) const;
+    QSize itemSize(const Item &item) const;
 
 private:
     QString _name;
-    QString _league;
     QString _class;
     int _level;
 

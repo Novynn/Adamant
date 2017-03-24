@@ -340,7 +340,7 @@ void ItemManager::onStashTabResult(QString league, QByteArray json, QVariant dat
                 current->update(tab);
             }
             else {
-                currentInstance->location = new StashItemLocation(tab);
+                currentInstance->location = new StashItemLocation(league, tab);
                 currentInstance->location->setState(ItemLocation::Loading);
             }
             currentInstances.removeOne(currentInstance);
@@ -355,7 +355,7 @@ void ItemManager::onStashTabResult(QString league, QByteArray json, QVariant dat
                 currentInstance->accountName = instance->accountName;
                 currentInstance->manager = this;
                 currentInstance->throttled = false;
-                currentInstance->location = new StashItemLocation(tab);
+                currentInstance->location = new StashItemLocation(league, tab);
                 currentInstance->location->setState(ItemLocation::Unknown);
                 currentInstance->type = ItemManagerInstance::Type::StashTab;
                 currentInstance->tab = new ItemManagerInstance::StashTab;
@@ -409,7 +409,7 @@ void ItemManager::onStashTabResult(QString league, QByteArray json, QVariant dat
             ItemList itemObjects;
             for (QJsonValue itemVal : items) {
                 QJsonObject item = itemVal.toObject();
-                itemObjects.append(new Item(item));
+                itemObjects.append(QSharedPointer<Item>::create(instance->location, item));
             }
             instance->location->setItems(itemObjects, layout);
             instance->location->setState(ItemLocation::Loaded);

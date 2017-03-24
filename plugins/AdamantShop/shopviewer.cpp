@@ -5,8 +5,6 @@
 #include <QDebug>
 #include <dialogs/pricedialog.h>
 #include <core.h>
-#include <session/session.h>
-#include <session/forum/forumrequest.h>
 #include <widgets/shopwidget.h>
 #include <graphicitem.h>
 
@@ -49,26 +47,6 @@ ShopViewer::ShopViewer(AdamantShopPlugin* plugin, StashViewer* viewer, QWidget *
     setupStashIntegration();
     showShop(nullptr);
 
-    connect(_plugin->Core()->forum(), &Session::ForumRequest::requestReady, this, [this](const ForumSubmission* submission) {
-        if (!_submissions.contains(submission)) return;
-        ForumSubmission* sub = (ForumSubmission*)submission;
-        sub->data.insert("content", "actually no, this data!");
-    });
-
-    connect(_plugin->Core()->forum(), &Session::ForumRequest::requestError, this, [this](const ForumSubmission* submission, const QString &error) {
-        if (!_submissions.contains(submission)) return;
-        qDebug() << "Error!" << submission->threadId << error;
-        _submissions.removeOne(submission);
-        delete submission;
-    });
-
-    connect(_plugin->Core()->forum(), &Session::ForumRequest::requestFinished, this, [this](const ForumSubmission* submission) {
-        if (!_submissions.contains(submission)) return;
-        qDebug() << "Finished!" << submission->threadId;
-        _submissions.removeOne(submission);
-        delete submission;
-    });
-
     connect(_tabWidePriceButton, &QPushButton::released, this, [this]() {
         QStringList selected = _stashViewer->getSelectedTabs();
         auto shop = _plugin->getShop(_stashViewer->getCurrentLeague());
@@ -81,7 +59,7 @@ ShopViewer::ShopViewer(AdamantShopPlugin* plugin, StashViewer* viewer, QWidget *
                 value = "";
             }
             else {
-                value = QString("%1 %2 %3").arg(dialog.getType()).arg(dialog.getValue()).arg(dialog.getCurrency());
+                value = dialog.getData();
             }
 
             for (QString id : selected) {
@@ -112,7 +90,7 @@ ShopViewer::ShopViewer(AdamantShopPlugin* plugin, StashViewer* viewer, QWidget *
                 value = "@inherit";
             }
             else {
-                value = QString("%1 %2 %3").arg(dialog.getType()).arg(dialog.getValue()).arg(dialog.getCurrency());
+                value = dialog.getData();
             }
 
             for (QString id : selected) {
@@ -268,9 +246,5 @@ void ShopViewer::on_addThreadButton_clicked() {
 
 void ShopViewer::on_updateButton_clicked() {
     if (_currentShop == nullptr) return;
-    ForumSubmission* s = new ForumSubmission();
-    s->threadId = "96";
-    s->data.insert("content", "test");
-    _submissions << s;
-    _plugin->Core()->forum()->beginRequest(s);
+    _plugin->updateShop(_currentShop);
 }

@@ -4,6 +4,7 @@
 #include <QNetworkCookieJar>
 #include <QUrlQuery>
 #include <QRegularExpression>
+#include <QInputDialog>
 
 Session::Request::Request(QObject *parent)
     : QObject(parent)
@@ -26,7 +27,7 @@ void Session::Request::setTimeout(int timeout) {
 
 void Session::Request::setSessionId(const QString& sessionId) {
     _sessionId = sessionId;
-//    for (QNetworkCookie cookie : _manager->cookieJar()->cookiesForUrl(BaseUrl())) {
+//    for (QNetworkCookie cookie : _manager->cookieJar()->cookiesForUrl(MainUrl())) {
 //        if (cookie.name() == SessionIdCookie().toUtf8()) {
 //            if (sessionId.isEmpty()) {
 //                _manager->cookieJar()->deleteCookie(cookie);
@@ -83,10 +84,16 @@ void Session::Request::loginWithSessionId(const QString &sessionId) {
     QNetworkCookie poeCookie(SessionIdCookie().toUtf8(), sessionId.toUtf8());
     poeCookie.setPath("/");
     poeCookie.setDomain(".pathofexile.com");
-    // This will override, no biggy
     _manager->cookieJar()->insertCookie(poeCookie);
 
+    QNetworkCookie sessionStartCookie("session_start", "1");
+    sessionStartCookie.setPath("/");
+    sessionStartCookie.setDomain(".pathofexile.com");
+    _manager->cookieJar()->insertCookie(sessionStartCookie);
+
     QNetworkRequest request = createRequest(LoginUrl());
+
+    _sessionId = sessionId;
     QNetworkReply *r = _manager->get(request);
 
     connect(r, &QNetworkReply::finished, this, &Session::Request::Request::onLoginPageResult);
@@ -97,20 +104,9 @@ void Session::Request::clear() {
 }
 
 void Session::Request::fetchProfileData() {
-//    QNetworkRequest request = createRequest(ProfileDataUrl());
-//    QNetworkReply *r = _manager->get(request);
-//    connect(r, &QNetworkReply::finished, this, &Session::Request::Request::onProfileData);
-
-    QJsonObject object;
-    object.insert("name", "Novynn_GGG");
-    object.insert("avatar_url", "");
-    object.insert("messages", 0);
-    object.insert("badges", QJsonArray());
-
-    _accountName = object.value("name").toString();
-
-    QJsonDocument temp(object);
-    emit profileData(temp.toJson());
+    QNetworkRequest request = createRequest(ProfileDataUrl());
+    QNetworkReply *r = _manager->get(request);
+    connect(r, &QNetworkReply::finished, this, &Session::Request::Request::onProfileData);
 }
 
 void Session::Request::fetchAccountBadge(const QString &badge, const QString &url) {
@@ -177,6 +173,7 @@ void Session::Request::fetchAccountCharacterItems(const QString &accountName, co
 
 void Session::Request::fetchLeagues() {
     QNetworkRequest request = createRequest(LeaguesUrl());
+    request.setAttribute(QNetworkRequest::CookieSaveControlAttribute, QNetworkRequest::Manual);
     QNetworkReply *r = _manager->get(request);
 
     connect(r, &QNetworkReply::finished, this, &Session::Request::Request::onLeaguesResult);
@@ -220,7 +217,7 @@ void Session::Request::onLoginPageResult() {
         emit loginResult(0x01, QString("Failed to log in (invalid password or expired session ID, status: %1)").arg(status));
     }
     else {
-        QList<QNetworkCookie> cookies = reply->manager()->cookieJar()->cookiesForUrl(MainUrl());
+        QList<QNetworkCookie> cookies = _manager->cookieJar()->cookiesForUrl(MainUrl());
         for (auto &cookie : cookies) {
             if (QString(cookie.name()) == SessionIdCookie()) {
                 _sessionId = cookie.value();
@@ -229,10 +226,16 @@ void Session::Request::onLoginPageResult() {
             }
         }
 
-        QNetworkRequest request = createRequest(AccountUrl());
-        QNetworkReply *r = _manager->get(request);
+        if (_sessionId.isEmpty()) {
+            qWarning() << "Failed to log in..." << status;
+        }
+        else {
 
-        connect(r, &QNetworkReply::finished, this, &Session::Request::Request::onAccountPageResult);
+            QNetworkRequest request = createRequest(AccountUrl());
+            QNetworkReply *r = _manager->get(request);
+
+            connect(r, &QNetworkReply::finished, this, &Session::Request::Request::onAccountPageResult);
+        }
     }
     reply->deleteLater();
 }
@@ -255,7 +258,6 @@ void Session::Request::onAccountPageResult() {
         // Regexp for getting last visited, guild, etc
         // <strong>(?<attr>.+?):<\/strong><br\/>\s+?(<a href=\"(?<url>.+?)\">(?<content1>.+?)<\/a>|\s+(?<content2>[A-Za-z0-9 ]+?)\s+<\/p>)
 
-
         const QByteArray data = reply->readAll();
         const QString avatar = getAccountAvatar(data);
         const QString name = getAccountName(data);
@@ -264,6 +266,20 @@ void Session::Request::onAccountPageResult() {
 
         // Store the account name
         _accountName = name;
+
+        if (name.isEmpty()) {
+            qWarning() << "Account name is empty!" << data << reply->errorString();
+
+            qWarning() << reply->url().toString();
+            for (auto &cookie : reply->manager()->cookieJar()->cookiesForUrl(MainUrl())) {
+                qDebug() << cookie.name() << cookie.value();
+            }
+
+            for (auto item : reply->rawHeaderPairs()) {
+                qWarning() << item.first << item.second;
+            }
+            QInputDialog::getMultiLineText(nullptr, "", "", data);
+        }
 
         QJsonObject object;
         object.insert("name", name);
@@ -295,7 +311,15 @@ void Session::Request::onLeaguesResult() {
     QByteArray response = reply->readAll();
 
     QJsonDocument doc = QJsonDocument::fromJson(response);
-    QStringList list = doc.object().value("leagues").toVariant().toStringList();
+    QStringList list;
+
+    for (auto league : doc.array()) {
+        auto obj = league.toObject();
+        list << obj.value("id").toString();
+        // TODO(rory): We should really store more than just the league ID here, as we might want
+        //             to treat SSF leagues separately sometimes (such as disabling shops)
+    }
+
     emit leaguesList(list);
 
     reply->deleteLater();

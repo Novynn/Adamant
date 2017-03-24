@@ -46,7 +46,6 @@ private:
     StashViewer* _stashViewer;
     QMap<const Shop*, QListWidgetItem*> _shopListItems;
     Shop* _currentShop;
-    QList<const ForumSubmission*> _submissions;
     Ui::ShopViewer *ui;
     QStringList _leagues;
 

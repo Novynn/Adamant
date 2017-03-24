@@ -8,7 +8,9 @@
 #include <QDebug>
 #include <QPointF>
 #include <QSize>
-typedef QList<const Item*> ItemList;
+#include <QSharedPointer>
+
+typedef QList<QSharedPointer<const Item>> ItemList;
 
 class CORE_EXTERN ItemLocation {
     Q_GADGET
@@ -27,23 +29,22 @@ public:
     };
 
     virtual ~ItemLocation() {
-        qDeleteAll(_items);
         _items.clear();
     }
 
     virtual LocationType location() const = 0;
     virtual QString header() const = 0;
     virtual QString hash() const = 0;
-    virtual QString forumCode(const Item *item) const = 0;
+    virtual QString forumCode(const Item &item) const = 0;
     virtual bool operator<(const ItemLocation &other) const = 0;
     virtual bool operator==(const ItemLocation &other) const = 0;
 
-    virtual QPointF itemPos(const Item* item) const {
-        return QPointF(item->data("x").toFloat(), item->data("y").toFloat());
+    virtual QPointF itemPos(const Item &item) const {
+        return QPointF(item.data("x").toFloat(), item.data("y").toFloat());
     }
 
-    virtual QSize itemSize(const Item* item) const {
-        return QSize(item->data("w").toInt(), item->data("h").toInt());
+    virtual QSize itemSize(const Item &item) const {
+        return QSize(item.data("w").toInt(), item.data("h").toInt());
     }
 
     virtual void setItems(ItemList items, const QJsonObject &layout = QJsonObject()) {
@@ -67,7 +68,7 @@ public:
     virtual QJsonObject toJson() const {
         QJsonObject result;
         QJsonArray items;
-        for (const Item* item : _items) {
+        for (QSharedPointer<const Item> item : _items) {
             items.append(item->toJson());
         }
         result.insert("items", items);
@@ -78,11 +79,10 @@ public:
     virtual bool fromJson(const QJsonObject &object) {
         if (state() != ItemLocation::Unknown) return false; // Only load if in unknown state
         //qDebug() << header() << "Loaded from disk";
-        qDeleteAll(_items);
         _items.clear();
         QJsonArray items = object.value("items").toArray();
         for (QJsonValue value : items) {
-            _items << new Item(value.toObject());
+            _items << QSharedPointer<Item>::create(this, value.toObject());
         }
         return true;
     }
@@ -91,6 +91,7 @@ protected:
     explicit ItemLocation() : _state(Unknown) {}
     State _state;
     ItemList _items;
+    QString _league;
 };
 
 

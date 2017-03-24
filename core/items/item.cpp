@@ -1,6 +1,7 @@
 #include "item.h"
+#include "itemlocation.h"
 
-Item::Item(QJsonObject data)
-    : _data(data) {
-
+Item::Item(ItemLocation *parent, QJsonObject data)
+    : _parent(parent)
+    , _data(data) {
 }

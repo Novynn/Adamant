@@ -6,7 +6,9 @@ LoggingSystem* LoggingSystem::_instance = 0;
 LoggingSystem::LoggingSystem()
     : QObject()
 {
+#ifndef QT_DEBUG
     qInstallMessageHandler(LoggingSystem::qtMessage);
+#endif
     qSetMessagePattern("[%{time h:mm:ss.zzz}] %{if-debug}%{file}:%{line} - %{endif}%{message}");
 
     QLoggingCategory::setFilterRules("qt.network.ssl.warning=false");

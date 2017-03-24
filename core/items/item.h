@@ -14,10 +14,12 @@ struct ItemSocket {
     QString attr;
 };
 
+class ItemLocation;
+
 class CORE_EXTERN Item
 {
 public:
-    Item(QJsonObject data);
+    Item(ItemLocation* parent, QJsonObject data);
 
     QVariant data(QString key) const {
         return _data.value(key).toVariant();
@@ -31,7 +33,12 @@ public:
         return _data;
     }
 
+    const ItemLocation* getParent() const {
+        return _parent;
+    }
+
 private:
+    const ItemLocation* _parent;
     QJsonObject _data;
 };
 

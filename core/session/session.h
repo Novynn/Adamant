@@ -61,7 +61,7 @@ public:
     }
 
     static QUrl LeaguesUrl() {
-        return QUrl("https://poe.rory.io/api/v1/leagues");
+        return QUrl(BaseUrl().toString() + "/api/leagues?type=main");
     }
 
     static QString SessionIdCookie() {

@@ -39,6 +39,7 @@ public:
     void setCurrentPageButton(int index);
     void setMenuExpanded(bool expanded);
     Q_INVOKABLE bool removePage(QUuid id);
+    void setLoginProgressMessage(const QString &message);
 public slots:
     void onProfileBadgeImage(const QString &badge, QImage image);
     void updateAccountMessagesCount(int messages);

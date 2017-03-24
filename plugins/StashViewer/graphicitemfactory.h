@@ -28,7 +28,7 @@ public slots:
     void SubmitLocation(const ItemLocation* location, QVariant data = QVariant()) {
         QList<GraphicItem*> items;
         QSet<QString> images;
-        for (const Item* item : location->items()) {
+        for (QSharedPointer<const Item> item : location->items()) {
             QString icon = item->data("icon").toString();
 
             if (icon.startsWith("/")) {

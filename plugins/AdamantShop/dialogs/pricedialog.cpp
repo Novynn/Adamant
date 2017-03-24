@@ -15,6 +15,7 @@ PriceDialog::PriceDialog(Shop* shop, QStringList selectedIds, bool tab, QWidget 
     setWindowFlags(windowFlags() |= Qt::FramelessWindowHint);
 
     // TODO(rory): Figure out a good way to do this
+    Q_UNUSED(selectedIds);
 //    double value;
 //    ui->entryValue->setSpecialValueText("");
 //    for (QString id : selectedIds) {
@@ -37,15 +38,22 @@ PriceDialog::~PriceDialog() {
     delete ui;
 }
 
-QString PriceDialog::getType() {
+QString PriceDialog::getData() const {
+    if (ui->entryBook->currentIndex() == 1) {
+        return ui->customEntryValue->text();
+    }
+    return QString("%1 %2 %3").arg(getType()).arg(getValue()).arg(getCurrency());
+}
+
+QString PriceDialog::getType() const {
     return ui->entryType->currentText();
 }
 
-double PriceDialog::getValue() {
+double PriceDialog::getValue() const {
     return ui->entryValue->value();
 }
 
-QString PriceDialog::getCurrency() {
+QString PriceDialog::getCurrency() const {
     return ui->entryCurrency->currentText();
 }
 
@@ -55,4 +63,8 @@ void PriceDialog::on_saveButton_clicked() {
 
 void PriceDialog::on_cancelButton_clicked() {
     reject();
+}
+
+void PriceDialog::on_entryType_currentIndexChanged(const QString &arg1) {
+    ui->entryBook->setCurrentIndex((int)(arg1 == "Custom"));
 }

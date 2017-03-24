@@ -12,7 +12,7 @@ class CORE_EXTERN StashItemLocation : public ItemLocation
 {
     Q_GADGET
 public:
-    StashItemLocation(const QJsonObject &tabData);
+    StashItemLocation(const QString &league, const QJsonObject &tabData);
 
     QColor tabColor() const {
         return _color;
@@ -36,15 +36,15 @@ public:
     LocationType location() const;
     QString header() const;
     QString hash() const;
-    QString forumCode(const Item* item) const;
+    QString forumCode(const Item &item) const;
     bool operator<(const ItemLocation &other) const;
     bool operator==(const ItemLocation &other) const;
 
     void setItems(ItemList items, const QJsonObject &layout);
     QJsonObject toJson();
     bool fromJson(const QJsonObject& object);
-    QPointF itemPos(const Item* item) const;
-    QSize itemSize(const Item* item) const;
+    QPointF itemPos(const Item &item) const;
+    QSize itemSize(const Item &item) const;
     int tabIndex() const;
 
     int getAutoUpdateInterval() const {
@@ -60,7 +60,6 @@ private:
     QString _tabId;
     QString _tabLabel;
 
-    QString _league;
     QColor _color;
     Type _type;
     QJsonObject _layout;

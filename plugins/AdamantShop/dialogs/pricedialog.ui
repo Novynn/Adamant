@@ -39,59 +39,89 @@
        <string>None</string>
       </property>
      </item>
-     <item>
-      <property name="text">
-       <string>Inherit</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>~price</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>~b/o</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>~c/o</string>
-      </property>
-     </item>
     </widget>
    </item>
    <item>
-    <widget class="QDoubleSpinBox" name="entryValue">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
+    <widget class="QStackedWidget" name="entryBook">
+     <property name="currentIndex">
+      <number>1</number>
      </property>
-     <property name="buttonSymbols">
-      <enum>QAbstractSpinBox::NoButtons</enum>
-     </property>
-     <property name="specialValueText">
-      <string>...</string>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="QComboBox" name="entryCurrency">
-     <property name="editable">
-      <bool>true</bool>
-     </property>
-     <item>
-      <property name="text">
-       <string>Chaos</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>Exalted</string>
-      </property>
-     </item>
+     <widget class="QWidget" name="pricePage">
+      <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QDoubleSpinBox" name="entryValue">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="buttonSymbols">
+          <enum>QAbstractSpinBox::NoButtons</enum>
+         </property>
+         <property name="specialValueText">
+          <string>...</string>
+         </property>
+         <property name="maximum">
+          <double>10000.000000000000000</double>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QComboBox" name="entryCurrency">
+         <property name="editable">
+          <bool>true</bool>
+         </property>
+         <item>
+          <property name="text">
+           <string>Orb of Transmutation</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Chaos Orb</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Exalted Orb</string>
+          </property>
+         </item>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="customPage">
+      <layout class="QHBoxLayout" name="horizontalLayout_3">
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QLineEdit" name="customEntryValue"/>
+       </item>
+      </layout>
+     </widget>
     </widget>
    </item>
    <item>
@@ -134,9 +164,6 @@
   </layout>
  </widget>
  <tabstops>
-  <tabstop>entryType</tabstop>
-  <tabstop>entryValue</tabstop>
-  <tabstop>entryCurrency</tabstop>
   <tabstop>saveButton</tabstop>
   <tabstop>cancelButton</tabstop>
  </tabstops>

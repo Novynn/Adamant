@@ -16,10 +16,14 @@ CoreService::CoreService()
     Session::SetCoreService(this);
 
     _ui = new AdamantUI(this);
+    _settingUp = false;
 
     connect(_pluginManager, &PluginManager::pluginMessage, [this] (QString msg, QtMsgType type) {
         emit message(msg, type);
     });
+
+
+    connect(session(), &Session::Request::loginResult, this, &CoreService::loginResult);
 
     _script->setup();
 }
@@ -38,7 +42,7 @@ CoreService::~CoreService() {
         } \
     }))
 
-bool CoreService::load() {
+bool CoreService::load(bool force) {
     sensitiveSettings()->beginGroup("session");
     QString sessionId = sensitiveSettings()->value("id").toString();
     QString accessToken = sensitiveSettings()->value("access_token").toString();
@@ -54,13 +58,16 @@ bool CoreService::load() {
         method = SetupDialog::LoginOAuth;
     }
 
-    while (sessionId.isEmpty() && accessToken.isEmpty()) {
+    while ((sessionId.isEmpty() && accessToken.isEmpty()) || force) {
         // Oh no, run setup.
+        _settingUp = true;
         int result = getInterface()->showSetup(); // Blocking
+        _settingUp = false;
         if (result != 0x0) {
             getInterface()->window()->close();
             return false;
         }
+        force = false;
 
         QVariantMap map = getInterface()->getSetupDialog()->getData();
 
@@ -87,6 +94,7 @@ bool CoreService::load() {
     getPluginManager()->preparePlugins();
 
     // Load the main application!
+    _requiredData.clear();
 
     /* Require leagues list */ {
         ADD_REQUIREMENT(session(), Session::Request::leaguesList, QStringList, leagues);
@@ -103,34 +111,36 @@ bool CoreService::load() {
                 session()->loginWithSessionId(sessionId);
                 break;
             case SetupDialog::LoginOAuth:
-                session()->fetchProfileData();
+                qFatal("OAuth not implemented!");
                 break;
         }
-
-
-        // TODO(rory): Improve this
-        connect(session(), &Session::Request::loginResult,
-                [this] (int result, QString resultString) {
-            if (result == 0) {
-
-            }
-            else {
-                qDebug() << "Failed to log in: " << resultString;
-            }
-        });
+        _ui->window()->setLoginProgressMessage("Logging in...");
     }
 
     return true;
 }
 
+void CoreService::loginResult(int result, QString resultString) {
+    if (result == 0) {
+        sensitiveSettings()->beginGroup("session");
+        sensitiveSettings()->setValue("id", session()->sessionId());
+        sensitiveSettings()->endGroup();
+        sensitiveSettings()->sync();
+    }
+    else {
+        _ui->window()->setLoginProgressMessage("Failed to log in.");
+
+        if (!_settingUp) {
+            // We failed to log in with our current credentials, re-run setup
+            QTimer::singleShot(1000, this, [this](){
+                load(true);
+            });
+        }
+
+    }
+}
+
 void CoreService::ready() {
-    _settings.beginGroup("data");
-    QString profileData = _settings.value("profile").toString();
-    QStringList leagues = _settings.value("leagues").toStringList();
-    _settings.endGroup();
-
-    qDebug() << leagues;
-
     getPluginManager()->loadPlugins();
 
     qInfo() << qPrintable("Adamant Started!");

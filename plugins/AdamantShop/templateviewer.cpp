@@ -7,6 +7,7 @@ TemplateViewer::TemplateViewer(AdamantShopPlugin* plugin, QWidget *parent)
     , ui(new Ui::TemplateViewer)
     , _template() {
     ui->setupUi(this);
+    Q_UNUSED(plugin);
 }
 
 TemplateViewer::~TemplateViewer()

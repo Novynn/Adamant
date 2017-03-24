@@ -244,6 +244,10 @@ bool MainWindow::removePage(QUuid id) {
     return false;
 }
 
+void MainWindow::setLoginProgressMessage(const QString &message) {
+    ui->loadingLabelDetail->setText(message);
+}
+
 void MainWindow::setMenuExpanded(bool expanded) {
     for (CommandButton* button : ui->sidebarWidget->findChildren<CommandButton*>()) {
         button->setIconOnly(!expanded);

@@ -1,7 +1,10 @@
 #include "adamantshopplugin.h"
+#include <session/session.h>
+#include <session/forum/forumrequest.h>
 #include <QHBoxLayout>
 #include <QPushButton>
 #include <core.h>
+#include "items/itemmanager.h"
 
 QDir AdamantShopPlugin::shopsPath() {
     return CoreService::dataPath("shops");
@@ -109,6 +112,83 @@ bool AdamantShopPlugin::saveShop(const Shop* shop) const {
     return false;
 }
 
+void AdamantShopPlugin::updateShop(const Shop* shop) {
+    auto manager = Core()->getItemManager();
+    auto resolver = [manager, shop](const QString &id) -> QSharedPointer<const Item> {
+        // TODO(rory): Optimize this, using index on public item id -> Item*
+        //             Also need a better method of storing item data
+        auto stashes = manager->getStashTabs(shop->league());
+        for (const StashItemLocation* stash : stashes) {
+            for (QSharedPointer<const Item> item : stash->items()) {
+                if (item->data("id").toString() == id) {
+                    return item;
+                }
+            }
+        }
+
+        return QSharedPointer<const Item>();
+    };
+
+    QVariantHash data;
+    data["item"] = QVariant::fromValue<Mustache::QtVariantContext::fn_t>([&resolver](const QString& val, Mustache::Renderer* renderer, Mustache::Context* context) -> QString {
+        Q_UNUSED(renderer);
+        Q_UNUSED(context);
+        QSharedPointer<const Item> item = resolver(val);
+        if (item.isNull() || !item->getParent())
+            return "[[NOITEM]]";
+        return item->getParent()->forumCode(*item);
+    });
+
+    data["allitems"] = QVariant::fromValue<Mustache::QtVariantContext::fn_t>([manager, shop](const QString& val, Mustache::Renderer* renderer, Mustache::Context* context) -> QString {
+        Q_UNUSED(val);
+        Q_UNUSED(renderer);
+        Q_UNUSED(context);
+        auto itemIds = shop->getItemIds();
+        auto stashes = manager->getStashTabs(shop->league());
+
+        QHash<QString, QSharedPointer<const Item>> items;
+
+        // NOTE(rory): Resolve item ids to current items
+        for (const StashItemLocation* stash : stashes) {
+            for (QSharedPointer<const Item> item : stash->items()) {
+                const QString id = item->data("id").toString();
+                if (itemIds.contains(id)) {
+                    items.insert(id, item);
+                }
+            }
+        }
+
+        QString result;
+
+        for (const QString &id : itemIds) {
+            QSharedPointer<const Item> item = items.value(id);
+            if (!item) {
+                result += "???";
+                continue;
+            }
+
+            result += item->getParent()->forumCode(*item);
+            result += shop->getItemData(id).getData();
+        }
+
+        return result;
+    });
+
+    auto result = shop->generateShopContent("Welcome to my shop!\n", "{{#allitems}}{{/allitems}}", "\nThanks for visiting!", data);
+
+    for (const QString &threadId : result.keys()) {
+        const QString &content = result.value(threadId);
+
+        qDebug() << qPrintable(threadId + "\n") << qPrintable(content);
+
+//        ForumSubmission* s = new ForumSubmission();
+//        s->threadId = threadId;
+//        s->data.insert("content", content);
+//        _submissions.append(s);
+//        Core()->forum()->beginRequest(s);
+    }
+}
+
 void AdamantShopPlugin::OnLoad() {
     StashViewerPlugin* plugin = dynamic_cast<StashViewerPlugin*>(Core()->getPluginManager()->getPluginByIID("adamant.stashviewer"));
     if (plugin == nullptr) {
@@ -142,31 +222,28 @@ void AdamantShopPlugin::OnLoad() {
 
 
 
+    connect(Core()->forum(), &Session::ForumRequest::requestReady, this, [this](const ForumSubmission* submission) {
+        if (!_submissions.contains(submission)) return;
+    });
+
+    connect(Core()->forum(), &Session::ForumRequest::requestError, this, [this](const ForumSubmission* submission, const QString &error) {
+        if (!_submissions.contains(submission)) return;
+        qDebug() << "Error!" << submission->threadId << error;
+        _submissions.removeOne(submission);
+        delete submission;
+    });
+
+    connect(Core()->forum(), &Session::ForumRequest::requestFinished, this, [this](const ForumSubmission* submission) {
+        if (!_submissions.contains(submission)) return;
+        qDebug() << "Finished!" << submission->threadId;
+        _submissions.removeOne(submission);
+        delete submission;
+    });
 
     qRegisterMetaType<Shop*>();
     qRegisterMetaType<ShopList>();
 
     loadShops(leagues);
-
-    // TODO(rory): Remove this
-    {
-        Item* item = nullptr;
-
-        QFile file("test.item");
-        if (file.open(QFile::ReadOnly | QFile::Text)) {
-            QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
-            file.close();
-
-            item = new Item(doc.object());
-        }
-
-        for (Shop* shop : _shops.values()) {
-            shop->generateShopContent([&item](const QString &id) {
-                Q_UNUSED(id);
-                return item;
-            });
-        }
-    }
 }
 
 void AdamantShopPlugin::setupEngine(QScriptEngine* engine, QScriptValue* plugin) {

@@ -25,8 +25,8 @@ public:
     Q_PROPERTY(QDateTime updated MEMBER _updated)
     Q_PROPERTY(QDateTime bumped MEMBER _bumped)
 
-    QString content() const {
-        return _content;
+    QString getId() const {
+        return _id;
     }
 
     inline bool operator==(const ShopThread& other){
@@ -39,7 +39,6 @@ private:
     QString _id;
     QDateTime _updated;
     QDateTime _bumped;
-    QString _content;
 
     friend class Shop;
 };
@@ -102,7 +101,7 @@ typedef QMap<QString, ShopThread> ShopThreadList;
 typedef QMap<QString, ShopItem> ShopItemMap;
 typedef QMap<QString, ShopTab> ShopTabMap;
 
-typedef std::function<const Item*(const QString &itemId)> ItemResolver;
+typedef std::function<QSharedPointer<const Item>(const QString &itemId)> ItemResolver;
 
 class Shop : public QObject
 {
@@ -189,42 +188,38 @@ public:
         return _items.value(id);
     }
 
-    void generateShopContent(const ItemResolver& resolver) {
+    const QStringList getItemIds() const {
+        return _items.uniqueKeys();
+    }
+
+    QHash<QString, QString> generateShopContent(const QString &headerInput, const QString &bodyInput, const QString &footerInput,
+                                                const QVariantHash &contextData) const {
         const int MaxThreadSize = 50000;
 
-        QVariantHash data;
-        data["item"] = QVariant::fromValue<Mustache::QtVariantContext::fn_t>([&resolver](const QString& val, Mustache::Renderer* renderer, Mustache::Context* context) -> QString {
-            Q_UNUSED(renderer);
-            Q_UNUSED(context);
-            const Item* item = resolver(val);
-            if (!item)
-                return "[[NOITEM]]";
-            return QString("[linkItem location=\"%1\" character=\"%2\" x=\"%3\" y=\"%4\"]")
-                    .arg(item->data("inventoryId").toString())
-                    .arg(item->data("league").toString())
-                    .arg(item->data("x").toString())
-                    .arg(item->data("y").toString());
-//            // Stash
-//            return "[linkItem location=\"{{inventoryId}}\" league=\"{{league}}\" x=\"{{x}}\" y=\"{{y}}\"]";
-        });
-
         QHash<QString, QString> partials;
-        partials["items"] = "{{#item}}1234567890{{/item}}{{#item}}1234567890{{/item}}{{#item}}1234567890{{/item}}{{#item}}1234567890{{/item}}";
-
         Mustache::PartialMap partialMap(partials);
 
-        Mustache::QtVariantContext context(data, &partialMap);
+        Mustache::QtVariantContext context(contextData, &partialMap);
 
         ShopTemplate renderer;
-        const QString header = renderer.render("<", &context);
-        const QString footer = renderer.render(">", &context);
-        renderer.setMaxLength(50);
+        const QString header = renderer.render(headerInput, &context);
+        const QString footer = renderer.render(footerInput, &context);
+        renderer.setMaxLength(MaxThreadSize - header.length() - footer.length());
         renderer.resetPages();
-        renderer.render("Hi {{>items}}", &context);
+        renderer.render(bodyInput, &context);
 
-        qDebug() << header;
-        qDebug() << renderer.getPages().join("\n-----\n");
-        qDebug() << footer;
+        QHash<QString, QString> result;
+        QStringList pages = renderer.getPages();
+        for (const ShopThread &thread : _threads) {
+            const QString content = QString("%1%2%3").arg(header).arg(pages.isEmpty() ? QString() : pages.takeFirst()).arg(footer);
+            result.insert(thread.getId(), content);
+        }
+
+        if (!pages.isEmpty()) {
+            qDebug() << "WARNING! You need more shop threads";
+        }
+
+        return result;
     }
 
 

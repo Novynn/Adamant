@@ -3,7 +3,6 @@
         <file>images/chris.jpg</file>
         <file>images/profile.jpg</file>
         <file>images/setupintro.jpg</file>
-        <file>images/background.jpg</file>
         <file>icons/dark/500px.png</file>
         <file>icons/dark/accessibility.png</file>
         <file>icons/dark/address-book.png</file>
@@ -989,9 +988,6 @@
         <file>images/poe.ico</file>
         <file>images/ad_example.png</file>
         <file>images/ad_example2.png</file>
-        <file>images/light_background.jpg</file>
-        <file>images/background2.jpg</file>
-        <file>images/background3.jpg</file>
         <file>images/loading_light.gif</file>
         <file>images/loading_dark.gif</file>
         <file>banners/BannerBackground.png</file>
@@ -1016,5 +1012,8 @@
         <file>banners/BannerDomination.png</file>
         <file>banners/BannerNemesis.png</file>
         <file>banners/BannerBreach.png</file>
+        <file>images/background1.jpg</file>
+        <file>banners/BannerHardcoreLegacy.png</file>
+        <file>banners/BannerLegacy.png</file>
     </qresource>
 </RCC>

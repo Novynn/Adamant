@@ -7,6 +7,7 @@
 #include <QDir>
 #include <QStandardPaths>
 #include <QSettings>
+#include <QDebug>
 
 #include "session/session.h"
 class AdamantUI;
@@ -33,7 +34,9 @@ public:
     static QDir dataPath(const QString &folder) {
         QDir path = CoreService::dataPath();
         if (!path.cd(folder)) {
-            path.mkdir(folder);
+            if (!path.mkdir(folder)) {
+                qWarning() << "Could not make folder" << folder;
+            }
             path.cd(folder);
         }
         return path;
@@ -43,7 +46,7 @@ public:
         return dataPath("cache");
     }
 
-    bool load();
+    bool load(bool force = false);
 
     Q_INVOKABLE AdamantUI* getInterface() {
         return _ui;
@@ -82,6 +85,7 @@ private slots:
     void ready();
 public slots:
     void loggedMessage(const QString &message, QtMsgType type);
+    void loginResult(int result, QString resultString);
 private:
     PluginManager* _pluginManager;
     QSettings _settings;
@@ -89,6 +93,7 @@ private:
     ItemManager* _itemManager;
     ScriptSandbox* _script;
     AdamantUI* _ui;
+    bool _settingUp;
 
     QMap<QString, QMetaObject::Connection> _requiredData;
 };

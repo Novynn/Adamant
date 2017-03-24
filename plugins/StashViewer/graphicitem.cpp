@@ -14,7 +14,7 @@
 
 QMenu* GraphicItem::_contextMenu = nullptr;
 
-GraphicItem::GraphicItem(QGraphicsItem *parent, const ItemLocation* location, const Item* item, const QString &imagePath)
+GraphicItem::GraphicItem(QGraphicsItem *parent, const ItemLocation* location, QSharedPointer<const Item> item, const QString &imagePath)
     : QGraphicsPixmapItem(parent)
     , _waitingForImage(true)
     , _imagePath(imagePath)
@@ -24,8 +24,8 @@ GraphicItem::GraphicItem(QGraphicsItem *parent, const ItemLocation* location, co
     , _item(item)
     , _location(location) {
 
-    QPointF pos = location->itemPos(item);
-    QSize size = location->itemSize(item);
+    QPointF pos = location->itemPos(*item);
+    QSize size = location->itemSize(*item);
 
     setPos(pos * 47.4645);
     _width = size.width();
@@ -79,13 +79,13 @@ const int LINKH_HEIGHT = 16;
 const int LINKH_WIDTH = 38;
 const int LINKV_HEIGHT = LINKH_WIDTH;
 const int LINKV_WIDTH = LINKH_HEIGHT;
-QPixmap GraphicItem::GenerateLinksOverlay(const Item *item) {
-    int height = item->data("h").toInt();
-    int width = item->data("w").toInt();
+QPixmap GraphicItem::GenerateLinksOverlay(const Item &item) {
+    int height = item.data("h").toInt();
+    int width = item.data("w").toInt();
     return GenerateLinksOverlay(item, width, height);
 }
 
-QPixmap GraphicItem::GenerateLinksOverlay(const Item *item, int width, int height) {
+QPixmap GraphicItem::GenerateLinksOverlay(const Item &item, int width, int height) {
     int socket_rows = 0;
     int socket_columns = 0;
     // this will ensure we have enough room to draw the slots
@@ -99,7 +99,7 @@ QPixmap GraphicItem::GenerateLinksOverlay(const Item *item, int width, int heigh
     size_t i = 0;
 
     QList<ItemSocket> sockets;
-    for (QVariant socketObj : item->data("sockets").toList()) {
+    for (QVariant socketObj : item.data("sockets").toList()) {
         QVariantMap socketObjMap = socketObj.toMap();
         sockets.append({socketObjMap.value("group").toInt(),
                         socketObjMap.value("attr").toString()});
@@ -171,8 +171,8 @@ QPixmap GraphicItem::GenerateLinksOverlay(const Item *item, int width, int heigh
     return base;
 }
 
-QPair<QString, QPixmap> GraphicItem::GenerateItemTooltip(const Item *item) {
-    QJsonObject object = item->toJson();
+QPair<QString, QPixmap> GraphicItem::GenerateItemTooltip(const Item &item) {
+    QJsonObject object = item.toJson();
     return ItemRenderer::render(object);
 
 }
@@ -192,7 +192,7 @@ bool GraphicItem::IsFilteredBy(QString text) {
 
 bool GraphicItem::GenerateItemTooltip() {
     if (_tooltip == nullptr) {
-        auto data = GraphicItem::GenerateItemTooltip(_item);
+        auto data = GraphicItem::GenerateItemTooltip(*_item);
         if (!data.first.isEmpty() && !data.second.isNull()) {
             // Parented to the scene in order to stack on top of all other elements
             _tooltip = new QGraphicsPixmapItem(data.second);
@@ -206,7 +206,7 @@ bool GraphicItem::GenerateItemTooltip() {
     return true;
 }
 
-const Item* GraphicItem::GetItem() const {
+QSharedPointer<const Item> GraphicItem::GetItem() const {
     return _item;
 }
 
@@ -214,7 +214,7 @@ void GraphicItem::ShowLinks(bool show, ShowLinkReason reason) {
     if (show) {
         _linkReason.push(reason);
         if (_linkOverlay == nullptr) {
-            QPixmap overlay = GenerateLinksOverlay(_item);
+            QPixmap overlay = GenerateLinksOverlay(*_item);
             _linkOverlay = new QGraphicsPixmapItem(overlay, this);
             qreal x = (pixmap().width() / 2) - (overlay.width() / 2);
             qreal y = (pixmap().height() / 2) - (overlay.height() / 2);

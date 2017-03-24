@@ -51,12 +51,14 @@ public:
         return _shops.value(shopName, nullptr);
     }
 
+    void updateShop(const Shop *shop);
 public slots:
     void OnLoad();
 private:
     ShopViewer* _viewer;
     TemplateViewer* _templateViewer;
     ShopList _shops;
+    QList<const ForumSubmission*> _submissions;
 
     StashViewer* _stashViewer;
 public slots:

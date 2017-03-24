@@ -1,10 +1,11 @@
 #include "stashitemlocation.h"
 
-StashItemLocation::StashItemLocation(const QJsonObject &tabData)
+StashItemLocation::StashItemLocation(const QString &league, const QJsonObject &tabData)
     : ItemLocation()
     , _type(Normal)
     , _updateInterval(0) {
     _tabId = tabData.value("id").toString();
+    _league = league;
     update(tabData);
 }
 
@@ -44,9 +45,9 @@ QString StashItemLocation::header() const {
     return QString("%1").arg(_tabLabel);
 }
 
-QString StashItemLocation::forumCode(const Item *item) const {
-    QString format("[linkItem location=\"Stash%1\" league=\"%2\" x=\"%3\" y=\"%4\"]");
-    return format.arg(_tabIndex + 1).arg(_league).arg(item->data("x").toInt()).arg(item->data("y").toInt());
+QString StashItemLocation::forumCode(const Item &item) const {
+    const QString format("[linkItem location=\"Stash%1\" league=\"%2\" x=\"%3\" y=\"%4\"]");
+    return format.arg(_tabIndex + 1).arg(_league).arg(item.data("x").toInt()).arg(item.data("y").toInt());
 }
 
 QString StashItemLocation::hash() const {
@@ -76,7 +77,7 @@ void StashItemLocation::setItems(ItemList items, const QJsonObject &layout) {
     ItemLocation::setItems(items, layout);
 }
 
-QPointF StashItemLocation::itemPos(const Item* item) const {
+QPointF StashItemLocation::itemPos(const Item &item) const {
     QPointF pos = ItemLocation::itemPos(item);
     switch (_type) {
         case Currency: {
@@ -94,7 +95,7 @@ QPointF StashItemLocation::itemPos(const Item* item) const {
     return pos;
 }
 
-QSize StashItemLocation::itemSize(const Item* item) const {
+QSize StashItemLocation::itemSize(const Item &item) const {
     QPointF pos = ItemLocation::itemPos(item);
     QSize size = ItemLocation::itemSize(item);
     switch (_type) {
@@ -138,6 +139,7 @@ bool StashItemLocation::fromJson(const QJsonObject &object) {
     QString type = object.value("type").toString();
     _type = StashItemLocation::NameToType(type);
     _updateInterval = object.value("update_interval").toInt();
+    _league = object.value("league").toString();
 
     // We only care about the items
     return ItemLocation::fromJson(object);

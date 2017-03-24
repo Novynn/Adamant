@@ -16,6 +16,7 @@
   <property name="styleSheet">
    <string notr="true">#MainWindow {
 	
+	border-image: url(:/images/background1.jpg);
 }
 
 
@@ -56,7 +57,7 @@ QSplitter::handle, QStatusBar {
     <item>
      <widget class="QStackedWidget" name="pagesWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="mainPage">
        <layout class="QHBoxLayout" name="horizontalLayout_2">
@@ -153,7 +154,7 @@ QSplitter::handle, QStatusBar {
                  <string>Expand Menu</string>
                 </property>
                 <property name="icon">
-                 <iconset resource="res.qrc">
+                 <iconset resource="res/res.qrc">
                   <normaloff>:/icons/dark/menu.png</normaloff>:/icons/dark/menu.png</iconset>
                 </property>
                 <property name="iconSize">
@@ -194,7 +195,7 @@ QSplitter::handle, QStatusBar {
                  <string>Home</string>
                 </property>
                 <property name="icon">
-                 <iconset resource="res.qrc">
+                 <iconset resource="res/res.qrc">
                   <normaloff>:/icons/dark/home3.png</normaloff>:/icons/dark/home3.png</iconset>
                 </property>
                 <property name="iconSize">
@@ -311,7 +312,7 @@ QSplitter::handle, QStatusBar {
                     <string>Launch Path of Exile</string>
                    </property>
                    <property name="icon">
-                    <iconset resource="res.qrc">
+                    <iconset resource="res/res.qrc">
                      <normaloff>:/images/poe.ico</normaloff>:/images/poe.ico</iconset>
                    </property>
                    <property name="iconSize">
@@ -346,7 +347,7 @@ QSplitter::handle, QStatusBar {
                     <string>Private Messages</string>
                    </property>
                    <property name="icon">
-                    <iconset resource="res.qrc">
+                    <iconset resource="res/res.qrc">
                      <normaloff>:/icons/dark/mail3.png</normaloff>:/icons/dark/mail3.png</iconset>
                    </property>
                    <property name="iconSize">
@@ -384,7 +385,7 @@ QSplitter::handle, QStatusBar {
                     <string>Toggle Console</string>
                    </property>
                    <property name="icon">
-                    <iconset resource="res.qrc">
+                    <iconset resource="res/res.qrc">
                      <normaloff>:/icons/dark/terminal.png</normaloff>:/icons/dark/terminal.png</iconset>
                    </property>
                    <property name="iconSize">
@@ -426,7 +427,7 @@ QSplitter::handle, QStatusBar {
           </property>
           <widget class="QStackedWidget" name="stackedWidget">
            <property name="currentIndex">
-            <number>0</number>
+            <number>1</number>
            </property>
            <widget class="QWidget" name="homePage">
             <layout class="QHBoxLayout" name="horizontalLayout" stretch="3,0">
@@ -536,7 +537,7 @@ QSplitter::handle, QStatusBar {
                    <string/>
                   </property>
                   <property name="icon">
-                   <iconset resource="res.qrc">
+                   <iconset resource="res/res.qrc">
                     <normaloff>:/images/ad_example2.png</normaloff>:/images/ad_example2.png</iconset>
                   </property>
                   <property name="iconSize">
@@ -577,7 +578,7 @@ QSplitter::handle, QStatusBar {
                    <string/>
                   </property>
                   <property name="icon">
-                   <iconset resource="res.qrc">
+                   <iconset resource="res/res.qrc">
                     <normaloff>:/images/ad_example.png</normaloff>:/images/ad_example.png</iconset>
                   </property>
                   <property name="iconSize">
@@ -624,6 +625,9 @@ QSplitter::handle, QStatusBar {
                    </property>
                    <item>
                     <widget class="QLabel" name="label">
+                     <property name="enabled">
+                      <bool>true</bool>
+                     </property>
                      <property name="text">
                       <string>Thank you for supporting Path of Exile!</string>
                      </property>
@@ -759,7 +763,7 @@ QSplitter::handle, QStatusBar {
                  <string>  Reload Scripts</string>
                 </property>
                 <property name="icon">
-                 <iconset resource="res.qrc">
+                 <iconset resource="res/res.qrc">
                   <normaloff>:/icons/dark/loop2.png</normaloff>:/icons/dark/loop2.png</iconset>
                 </property>
                 <property name="iconSize">
@@ -851,7 +855,7 @@ QSplitter::handle, QStatusBar {
              <string/>
             </property>
             <property name="pixmap">
-             <pixmap resource="res.qrc">:/images/loading_dark.gif</pixmap>
+             <pixmap resource="res/res.qrc">:/images/loading_dark.gif</pixmap>
             </property>
             <property name="scaledContents">
              <bool>true</bool>
@@ -928,7 +932,7 @@ QSplitter::handle, QStatusBar {
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="res.qrc"/>
+  <include location="res/res.qrc"/>
  </resources>
  <connections>
   <connection>

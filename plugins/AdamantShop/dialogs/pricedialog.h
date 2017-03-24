@@ -16,12 +16,16 @@ public:
     explicit PriceDialog(Shop* shop, QStringList selectedIds, bool tab = false, QWidget *parent = 0);
     ~PriceDialog();
 
-    double getValue();
-    QString getType();
-    QString getCurrency();
+    QString getData() const;
+    QString getType() const;
+protected:
+    double getValue() const;
+    QString getCurrency() const;
 private slots:
     void on_saveButton_clicked();
     void on_cancelButton_clicked();
+    void on_entryType_currentIndexChanged(const QString &arg1);
+
 private:
     Ui::PriceDialog *ui;
     Shop* _shop;

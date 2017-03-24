@@ -13,7 +13,7 @@ CharacterItemLocation::CharacterItemLocation(const QJsonObject& data)
     _level = characterData.value("level").toInt();
 
     for (QJsonValue itemVal : itemData) {
-        auto item = new Item(itemVal.toObject());
+        auto item = QSharedPointer<Item>::create(this, itemVal.toObject());
         _items.append(item);
     }
 
@@ -43,9 +43,9 @@ QString CharacterItemLocation::header() const {
     return _name;
 }
 
-QString CharacterItemLocation::forumCode(const Item *item) const {
-    Q_UNUSED(item)
-    return "";
+QString CharacterItemLocation::forumCode(const Item &item) const {
+    const QString format("[linkItem location=\"%1\" character=\"%2\" x=\"%3\" y=\"%4\"]");
+    return format.arg(item.data("inventoryId").toString()).arg(_name).arg(item.data("x").toInt()).arg(item.data("y").toInt());
 }
 
 QString CharacterItemLocation::hash() const {
@@ -69,9 +69,9 @@ QJsonObject CharacterItemLocation::toJson() const {
     return QJsonObject();
 }
 
-QPointF CharacterItemLocation::itemPos(const Item* item) const {
+QPointF CharacterItemLocation::itemPos(const Item &item) const {
     QPointF pos = ItemLocation::itemPos(item);
-    QString inventoryId = item->data("inventoryId").toString();
+    QString inventoryId = item.data("inventoryId").toString();
 
     if (InventoryLayout.contains(inventoryId))
         pos += InventoryLayout.value(inventoryId);
@@ -81,9 +81,9 @@ QPointF CharacterItemLocation::itemPos(const Item* item) const {
     return pos;
 }
 
-QSize CharacterItemLocation::itemSize(const Item* item) const {
+QSize CharacterItemLocation::itemSize(const Item &item) const {
     QSize size = ItemLocation::itemSize(item);
-    QString inventoryId = item->data("inventoryId").toString();
+    QString inventoryId = item.data("inventoryId").toString();
 
     if ((inventoryId.startsWith("Weapon") || inventoryId.startsWith("Offhand")) &&
         InventoryLayout.contains(inventoryId)) {

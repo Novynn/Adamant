@@ -20,7 +20,7 @@ public:
         Always
     };
 
-    GraphicItem(QGraphicsItem* parent, const ItemLocation* location, const Item *item, const QString &imagePath);
+    GraphicItem(QGraphicsItem* parent, const ItemLocation* location, QSharedPointer<const Item> item, const QString &imagePath);
     ~GraphicItem();
 
     bool IsWaitingForImage(QString imagePath=QString()) const;
@@ -30,9 +30,9 @@ public:
 
     void SetImage(QImage image);
 
-    static QPixmap GenerateLinksOverlay(const Item* item);
-    static QPixmap GenerateLinksOverlay(const Item* item, int width, int height);
-    static QPair<QString, QPixmap> GenerateItemTooltip(const Item* item);
+    static QPixmap GenerateLinksOverlay(const Item &item);
+    static QPixmap GenerateLinksOverlay(const Item &item, int width, int height);
+    static QPair<QString, QPixmap> GenerateItemTooltip(const Item &item);
 
     bool IsFilteredBy(QString text);
 
@@ -42,7 +42,7 @@ public:
 
     bool GenerateItemTooltip();
 
-    const Item* GetItem() const;
+    QSharedPointer<const Item> GetItem() const;
 
     void ShowLinks(bool show=true, ShowLinkReason reason=ShowLinkReason::Hover);
     void ShowTooltip(bool show=true);
@@ -66,7 +66,7 @@ private:
     int _width;
     int _height;
 
-    const Item* _item;
+    QSharedPointer<const Item> _item;
     const ItemLocation* _location;
 };
 

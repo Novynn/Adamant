@@ -14,6 +14,11 @@ QString unescapeHtml(const QString& escaped);
 
 class ShopTemplate : public Renderer {
 public:
+    ShopTemplate()
+        : Renderer()
+        , _maxLength(0) {
+    }
+
     void setMaxLength(int len) {
         _maxLength = len;
     }
@@ -146,6 +151,11 @@ protected:
             case Tag::Null:
                 break;
             }
+        }
+
+        if (!output.isEmpty() && _maxLength > 0) {
+            _pages << output;
+            output.clear();
         }
 
         return output;
