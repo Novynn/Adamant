@@ -28,13 +28,18 @@ public:
     static QDir applicationPath();
 
     static QDir dataPath() {
-        return QDir(QStandardPaths::writableLocation(QStandardPaths::DataLocation));
+        auto dir = QDir(QStandardPaths::writableLocation(QStandardPaths::DataLocation));
+
+        if (!dir.exists()) dir.mkpath(dir.absolutePath());
+
+        return dir;
     }
 
     static QDir dataPath(const QString &folder) {
         QDir path = CoreService::dataPath();
         if (!path.cd(folder)) {
             if (!path.mkdir(folder)) {
+                auto info = QFileInfo(path.absolutePath());
                 qWarning() << "Could not make folder" << folder;
             }
             path.cd(folder);

@@ -36,7 +36,7 @@
    <item>
     <layout class="QFormLayout" name="formLayout">
      <item row="0" column="0">
-      <widget class="QLabel" name="emailLabel">
+      <widget class="QLabel" name="oauthLabel">
        <property name="text">
         <string>OAuth Key</string>
        </property>

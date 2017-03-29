@@ -42,7 +42,6 @@ public:
     Q_PROPERTY(QString accountName MEMBER _accountName READ accountName)
     void loginWithOAuth(const QString &authorizationCode);
 public slots:
-    void login(const QString &username, const QString &password);
     void loginWithSessionId(const QString &sessionId);
     void clear();
 
@@ -69,7 +68,6 @@ public slots:
 
 private slots:
     void onOAuthResultPath();
-    void onLoginPage();
     void onLoginPageResult();
     void onAccountPageResult();
     void onAccountStashTabsResult();

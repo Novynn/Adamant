@@ -40,17 +40,6 @@ void Session::Request::setSessionId(const QString& sessionId) {
 //    }
 }
 
-void Session::Request::login(const QString &username, const QString &password) {
-    QNetworkRequest request = createRequest(LoginUrl());
-    // TODO(rory): Encode special characters in username / password
-    setAttribute(&request, LoginUsername, username);
-    setAttribute(&request, LoginPassword, password);
-
-    QNetworkReply *r = _manager->get(request);
-
-    connect(r, &QNetworkReply::finished, this, &Session::Request::Request::onLoginPage);
-}
-
 void Session::Request::loginWithOAuth(const QString &authorizationCode) {
     QUrl url("https://www.pathofexile.com/oauth/token");
     QUrlQuery query;
@@ -177,37 +166,6 @@ void Session::Request::fetchLeagues() {
     QNetworkReply *r = _manager->get(request);
 
     connect(r, &QNetworkReply::finished, this, &Session::Request::Request::onLeaguesResult);
-}
-
-void Session::Request::onLoginPage() {
-    QNetworkReply *reply = qobject_cast<QNetworkReply*>(QObject::sender());
-    if (reply->error()) {
-        emit loginResult(0x01, "A network error occured: " + reply->errorString());
-    }
-    else {
-        QNetworkRequest request = reply->request();
-        // Extract CSF
-        const QString hash = getCSRFToken(reply->readAll());
-        const QString username = getAttribute(&request, LoginUsername).toString();
-        const QString password = getAttribute(&request, LoginPassword).toString();
-
-        QUrlQuery query;
-        query.addQueryItem("login_email", username);
-        query.addQueryItem("login_password", password);
-        query.addQueryItem("hash", hash);
-        query.addQueryItem("login", "Login");
-        QByteArray data(query.query().toUtf8());
-
-        request = createRequest(LoginUrl());
-        setAttribute(&request, LoginUsername, username);
-        setAttribute(&request, LoginPassword, password);
-        request.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
-
-        QNetworkReply *r = _manager->post(request, data);
-
-        connect(r, &QNetworkReply::finished, this, &Session::Request::Request::onLoginPageResult);
-    }
-    reply->deleteLater();
 }
 
 void Session::Request::onLoginPageResult() {

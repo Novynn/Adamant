@@ -19,8 +19,6 @@ AdamantUI::AdamantUI(CoreService *parent)
 
     connect(_setupDialog, &SetupDialog::loginByIdRequested,
             _core->session(), &Session::Request::loginWithSessionId);
-    connect(_setupDialog, &SetupDialog::loginRequested,
-            _core->session(), &Session::Request::login);
     connect(this, &AdamantUI::requestProfileData,
             _core->session(), &Session::Request::loginWithSessionId);
 

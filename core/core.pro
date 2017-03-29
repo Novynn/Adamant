@@ -29,7 +29,6 @@ HEADERS += \
     ui/widgets/pluginitemdelegate.h \
     session/sessionrequest.h \
     items/characteritemlocation.h \
-    ui/dialogs/loginsessiondialog.h \
     ui/dialogs/ilogindialog.h \
     ui/widgets/custompage.h \
     session/forum/forumrequest.h \
@@ -52,7 +51,6 @@ SOURCES += \
     ui/widgets/pluginitemdelegate.cpp \
     session/sessionrequest.cpp \
     items/characteritemlocation.cpp \
-    ui/dialogs/loginsessiondialog.cpp \
     ui/widgets/custompage.cpp \
     session/forum/forumrequest.cpp \
     ui/dialogs/loginoauthdialog.cpp
@@ -65,5 +63,4 @@ FORMS += \
     ui/setupdialog.ui \
     ui/pages/pluginpage.ui \
     ui/widgets/pluginitem.ui \
-    ui/dialogs/loginsessiondialog.ui \
     ui/dialogs/loginoauthdialog.ui

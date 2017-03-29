@@ -106,8 +106,6 @@ bool CoreService::load(bool force) {
 
         switch (method) {
             case SetupDialog::LoginSessionId:
-            case SetupDialog::LoginEmail:
-            case SetupDialog::LoginSteam:
                 session()->loginWithSessionId(sessionId);
                 break;
             case SetupDialog::LoginOAuth:

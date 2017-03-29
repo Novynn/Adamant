@@ -307,41 +307,9 @@
            </widget>
           </item>
           <item>
-           <widget class="QCommandLinkButton" name="poeLoginButton">
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>42</height>
-             </size>
-            </property>
-            <property name="text">
-             <string>Path of Exile Account</string>
-            </property>
-           </widget>
-          </item>
-          <item>
            <widget class="QCommandLinkButton" name="sessionIdLoginButton">
             <property name="text">
-             <string>Session ID</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCommandLinkButton" name="steamLoginButton">
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>0</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>16777215</width>
-              <height>16777215</height>
-             </size>
-            </property>
-            <property name="text">
-             <string>Steam Account</string>
+             <string>Session ID (Deprecated)</string>
             </property>
            </widget>
           </item>
@@ -1032,9 +1000,7 @@
   </layout>
  </widget>
  <tabstops>
-  <tabstop>poeLoginButton</tabstop>
   <tabstop>sessionIdLoginButton</tabstop>
-  <tabstop>steamLoginButton</tabstop>
   <tabstop>continueNameButton</tabstop>
   <tabstop>poeEdit</tabstop>
   <tabstop>poeBrowseButton</tabstop>

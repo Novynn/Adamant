@@ -14,9 +14,7 @@ public:
     class ForumRequest;
 
     enum AttributeData {
-        LoginUsername = 0x01,
-        LoginPassword,
-        LoginSessionId,
+        LoginSessionId = 0x01,
         Badge,
         UserData,
         League,

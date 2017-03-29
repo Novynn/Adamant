@@ -9,16 +9,12 @@
 #include <core.h>
 #include <session/sessionrequest.h>
 
-#include <ui/dialogs/loginsessiondialog.h>
 #include <ui/dialogs/loginoauthdialog.h>
-
-#undef STEAM_SUPPORT
 
 SetupDialog::SetupDialog(QWidget *parent, CoreService* core)
     : QDialog(parent)
     , ui(new Ui::SetupDialog)
     , _core(core)
-    , _email()
     , _sessionId()
     , _accountName("Unknown")
     , _poePath()
@@ -27,12 +23,8 @@ SetupDialog::SetupDialog(QWidget *parent, CoreService* core)
 {
     ui->setupUi(this);
     //setWindowFlags(windowFlags() & ~Qt::WindowCloseButtonHint);
-#ifndef STEAM_SUPPORT
-    ui->steamLoginButton->hide();
-#endif
     setPage(SetupDialog::LoginMethodPage);
 
-    _loginMethods.insert(SetupDialog::LoginEmail, new LoginSessionDialog(this, core));
     _loginMethods.insert(SetupDialog::LoginOAuth, new LoginOAuthDialog(this, core));
 }
 
@@ -82,10 +74,6 @@ void SetupDialog::updateAccountAvatar(QImage image) {
 void SetupDialog::updateAccountName(const QString &name) {
     _accountName = name;
     ui->welcomeLabel->setText(QString("Welcome %1").arg(_accountName));
-}
-
-void SetupDialog::on_poeLoginButton_clicked() {
-    attemptLogin(SetupDialog::LoginEmail);
 }
 
 void SetupDialog::on_sessionIdLoginButton_clicked() {

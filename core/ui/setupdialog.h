@@ -25,10 +25,8 @@ public:
     };
 
     enum LoginMethod {
-        LoginEmail,
         LoginSessionId,
-        LoginOAuth,
-        LoginSteam
+        LoginOAuth
     };
 
 public:
@@ -41,7 +39,6 @@ public:
         QVariantMap map;
         map.insert("id", _sessionId);
         map.insert("access_token", _accessToken);
-        map.insert("email", _email);
         map.insert("method", (int)_method);
         map.insert("account", _accountName);
         map.insert("poe", _poePath);
@@ -59,7 +56,6 @@ public slots:
 protected:
     void closeEvent(QCloseEvent *event);
 private slots:
-    void on_poeLoginButton_clicked();
     void on_sessionIdLoginButton_clicked();
     void on_continueNameButton_clicked();
     void on_continuePathsButton_clicked();
@@ -78,14 +74,12 @@ private slots:
     void on_oauthLoginButton_clicked();
 
 signals:
-    void loginRequested(const QString &username, const QString &password);
     void loginByIdRequested(const QString &sessionId);
 private:
     Ui::SetupDialog *ui;
     CoreService* _core;
 
     LoginMethod _method;
-    QString _email;
     QString _sessionId;
     QString _accessToken;
     QString _accountName;
