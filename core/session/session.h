@@ -2,13 +2,16 @@
 #define SESSION_H
 
 #include <core_global.h>
+#include <QNetworkAccessManager>
 #include <QUrl>
-
+#include <QScopedPointer>
+#include <QPointer>
 
 class CoreService;
 
-class CORE_EXTERN Session
+class CORE_EXTERN Session : public QObject
 {
+    Q_OBJECT
 public:
     class Request;
     class ForumRequest;
@@ -20,6 +23,12 @@ public:
         League,
         Character,
         ForumSubmissionData
+    };
+
+    enum SessionLoginState {
+        Idle,
+        Success,
+        Failed
     };
 
     static QUrl BaseUrl() {
@@ -66,22 +75,59 @@ public:
         return "POESESSID";
     }
 
-    static void SetCoreService(CoreService* core);
+    Session(CoreService* parent);
+    ~Session();
 
-    static void LogError(const QString &error);
+    void resetLoginState() {
+        _loginState = SessionLoginState::Idle;
+    }
 
-    static Request* Global();
+    SessionLoginState loginState() const {
+        return _loginState;
+    }
 
-    static ForumRequest* Forum();
+    const QString accessToken() const {
+        return _accessToken;
+    }
 
-    static Request* NewRequest(QObject* parent = 0);
+    const QString sessionId() const {
+        return _sessionId;
+    }
 
+    const QString accountName() const {
+        return _accountName;
+    }
+
+    const QStringList leagues() const {
+        return _leagues;
+    }
+
+    Request* request() const {
+        return _request.data();
+    }
+
+    ForumRequest* forum() const {
+        return _forumRequest.data();
+    }
+
+    void logError(const QString &error) const;
+
+    static void SetCustomRequestAttribute(QNetworkRequest* request, AttributeData attr, const QVariant &data);
+    static const QVariant GetCustomRequestAttribute(const QNetworkRequest *request, AttributeData attr);
+    QNetworkRequest createRequest(const QUrl &url) const;
+signals:
+    void sessionChange();
 private:
-    static Request* _globalRequest;
-    static ForumRequest* _forumRequest;
-    static CoreService* _core;
+    CoreService* _core;
+    SessionLoginState _loginState;
+    QString _sessionId;
+    QString _accessToken;
+    QString _accountName;
+    QStringList _leagues;
 
-    explicit Session() {}
+    QScopedPointer<QNetworkAccessManager> _manager;
+    QScopedPointer<Request> _request;
+    QScopedPointer<ForumRequest> _forumRequest;
 };
 
 #endif // SESSION_H

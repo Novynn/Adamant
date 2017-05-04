@@ -41,14 +41,6 @@ LoginOAuthDialog::~LoginOAuthDialog()
     delete ui;
 }
 
-QString LoginOAuthDialog::getSessionId() const {
-    return QString();
-}
-
-QString LoginOAuthDialog::getToken() const {
-    return QString();
-}
-
 void LoginOAuthDialog::on_cancelButton_clicked() {
     ui->errorLabel->hide();
     reject();
@@ -56,6 +48,6 @@ void LoginOAuthDialog::on_cancelButton_clicked() {
 
 void LoginOAuthDialog::on_loginButton_clicked() {
     ui->errorLabel->hide();
-    _core->session()->loginWithOAuth(ui->oauthLineEdit->text());
+    _core->request()->loginWithOAuth(ui->oauthLineEdit->text());
     setEnabled(false);
 }

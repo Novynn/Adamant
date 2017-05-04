@@ -15,11 +15,11 @@ public:
     bool hasLocalImage(QString path);
 public slots:
     QDir cacheDir() const;
-    void fetchImage(QString path);
-    QImage getImage(QString path);
+    void fetchImage(QString path, QVariant data = QVariant());
+    QImage getImage(QString path, QVariant data = QVariant());
     QString generateFileName(const QString &path);
 signals:
-    void onImage(const QString &path, QImage image);
+    void onImage(const QString &path, const QImage image, const QVariant data = QVariant());
 private slots:
     void onImageResult();
 private:

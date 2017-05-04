@@ -8,8 +8,9 @@
 const QString POE_EDIT_THREAD = "https://www.pathofexile.com/forum/edit-thread/";
 const QString POE_REPLY_THREAD = "https://www.pathofexile.com/forum/post-reply/";
 
-Session::ForumRequest::ForumRequest(QObject* parent, QNetworkAccessManager *manager)
+Session::ForumRequest::ForumRequest(Session *parent, QNetworkAccessManager *manager)
     : QObject(parent)
+    , _session(parent)
     , network(manager)
     , timeout(60000)
 {
@@ -40,7 +41,7 @@ void Session::ForumRequest::beginRequest(ForumSubmission* submission) {
     submission->timerId = startTimer(getTimeout());
 
     submission->request = QNetworkRequest(QUrl(POE_EDIT_THREAD + submission->threadId));
-    Session::Global()->setAttribute(&submission->request, Session::ForumSubmissionData, QVariant::fromValue<ForumSubmission*>(submission));
+    Session::SetCustomRequestAttribute(&submission->request, Session::ForumSubmissionData, QVariant::fromValue<ForumSubmission*>(submission));
 
     QNetworkReply *fetched = network->get(submission->request);
     submission->state = FORUM_SUBMISSION_STARTED;
@@ -49,7 +50,8 @@ void Session::ForumRequest::beginRequest(ForumSubmission* submission) {
 }
 
 ForumSubmission* Session::ForumRequest::extractResponse(QNetworkReply *reply) {
-    ForumSubmission* submission = Session::Global()->getAttribute(reply->request(), Session::ForumSubmissionData).value<ForumSubmission*>();
+    const QNetworkRequest request = reply->request();
+    ForumSubmission* submission = Session::GetCustomRequestAttribute(&request, Session::ForumSubmissionData).value<ForumSubmission*>();
     QString error;
 
     if (!submission) return 0;
@@ -148,7 +150,7 @@ void Session::ForumRequest::submitRequest(ForumSubmission* submission) {
     submission->timerId = startTimer(getTimeout());
 
     submission->request = QNetworkRequest(QUrl(POE_EDIT_THREAD + submission->threadId));
-    Session::Global()->setAttribute(&submission->request, Session::ForumSubmissionData, QVariant::fromValue<ForumSubmission*>(submission));
+    Session::SetCustomRequestAttribute(&submission->request, Session::ForumSubmissionData, QVariant::fromValue<ForumSubmission*>(submission));
     submission->request.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
     QNetworkReply *submitted = network->post(submission->request, query.query().toUtf8());
     submission->state = FORUM_SUBMISSION_SUBMITTING;

@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core widgets
+QT       += core network widgets
 
 TARGET = Adamant
 TEMPLATE = app
@@ -13,7 +13,7 @@ RC_FILE = resources.rc
 
 DESTDIR = ../bin
 
-unix|win32: LIBS += -L$$OUT_PWD/../bin/ -ladamant
+unix|win32: LIBS += -L$$OUT_PWD/../bin -ladamant
 
 INCLUDEPATH += $$PWD/../core
 DEPENDPATH += $$PWD/../core

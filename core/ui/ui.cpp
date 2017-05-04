@@ -18,11 +18,11 @@ AdamantUI::AdamantUI(CoreService *parent)
     _setupDialog = new SetupDialog(_window, _core);
 
     connect(_setupDialog, &SetupDialog::loginByIdRequested,
-            _core->session(), &Session::Request::loginWithSessionId);
+            _core->request(), &Session::Request::loginWithSessionId);
     connect(this, &AdamantUI::requestProfileData,
-            _core->session(), &Session::Request::loginWithSessionId);
+            _core->request(), &Session::Request::loginWithSessionId);
 
-    connect(_core->session(), &Session::Request::loginResult,
+    connect(_core->request(), &Session::Request::loginResult,
             [this] (int result, QString resultString) {
         if (result == 0) {
             QString sessionId = _core->session()->sessionId();
@@ -33,9 +33,9 @@ AdamantUI::AdamantUI(CoreService *parent)
         }
     });
 
-    connect(_core->session(), &Session::Request::profileBadgeImage, _window, &MainWindow::onProfileBadgeImage);
-    connect(_core->session(), &Session::Request::profileAvatarImage, _setupDialog, &SetupDialog::updateAccountAvatar);
-    connect(_core->session(), &Session::Request::profileData, [this](QString data) {
+    connect(_core->request(), &Session::Request::profileBadgeImage, _window, &MainWindow::onProfileBadgeImage);
+    connect(_core->request(), &Session::Request::profileAvatarImage, _setupDialog, &SetupDialog::updateAccountAvatar);
+    connect(_core->request(), &Session::Request::profileData, [this](QString data) {
         QJsonDocument doc = QJsonDocument::fromJson(data.toLatin1());
         if (doc.isObject() && !doc.isEmpty()) {
             _setupDialog->updateAccountName(doc.object().value("name").toString());

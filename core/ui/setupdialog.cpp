@@ -10,6 +10,7 @@
 #include <session/sessionrequest.h>
 
 #include <ui/dialogs/loginoauthdialog.h>
+#include <ui/dialogs/loginsessioniddialog.h>
 
 SetupDialog::SetupDialog(QWidget *parent, CoreService* core)
     : QDialog(parent)
@@ -26,6 +27,7 @@ SetupDialog::SetupDialog(QWidget *parent, CoreService* core)
     setPage(SetupDialog::LoginMethodPage);
 
     _loginMethods.insert(SetupDialog::LoginOAuth, new LoginOAuthDialog(this, core));
+    _loginMethods.insert(SetupDialog::LoginSessionId, new LoginSessionIdDialog(this, core));
 }
 
 void SetupDialog::closeEvent(QCloseEvent* event) {

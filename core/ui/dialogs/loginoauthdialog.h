@@ -21,9 +21,6 @@ public:
         return "OAuth";
     }
 
-    QString getSessionId() const;
-    QString getToken() const;
-
     void showError(const QString& error);
     int exec();
 private slots:

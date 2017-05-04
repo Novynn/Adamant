@@ -11,19 +11,15 @@ CoreService::CoreService()
     , _pluginManager(new PluginManager(this))
     , _settings("data.ini", QSettings::IniFormat)
     , _sensitiveSettings("sensitive.ini", QSettings::IniFormat)
+    , _session(new Session(this))
     , _itemManager(new ItemManager(this))
     , _script(new ScriptSandbox(_pluginManager, "console", "")) {
-    Session::SetCoreService(this);
 
     _ui = new AdamantUI(this);
-    _settingUp = false;
 
     connect(_pluginManager, &PluginManager::pluginMessage, [this] (QString msg, QtMsgType type) {
         emit message(msg, type);
     });
-
-
-    connect(session(), &Session::Request::loginResult, this, &CoreService::loginResult);
 
     _script->setup();
 }
@@ -31,27 +27,11 @@ CoreService::CoreService()
 CoreService::~CoreService() {
 }
 
-#define ADD_REQUIREMENT(object, slot, type, var) \
-    _requiredData.insert(#slot, QObject::connect(object, &slot, this, [this] (type var) { \
-        QObject::disconnect(_requiredData.take(#slot)); \
-        _settings.beginGroup("data"); \
-        _settings.setValue(#var, var); \
-        _settings.endGroup(); \
-        if (_requiredData.isEmpty()) { \
-            ready(); \
-        } \
-    }))
-
-bool CoreService::load(bool force) {
+SetupDialog::LoginMethod CoreService::setup(bool force) {
     sensitiveSettings()->beginGroup("session");
     QString sessionId = sensitiveSettings()->value("id").toString();
     QString accessToken = sensitiveSettings()->value("access_token").toString();
     sensitiveSettings()->endGroup();
-
-    // Required here so that the setup dialog also gets this palette
-    getInterface()->setTheme();
-
-    getInterface()->start();
 
     SetupDialog::LoginMethod method = SetupDialog::LoginSessionId;
     if (!accessToken.isEmpty()) {
@@ -59,14 +39,13 @@ bool CoreService::load(bool force) {
     }
 
     while ((sessionId.isEmpty() && accessToken.isEmpty()) || force) {
-        // Oh no, run setup.
-        _settingUp = true;
+        getInterface()->window()->hide();
         int result = getInterface()->showSetup(); // Blocking
-        _settingUp = false;
         if (result != 0x0) {
             getInterface()->window()->close();
-            return false;
+            return SetupDialog::LoginNone;
         }
+        getInterface()->window()->show();
         force = false;
 
         QVariantMap map = getInterface()->getSetupDialog()->getData();
@@ -85,56 +64,109 @@ bool CoreService::load(bool force) {
         }
     }
 
-    // These are requirements for data we need before the application loads
-    _requiredData.clear();
+    return method;
+}
+
+bool CoreService::login(SetupDialog::LoginMethod method) {
+    connect(session(), &Session::sessionChange, this, &CoreService::sessionChange);
+
+    sensitiveSettings()->beginGroup("session");
+    QString sessionId = sensitiveSettings()->value("id").toString();
+    QString accessToken = sensitiveSettings()->value("access_token").toString();
+    sensitiveSettings()->endGroup();
+
+    // Attempt to log in
+    switch (method) {
+        case SetupDialog::LoginSessionId: {
+            request()->loginWithSessionId(sessionId);
+        } break;
+        case SetupDialog::LoginOAuth: {
+            Q_UNUSED(accessToken);
+            qFatal("OAuth not implemented!");
+        } break;
+        case SetupDialog::LoginNone:
+        default: {
+            qFatal("Logging in without a method?");
+        }
+    }
+
+    _ui->window()->setLoginProgressMessage("Logging in...");
+    return true;
+}
+
+bool CoreService::load(bool force) {
+    // Required here so that the setup dialog also gets this palette
+    getInterface()->setTheme();
+    getInterface()->start();
+
+    request()->fetchLeagues();
+
+    auto method = setup(force);
+
+    if (method == SetupDialog::LoginNone)
+        return false;
 
     // Load Plugins
     getPluginManager()->scanPlugins(true);
     getPluginManager()->verifyPlugins();
     getPluginManager()->preparePlugins();
 
-    // Load the main application!
-    _requiredData.clear();
-
-    /* Require leagues list */ {
-        ADD_REQUIREMENT(session(), Session::Request::leaguesList, QStringList, leagues);
-        session()->fetchLeagues();
-    }
-
-    /* Require profile data */ {
-        ADD_REQUIREMENT(session(), Session::Request::profileData, QString, profile);
-
-        switch (method) {
-            case SetupDialog::LoginSessionId:
-                session()->loginWithSessionId(sessionId);
-                break;
-            case SetupDialog::LoginOAuth:
-                qFatal("OAuth not implemented!");
-                break;
-        }
-        _ui->window()->setLoginProgressMessage("Logging in...");
-    }
-
-    return true;
+    return login(method);
 }
 
-void CoreService::loginResult(int result, QString resultString) {
-    if (result == 0) {
-        sensitiveSettings()->beginGroup("session");
-        sensitiveSettings()->setValue("id", session()->sessionId());
-        sensitiveSettings()->endGroup();
-        sensitiveSettings()->sync();
-    }
-    else {
-        _ui->window()->setLoginProgressMessage("Failed to log in.");
+void CoreService::sessionChange() {
+    if (session()->loginState() == Session::Success) {
+        bool finished = true;
 
-        if (!_settingUp) {
-            // We failed to log in with our current credentials, re-run setup
-            QTimer::singleShot(1000, this, [this](){
-                load(true);
-            });
+        const QString sessionId = session()->sessionId();
+        if (!sessionId.isEmpty()) {
+            sensitiveSettings()->beginGroup("session");
+            sensitiveSettings()->setValue("id", sessionId);
+            sensitiveSettings()->endGroup();
+        }
+        else {
+            finished = false;
         }
 
+        const QString name = session()->accountName();
+        if (!name.isEmpty()) {
+            sensitiveSettings()->beginGroup("session");
+            sensitiveSettings()->setValue("name", name);
+            sensitiveSettings()->endGroup();
+        }
+        else {
+            finished = false;
+        }
+
+        const QStringList leagues = session()->leagues();
+        if (!leagues.isEmpty()) {
+            sensitiveSettings()->beginGroup("session");
+            sensitiveSettings()->setValue("leagues", leagues);
+            sensitiveSettings()->endGroup();
+        }
+        else {
+            finished = false;
+        }
+
+        sensitiveSettings()->sync();
+
+        if (!finished) {
+            return;
+        }
+        disconnect(session(), &Session::sessionChange, this, &CoreService::sessionChange);
+
+        ready();
+    }
+    else if (session()->loginState() == Session::Failed){
+        _ui->window()->setLoginProgressMessage("Failed to log in.");
+        disconnect(session(), &Session::sessionChange, this, &CoreService::sessionChange);
+        session()->resetLoginState();
+
+        // NOTE(rory) Infinite loop?
+        auto method = setup(true);
+        if (method == SetupDialog::LoginNone)
+            return;
+        login(method);
     }
 }
 

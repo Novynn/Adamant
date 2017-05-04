@@ -1,4 +1,5 @@
 #include "sessionrequest.h"
+#include "core.h"
 
 #include <QNetworkCookie>
 #include <QNetworkCookieJar>
@@ -6,38 +7,25 @@
 #include <QRegularExpression>
 #include <QInputDialog>
 
-Session::Request::Request(QObject *parent)
+Session::Request::Request(Session *parent, QNetworkAccessManager* manager)
     : QObject(parent)
-    , _manager(new QNetworkAccessManager(this))
+    , _session(parent)
+    , _manager(manager)
     , _cache(new ImageCache(this))
-    , _accountName()
-    , _sessionId()
-    , _accessToken()
 {
     connect(_cache, &ImageCache::onImage, this, &Session::Request::Request::onImageResult);
     connect(_manager, &QNetworkAccessManager::sslErrors, this, [this] (QNetworkReply* reply, const QList<QSslError> &errors) {
         Q_UNUSED(errors);
         reply->ignoreSslErrors();
     });
+
+    connect(_manager,  &QNetworkAccessManager::networkAccessibleChanged, this, [this](QNetworkAccessManager::NetworkAccessibility accessible) {
+        qDebug() << "Network accessibility changed: " << accessible;
+    });
 }
 
 void Session::Request::setTimeout(int timeout) {
     Q_UNUSED(timeout)
-}
-
-void Session::Request::setSessionId(const QString& sessionId) {
-    _sessionId = sessionId;
-//    for (QNetworkCookie cookie : _manager->cookieJar()->cookiesForUrl(MainUrl())) {
-//        if (cookie.name() == SessionIdCookie().toUtf8()) {
-//            if (sessionId.isEmpty()) {
-//                _manager->cookieJar()->deleteCookie(cookie);
-//            }
-//            else {
-//                cookie.setValue(sessionId.toUtf8());
-//                _manager->cookieJar()->updateCookie(cookie);
-//            }
-//        }
-//    }
 }
 
 void Session::Request::loginWithOAuth(const QString &authorizationCode) {
@@ -47,7 +35,7 @@ void Session::Request::loginWithOAuth(const QString &authorizationCode) {
     query.addQueryItem("client_secret", "testpassword");
     query.addQueryItem("code", authorizationCode);
     query.addQueryItem("grant_type", "authorization_code");
-    QNetworkRequest request = createRequest(url);
+    QNetworkRequest request = _session->createRequest(url);
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
 
     QNetworkReply *r = _manager->post(request, query.toString().toUtf8());
@@ -61,10 +49,9 @@ void Session::Request::onOAuthResultPath() {
     }
     else {
         QJsonDocument doc = QJsonDocument::fromJson(reply->readAll());
-        _accessToken = doc.object().value("access_token").toString();
+        const QString token = doc.object().value("access_token").toString();
 
-        qDebug() << _accessToken;
-        emit loginResult(0x00, "Logged in!");
+        emit loginResult(-1, token);
     }
     reply->deleteLater();
 }
@@ -80,35 +67,32 @@ void Session::Request::loginWithSessionId(const QString &sessionId) {
     sessionStartCookie.setDomain(".pathofexile.com");
     _manager->cookieJar()->insertCookie(sessionStartCookie);
 
-    QNetworkRequest request = createRequest(LoginUrl());
-
-    _sessionId = sessionId;
+    QNetworkRequest request = _session->createRequest(LoginUrl());
     QNetworkReply *r = _manager->get(request);
 
     connect(r, &QNetworkReply::finished, this, &Session::Request::Request::onLoginPageResult);
 }
 
-void Session::Request::clear() {
-    _sessionId.clear();
-}
-
 void Session::Request::fetchProfileData() {
-    QNetworkRequest request = createRequest(ProfileDataUrl());
-    QNetworkReply *r = _manager->get(request);
-    connect(r, &QNetworkReply::finished, this, &Session::Request::Request::onProfileData);
+    // NOTE(rory): This isn't implemented on GGG's end
+//    QNetworkRequest request = createRequest(ProfileDataUrl());
+//    QNetworkReply *r = _manager->get(request);
+//    connect(r, &QNetworkReply::finished, this, &Session::Request::Request::onProfileData);
 }
 
 void Session::Request::fetchAccountBadge(const QString &badge, const QString &url) {
-    const QString badgeFile = _cache->generateFileName(url);
-    if (!_badges.contains(badge))
-        _badges.insert(badgeFile, badge);
-    fetchImage(url);
+    QVariantHash data = {
+        {"type", "badge"},
+        {"badge", badge}
+    };
+
+    fetchImage(url, data);
 }
 
-void Session::Request::fetchImage(const QString &url) {
-    QImage image = _cache->getImage(url);
+void Session::Request::fetchImage(const QString &url, const QVariant &variant) {
+    QImage image = _cache->getImage(url, variant);
     if (!image.isNull()) {
-        onImageResult(url, image);
+        onImageResult(url, image, variant);
     }
 }
 
@@ -122,9 +106,9 @@ void Session::Request::fetchAccountStashTabs(const QString &accountName, const Q
     QUrl url = StashUrl();
     url.setQuery(query);
 
-    QNetworkRequest request = createRequest(url);
-    setAttribute(&request, UserData, data);
-    setAttribute(&request, League, league);
+    QNetworkRequest request = _session->createRequest(url);
+    Session::SetCustomRequestAttribute(&request, UserData, data);
+    Session::SetCustomRequestAttribute(&request, League, league);
     QNetworkReply *r = _manager->get(request);
 
     connect(r, &QNetworkReply::finished, this, &Session::Request::Request::onAccountStashTabsResult);
@@ -137,8 +121,8 @@ void Session::Request::fetchAccountCharacters(const QString &accountName,
     QUrl url = CharactersUrl();
     url.setQuery(query);
 
-    QNetworkRequest request = createRequest(url);
-    setAttribute(&request, UserData, data);
+    QNetworkRequest request = _session->createRequest(url);
+    Session::SetCustomRequestAttribute(&request, UserData, data);
     QNetworkReply *r = _manager->get(request);
 
     connect(r, &QNetworkReply::finished, this, &Session::Request::Request::onAccountCharactersResult);
@@ -152,16 +136,16 @@ void Session::Request::fetchAccountCharacterItems(const QString &accountName, co
     QUrl url = CharacterItemsUrl();
     url.setQuery(query);
 
-    QNetworkRequest request = createRequest(url);
-    setAttribute(&request, UserData, data);
-    setAttribute(&request, Character, character);
+    QNetworkRequest request = _session->createRequest(url);
+    Session::SetCustomRequestAttribute(&request, UserData, data);
+    Session::SetCustomRequestAttribute(&request, Character, character);
     QNetworkReply *r = _manager->get(request);
 
     connect(r, &QNetworkReply::finished, this, &Session::Request::Request::onAccountCharacterItemsResult);
 }
 
 void Session::Request::fetchLeagues() {
-    QNetworkRequest request = createRequest(LeaguesUrl());
+    QNetworkRequest request = _session->createRequest(LeaguesUrl());
     request.setAttribute(QNetworkRequest::CookieSaveControlAttribute, QNetworkRequest::Manual);
     QNetworkReply *r = _manager->get(request);
 
@@ -175,21 +159,19 @@ void Session::Request::onLoginPageResult() {
         emit loginResult(0x01, QString("Failed to log in (invalid password or expired session ID, status: %1)").arg(status));
     }
     else {
+        bool success = false;
         QList<QNetworkCookie> cookies = _manager->cookieJar()->cookiesForUrl(MainUrl());
         for (auto &cookie : cookies) {
             if (QString(cookie.name()) == SessionIdCookie()) {
-                _sessionId = cookie.value();
-                emit loginResult(0x00, "Logged in!");
+                emit loginResult(0x00, cookie.value());
+                success = true;
                 break;
             }
         }
 
-        if (_sessionId.isEmpty()) {
-            qWarning() << "Failed to log in..." << status;
-        }
-        else {
-
-            QNetworkRequest request = createRequest(AccountUrl());
+        if (success) {
+            // NOTE(rory): Proceed to account page
+            QNetworkRequest request = _session->createRequest(AccountUrl());
             QNetworkReply *r = _manager->get(request);
 
             connect(r, &QNetworkReply::finished, this, &Session::Request::Request::onAccountPageResult);
@@ -222,9 +204,6 @@ void Session::Request::onAccountPageResult() {
         const auto badges = getAccountBadges(data);
         const int messages = getAccountMessagesUnread(data);
 
-        // Store the account name
-        _accountName = name;
-
         if (name.isEmpty()) {
             qWarning() << "Account name is empty!" << data << reply->errorString();
 
@@ -249,9 +228,7 @@ void Session::Request::onAccountPageResult() {
 
         // Request Avatar
         if (!avatar.isEmpty()) {
-            if (!_avatars.contains(avatar))
-                _avatars.append(avatar);
-            fetchImage(avatar);
+            fetchImage(avatar, QVariantHash{{"type", "avatar"}});
         }
         // Request Badges
         for (const QString &key : badges.uniqueKeys()){
@@ -283,13 +260,19 @@ void Session::Request::onLeaguesResult() {
     reply->deleteLater();
 }
 
-void Session::Request::onImageResult(const QString &path, const QImage &image) {
-    if (_badges.contains(path)) {
-        const QString badge = _badges.value(path);
+void Session::Request::onImageResult(const QString &path, const QImage &image, const QVariant &data) {
+    Q_UNUSED(path);
+    QVariantHash hash = data.toHash();
+    const QString type = hash.value("type").toString();
+    if (type == "badge") {
+        const QString badge = hash.value("badge").toString();
         emit profileBadgeImage(badge, image);
     }
-    else if (_avatars.contains(path)) {
+    else if (type == "avatar") {
         emit profileAvatarImage(image);
+    }
+    else {
+        qWarning() << "Unknown image type recieved in " << __FUNCTION__;
     }
 }
 
@@ -298,7 +281,7 @@ void Session::Request::onAccountStashTabsResult() {
     QByteArray response;
     if (reply->error()) {
         const QString errorMessage = QString("Network error in %1: %2").arg(__FUNCTION__).arg(reply->errorString());
-        Session::LogError(errorMessage);
+        _session->logError(errorMessage);
         QJsonObject error({
             {
                 "error", QJsonObject({
@@ -314,8 +297,8 @@ void Session::Request::onAccountStashTabsResult() {
     }
 
     QNetworkRequest request = reply->request();
-    QVariant data = getAttribute(&request, UserData);
-    QString league = getAttribute(&request, League).toString();
+    QVariant data = Session::GetCustomRequestAttribute(&request, UserData);
+    QString league = Session::GetCustomRequestAttribute(&request, League).toString();
 
     emit accountStashTabs(league, response, data);
     QJsonDocument doc = QJsonDocument::fromJson(response);
@@ -329,7 +312,7 @@ void Session::Request::onAccountCharactersResult() {
 
     QByteArray response = reply->readAll();
     QNetworkRequest request = reply->request();
-    QVariant data = getAttribute(&request, UserData);
+    QVariant data = Session::GetCustomRequestAttribute(&request, UserData);
 
     emit accountCharacters(response, data);
     QJsonDocument doc = QJsonDocument::fromJson(response);
@@ -343,8 +326,8 @@ void Session::Request::onAccountCharacterItemsResult() {
 
     QByteArray response = reply->readAll();
     QNetworkRequest request = reply->request();
-    QVariant data = getAttribute(&request, UserData);
-    QString character = getAttribute(&request, Character).toString();
+    QVariant data = Session::GetCustomRequestAttribute(&request, UserData);
+    QString character = Session::GetCustomRequestAttribute(&request, Character).toString();
 
     emit accountCharacterItems(character, response, data);
     QJsonDocument doc = QJsonDocument::fromJson(response);
