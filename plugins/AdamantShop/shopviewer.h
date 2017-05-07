@@ -41,6 +41,8 @@ private slots:
     void on_addThreadButton_clicked();
     void on_updateButton_clicked();
 
+    void on_previewButton_clicked();
+
 private:
     AdamantShopPlugin* _plugin;
     StashViewer* _stashViewer;

@@ -52,6 +52,7 @@ public:
     }
 
     void updateShop(const Shop *shop);
+    QMap<QString, QString> previewShop(const Shop* shop);
 public slots:
     void OnLoad();
 private:

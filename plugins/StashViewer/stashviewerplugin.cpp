@@ -42,9 +42,7 @@ void StashViewerPlugin::OnLoad() {
             _viewer->UpdateTab(league, tab, throttled);
     });
 
-    Core()->settings()->beginGroup("data");
-    const QStringList leagues = Core()->settings()->value("leagues").toStringList();
-    Core()->settings()->endGroup();
+    const QStringList leagues = Core()->session()->leagues();
     _viewer->OnLeaguesList(leagues);
     _characterViewer->setLeagues(leagues);
 

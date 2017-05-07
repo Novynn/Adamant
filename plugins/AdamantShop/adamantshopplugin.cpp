@@ -112,7 +112,7 @@ bool AdamantShopPlugin::saveShop(const Shop* shop) const {
     return false;
 }
 
-void AdamantShopPlugin::updateShop(const Shop* shop) {
+QMap<QString, QString> AdamantShopPlugin::previewShop(const Shop* shop) {
     auto manager = Core()->getItemManager();
     auto resolver = [manager, shop](const QString &id) -> QSharedPointer<const Item> {
         // TODO(rory): Optimize this, using index on public item id -> Item*
@@ -174,19 +174,17 @@ void AdamantShopPlugin::updateShop(const Shop* shop) {
         return result;
     });
 
-    auto result = shop->generateShopContent("Welcome to my shop!\n", "{{#allitems}}{{/allitems}}", "\nThanks for visiting!", data);
+    return shop->generateShopContent("Welcome to my shop!\n", "{{#allitems}}{{/allitems}}", "\nThanks for visiting!", data);
+}
 
-    for (const QString &threadId : result.keys()) {
-        const QString &content = result.value(threadId);
+void AdamantShopPlugin::updateShop(const Shop* shop) {
+    Q_UNUSED(shop);
 
-        qDebug() << qPrintable(threadId + "\n") << qPrintable(content);
-
-//        ForumSubmission* s = new ForumSubmission();
-//        s->threadId = threadId;
-//        s->data.insert("content", content);
-//        _submissions.append(s);
-//        Core()->forum()->beginRequest(s);
-    }
+    //        ForumSubmission* s = new ForumSubmission();
+    //        s->threadId = threadId;
+    //        s->data.insert("content", content);
+    //        _submissions.append(s);
+    //        Core()->forum()->beginRequest(s);
 }
 
 void AdamantShopPlugin::OnLoad() {
@@ -201,9 +199,12 @@ void AdamantShopPlugin::OnLoad() {
         return;
     }
 
-    Core()->settings()->beginGroup("data");
-    const QStringList leagues = Core()->settings()->value("leagues").toStringList();
-    Core()->settings()->endGroup();
+    QStringList leagues;
+    for (const QString &league : Core()->session()->leagues()) {
+        // TODO(rory): Use flags returned with leagues rather than this check
+        if (league.contains("SSF")) continue;
+        leagues << league;
+    }
 
     {
         _viewer = new ShopViewer(this, _stashViewer);

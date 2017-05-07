@@ -139,12 +139,7 @@ void CoreService::sessionChange() {
         }
 
         const QStringList leagues = session()->leagues();
-        if (!leagues.isEmpty()) {
-            sensitiveSettings()->beginGroup("session");
-            sensitiveSettings()->setValue("leagues", leagues);
-            sensitiveSettings()->endGroup();
-        }
-        else {
+        if (leagues.isEmpty()) {
             finished = false;
         }
 
