@@ -43,8 +43,8 @@ public:
         return QPointF(item.data("x").toFloat(), item.data("y").toFloat());
     }
 
-    virtual QSize itemSize(const Item &item) const {
-        return QSize(item.data("w").toInt(), item.data("h").toInt());
+    virtual QSizeF itemSize(const Item &item) const {
+        return QSizeF(item.data("w").toInt(), item.data("h").toInt());
     }
 
     virtual void setItems(ItemList items, const QJsonObject &layout = QJsonObject()) {

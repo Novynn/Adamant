@@ -19,7 +19,7 @@ public:
     bool operator==(const ItemLocation &other) const final;
     QJsonObject toJson() const final;
     QPointF itemPos(const Item &item) const;
-    QSize itemSize(const Item &item) const;
+    QSizeF itemSize(const Item &item) const;
 
 private:
     QString _name;

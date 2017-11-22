@@ -13,7 +13,11 @@ enum class FrameType {
     Rare        = 2,
     Unique      = 3,
     Gem         = 4,
-    Currency    = 5
+    Currency    = 5,
+    Card,
+    Quest,
+    Prophecy,
+    Foil,
 };
 
 class ItemRenderer {
@@ -183,16 +187,21 @@ public:
             "Rare",
             "Unique",
             "Gem",
-            "Currency"
+            "",
+            "Quest",
+            "Prophecy",
+            "Foil",
         };
 
         if (typeIndex >= FrameToKey.count()) typeIndex = 0;
 
         QString key = FrameToKey.at(typeIndex);
 
-        tooltip.ui->itemHeaderLeft->setStyleSheet(("border-image: url(:/tooltip/ItemHeader" + key + suffix + "Left.png);"));
-        tooltip.ui->itemNameContainerWidget->setStyleSheet(("border-image: url(:/tooltip/ItemHeader" + key + suffix + "Middle.png);"));
-        tooltip.ui->itemHeaderRight->setStyleSheet(("border-image: url(:/tooltip/ItemHeader" + key + suffix + "Right.png);"));
+        if (!key.isEmpty()) {
+            tooltip.ui->itemHeaderLeft->setStyleSheet(("border-image: url(:/tooltip/ItemHeader" + key + suffix + "Left.png);"));
+            tooltip.ui->itemNameContainerWidget->setStyleSheet(("border-image: url(:/tooltip/ItemHeader" + key + suffix + "Middle.png);"));
+            tooltip.ui->itemHeaderRight->setStyleSheet(("border-image: url(:/tooltip/ItemHeader" + key + suffix + "Right.png);"));
+        }
 
         tooltip.ui->itemNameFirstLine->setText(name);
         tooltip.ui->itemNameSecondLine->setText(typeLine);
@@ -203,7 +212,11 @@ public:
             "#ff7",
             "#af6025",
             "#1ba29b",
-            "#aa9e82"
+            "#aa9e82",
+            "",
+            "#4ae63a",
+            "#b54bff",
+            "#82ad6a",
         };
 
         QString css = "border-image: none; font-size: 19px; color: " + FrameToColor[typeIndex];

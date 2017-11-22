@@ -25,16 +25,16 @@ GraphicItem::GraphicItem(QGraphicsItem *parent, const ItemLocation* location, QS
     , _location(location) {
 
     QPointF pos = location->itemPos(*item);
-    QSize size = location->itemSize(*item);
-
     setPos(pos * 47.4645);
-    _width = size.width();
-    _height = size.height();
 
+    QSize size = (location->itemSize(*item) * 47.4645).toSize();
+    if (size.height() == 0 || size.width() == 0) {
+        qDebug() << "Size invalid!" << size;
+    }
     static QPixmap normalBack = QPixmap(":/images/inventory_item_background.png", "png");
     static QPixmap unidentifiedBack = QPixmap(":/images/item_bg_unidentified.png", "png");
-
-    setPixmap((item->data("identified").toBool()) ? normalBack.scaled(size * 47) : unidentifiedBack.scaled(size * 47));
+    const bool identified = item->data("identified").toBool();
+    setPixmap(identified ? normalBack.scaled(size) : unidentifiedBack.scaled(size));
 
     setAcceptHoverEvents(true);
     setShapeMode(BoundingRectShape);
@@ -211,6 +211,7 @@ QSharedPointer<const Item> GraphicItem::GetItem() const {
 }
 
 void GraphicItem::ShowLinks(bool show, ShowLinkReason reason) {
+#if 0
     if (show) {
         _linkReason.push(reason);
         if (_linkOverlay == nullptr) {
@@ -227,6 +228,7 @@ void GraphicItem::ShowLinks(bool show, ShowLinkReason reason) {
         if (_linkReason.isEmpty())
             _linkOverlay->hide();
     }
+#endif
 }
 
 void GraphicItem::ShowTooltip(bool show) {

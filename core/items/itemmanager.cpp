@@ -404,7 +404,24 @@ void ItemManager::onStashTabResult(QString league, QByteArray json, QVariant dat
     // TODO(rory): Currently we waste a stash tab fetch when we index, this could be made smarter
     if (foundIndex != -1 && foundIndex == instance->tab->tabIndex) {
         if (!error) {
-            QJsonObject layout = doc.object().value("currencyLayout").toObject();
+            static const QStringList Types = {
+                "currencyLayout",
+                "divinationLayout",
+                "essenceLayout",
+                "quadLayout",
+                "mapLayout",
+            };
+            QJsonObject layout;
+
+            for (const QString &type : Types) {
+                if (doc.object().contains(type)) {
+                    const QJsonValue val = doc.object().value(type);
+                    if (!val.isObject()) continue;
+                    layout = val.toObject();
+                    break;
+                }
+            }
+
             QJsonArray items = doc.object().value("items").toArray();
             ItemList itemObjects;
             for (QJsonValue itemVal : items) {

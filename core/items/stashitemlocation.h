@@ -21,7 +21,13 @@ public:
     enum Type {
         Normal,
         Premium,
-        Currency
+        UNKNOWN_0,
+        Currency,
+        UNKNOWN_1,
+        Map,
+        Divination,
+        Essence,
+        Quad,
     };
     Q_ENUM(Type)
 
@@ -44,7 +50,7 @@ public:
     QJsonObject toJson();
     bool fromJson(const QJsonObject& object);
     QPointF itemPos(const Item &item) const;
-    QSize itemSize(const Item &item) const;
+    QSizeF itemSize(const Item &item) const;
     int tabIndex() const;
 
     int getAutoUpdateInterval() const {

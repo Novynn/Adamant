@@ -81,8 +81,8 @@ QPointF CharacterItemLocation::itemPos(const Item &item) const {
     return pos;
 }
 
-QSize CharacterItemLocation::itemSize(const Item &item) const {
-    QSize size = ItemLocation::itemSize(item);
+QSizeF CharacterItemLocation::itemSize(const Item &item) const {
+    QSizeF size = ItemLocation::itemSize(item);
     QString inventoryId = item.data("inventoryId").toString();
 
     if ((inventoryId.startsWith("Weapon") || inventoryId.startsWith("Offhand")) &&

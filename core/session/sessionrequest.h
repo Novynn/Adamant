@@ -11,10 +11,9 @@
 #include <QJsonValue>
 #include <QJsonArray>
 
-
 #define CHECK_REPLY \
     QNetworkReply *reply = qobject_cast<QNetworkReply*>(QObject::sender()); \
-    if (reply->error()) { \
+    if (reply->error() != QNetworkReply::NoError) { \
         Session::LogError(QString("Network error in %1: %2").arg(__FUNCTION__).arg(reply->errorString())); \
         reply->deleteLater(); \
         return; \

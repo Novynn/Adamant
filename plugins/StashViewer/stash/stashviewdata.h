@@ -41,7 +41,8 @@ public:
     }
 
     void setStatus(const QString &status) {
-        _item->setStatusTip(QString("%1 - %2").arg(_tab->header()).arg(status));
+        const QString type = StashItemLocation::TypeToName(_tab->type());
+        _item->setStatusTip(QString("%1 [%2] - %3").arg(_tab->header()).arg(type).arg(status));
     }
 
     void setLoaded(bool loaded=true, bool throttled=false) {
