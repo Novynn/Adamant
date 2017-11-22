@@ -42,7 +42,7 @@ bool ImageCache::hasLocalImage(QString path) {
     return false;
 }
 
-QImage ImageCache::getImage(QString path) {
+QImage ImageCache::getImage(QString path, QVariant data) {
     QString file = generateFileName(path);
     QString local = cacheDir().absoluteFilePath(file);
 
@@ -57,14 +57,15 @@ QImage ImageCache::getImage(QString path) {
             return image;
         }
     }
-    fetchImage(path);
+    fetchImage(path, data);
     return QImage();
 }
 
-void ImageCache::fetchImage(QString path) {
+void ImageCache::fetchImage(QString path, QVariant data) {
     QString file = generateFileName(path);
     QNetworkRequest request = QNetworkRequest(path);
     request.setAttribute(QNetworkRequest::User, file);
+    request.setAttribute((QNetworkRequest::Attribute)(QNetworkRequest::User + 1), data);
     QNetworkReply *r = _manager->get(request);
     connect(r, &QNetworkReply::finished, this, &ImageCache::onImageResult);
 }
@@ -91,10 +92,11 @@ void ImageCache::onImageResult() {
     else {
         QNetworkRequest request = reply->request();
         const QString file = request.attribute(QNetworkRequest::User).toString();
-        QImage image = QImage::fromData(reply->readAll(), "png");
+        const QVariant data = request.attribute((QNetworkRequest::Attribute)(QNetworkRequest::User + 1));
+        const QImage image = QImage::fromData(reply->readAll(), "png");
         if (!image.isNull()) {
             save(file, image);
-            emit onImage(file, image);
+            emit onImage(file, image, data);
         }
     }
     reply->deleteLater();

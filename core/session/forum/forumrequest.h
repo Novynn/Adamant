@@ -24,7 +24,7 @@ class CORE_EXTERN Session::ForumRequest : public QObject
 {
     Q_OBJECT
 public:
-    explicit ForumRequest(QObject* parent, QNetworkAccessManager* manager);
+    explicit ForumRequest(Session* parent, QNetworkAccessManager* manager);
 
     bool isSubmitting(const QString &threadId) {
         return submissions.contains(threadId) &&
@@ -56,6 +56,7 @@ private slots:
     void onSubmissionPageFinished();
     void onSubmitted();
 private:
+    Session* _session;
     ForumSubmission* extractResponse(QNetworkReply *reply);
     void submitRequest(ForumSubmission* submission);
     void removeRequest(ForumSubmission* submission);

@@ -32,7 +32,8 @@ HEADERS += \
     ui/dialogs/ilogindialog.h \
     ui/widgets/custompage.h \
     session/forum/forumrequest.h \
-    ui/dialogs/loginoauthdialog.h
+    ui/dialogs/loginoauthdialog.h \
+    ui/dialogs/loginsessioniddialog.h
 
 SOURCES += \
     core.cpp \
@@ -53,7 +54,8 @@ SOURCES += \
     items/characteritemlocation.cpp \
     ui/widgets/custompage.cpp \
     session/forum/forumrequest.cpp \
-    ui/dialogs/loginoauthdialog.cpp
+    ui/dialogs/loginoauthdialog.cpp \
+    ui/dialogs/loginsessioniddialog.cpp
 
 RESOURCES += \
     ui/res/res.qrc
@@ -63,4 +65,5 @@ FORMS += \
     ui/setupdialog.ui \
     ui/pages/pluginpage.ui \
     ui/widgets/pluginitem.ui \
-    ui/dialogs/loginoauthdialog.ui
+    ui/dialogs/loginoauthdialog.ui \
+    ui/dialogs/loginsessioniddialog.ui

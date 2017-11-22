@@ -17,8 +17,8 @@ ItemManager::ItemManager(CoreService *parent)
     : QObject(parent)
     , _core(parent)
 {
-    connect(_core->session(), &Session::Request::accountStashTabs, this, &ItemManager::onStashTabResult);
-    connect(_core->session(), &Session::Request::accountCharacterItems, this, &ItemManager::onCharacterItemsResult);
+    connect(_core->request(), &Session::Request::accountStashTabs, this, &ItemManager::onStashTabResult);
+    connect(_core->request(), &Session::Request::accountCharacterItems, this, &ItemManager::onCharacterItemsResult);
 }
 
 void ItemManager::fetchCharacterItems(const QString& characterName, const QString &classType, int level) {
@@ -199,14 +199,14 @@ void ItemManager::fetchStashTab(ItemManagerInstance *instance) {
     if (data.isEmpty()) {
         data = "index_" + instance->tab->league;
     }
-    _core->session()->fetchAccountStashTabs(instance->accountName, instance->tab->league,
+    _core->request()->fetchAccountStashTabs(instance->accountName, instance->tab->league,
                                             (instance->tab->tabIndex == -1) ? 0 : instance->tab->tabIndex, true,
                                             data);
     instance->sent = true;
 }
 
 void ItemManager::fetchCharacter(ItemManagerInstance* instance) {
-    _core->session()->fetchAccountCharacterItems(instance->accountName, instance->character->name);
+    _core->request()->fetchAccountCharacterItems(instance->accountName, instance->character->name);
     instance->sent = true;
 }
 

@@ -25,6 +25,7 @@ public:
     };
 
     enum LoginMethod {
+        LoginNone,
         LoginSessionId,
         LoginOAuth
     };

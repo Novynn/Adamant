@@ -11,7 +11,6 @@ public:
 //        setWindowFlags(Qt::Tool|Qt::CustomizeWindowHint);
     }
     virtual QString getMethodName() const = 0;
-    virtual QString getSessionId() const = 0;
     virtual void showError(const QString& error) = 0;
 };
 

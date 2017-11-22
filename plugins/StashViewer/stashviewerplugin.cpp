@@ -42,13 +42,11 @@ void StashViewerPlugin::OnLoad() {
             _viewer->UpdateTab(league, tab, throttled);
     });
 
-    Core()->settings()->beginGroup("data");
-    const QStringList leagues = Core()->settings()->value("leagues").toStringList();
-    Core()->settings()->endGroup();
+    const QStringList leagues = Core()->session()->leagues();
     _viewer->OnLeaguesList(leagues);
     _characterViewer->setLeagues(leagues);
 
-    connect(Core()->session(), &Session::Request::accountCharactersJson, [this] (QJsonDocument doc, QVariant) {
+    connect(Core()->request(), &Session::Request::accountCharactersJson, [this] (QJsonDocument doc, QVariant) {
         QList<Character> characters;
         for (QJsonValue charVal : doc.array()) {
             QJsonObject charObj = charVal.toObject();
@@ -74,7 +72,7 @@ void StashViewerPlugin::OnLoad() {
         Core()->getItemManager()->saveStash(league, id);
     });
 
-    connect(_viewer, &StashViewer::RequestLeaguesList, Core()->session(), &Session::Request::fetchLeagues);
+    connect(_viewer, &StashViewer::RequestLeaguesList, Core()->request(), &Session::Request::fetchLeagues);
     connect(_viewer, &StashViewer::RequestStashTabList, [this](QString league) {
         Core()->getItemManager()->fetchStashTab(league, "");
     });
@@ -93,5 +91,10 @@ void StashViewerPlugin::OnLoad() {
     }
 
     //Core()->getItemManager()->fe();
-    Core()->session()->fetchAccountCharacters(Core()->session()->accountName());
+    const QString name = Core()->session()->accountName();
+    if (!name.isEmpty())
+        Core()->request()->fetchAccountCharacters(name);
+    else {
+//        connect(Core()->request(), &Session::Request::profileData)
+    }
 }

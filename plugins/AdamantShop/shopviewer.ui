@@ -256,11 +256,11 @@
             <string>Coming soon!</string>
            </property>
            <property name="currentText">
-            <string>Select Template...</string>
+            <string>Default Template</string>
            </property>
            <item>
             <property name="text">
-             <string>Select Template...</string>
+             <string>Default Template</string>
             </property>
            </item>
           </widget>

@@ -9,6 +9,7 @@
 #include <QSettings>
 #include <QDebug>
 
+#include "ui/setupdialog.h"
 #include "session/session.h"
 class AdamantUI;
 class Adamant;
@@ -61,12 +62,16 @@ public:
         return _script;
     }
 
-    Q_INVOKABLE Session::Request* session() {
-        return Session::Global();
+    Q_INVOKABLE Session* session() {
+        return _session;
+    }
+
+    Q_INVOKABLE Session::Request* request() {
+        return _session->request();
     }
 
     Q_INVOKABLE Session::ForumRequest* forum() {
-        return Session::Forum();
+        return _session->forum();
     }
 
     Q_INVOKABLE QSettings* settings() {
@@ -84,23 +89,24 @@ public:
     Q_INVOKABLE ItemManager* getItemManager() {
         return _itemManager;
     }
+protected:
+    bool login(SetupDialog::LoginMethod method);
+    SetupDialog::LoginMethod setup(bool force);
 signals:
     void message(const QString &message, QtMsgType type);
 private slots:
     void ready();
 public slots:
     void loggedMessage(const QString &message, QtMsgType type);
-    void loginResult(int result, QString resultString);
+    void sessionChange();
 private:
     PluginManager* _pluginManager;
     QSettings _settings;
     QSettings _sensitiveSettings;
+    Session* _session;
     ItemManager* _itemManager;
     ScriptSandbox* _script;
     AdamantUI* _ui;
-    bool _settingUp;
-
-    QMap<QString, QMetaObject::Connection> _requiredData;
 };
 
 Q_DECLARE_METATYPE(CoreService*)

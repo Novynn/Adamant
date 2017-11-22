@@ -11,10 +11,12 @@
 #include <QJsonValue>
 #include <QJsonArray>
 
+class CoreService;
+
 #define CHECK_REPLY \
     QNetworkReply *reply = qobject_cast<QNetworkReply*>(QObject::sender()); \
     if (reply->error() != QNetworkReply::NoError) { \
-        Session::LogError(QString("Network error in %1: %2").arg(__FUNCTION__).arg(reply->errorString())); \
+        _session->logError(QString("Network error in %1: %2").arg(__FUNCTION__).arg(reply->errorString())); \
         reply->deleteLater(); \
         return; \
     }
@@ -23,31 +25,15 @@ class CORE_EXTERN Session::Request : public QObject
 {
     Q_OBJECT
 public:
-    explicit Request(QObject* parent = 0);
+    Request(Session* parent, QNetworkAccessManager* manager);
 
-    QString sessionId() const {
-        return _sessionId;
-    }
-
-    QString accessToken() const {
-        return _accessToken;
-    }
-
-    QString accountName() const {
-        return _accountName;
-    }
-
-    Q_PROPERTY(QString sessionId MEMBER _sessionId NOTIFY sessionIdChanged READ sessionId)
-    Q_PROPERTY(QString accountName MEMBER _accountName READ accountName)
-    void loginWithOAuth(const QString &authorizationCode);
 public slots:
     void loginWithSessionId(const QString &sessionId);
-    void clear();
+    void loginWithOAuth(const QString &authorizationCode);
 
     void fetchProfileData();
-
     void fetchAccountBadge(const QString &badge, const QString &url);
-    void fetchImage(const QString &url);
+    void fetchImage(const QString &url, const QVariant &variant = QVariant());
 
     void fetchAccountStashTabs(const QString &accountName, const QString &league, int tabIndex = 0,
                                            bool tabs = true, QVariant data = QVariant());
@@ -59,12 +45,6 @@ public slots:
     void fetchLeagues();
 
     void setTimeout(int timeout);
-    void setAccount(const QString &account) {
-        _accountName = account;
-    }
-    void setSessionId(const QString &sessionId);
-    //void setListenToAll();
-
 private slots:
     void onOAuthResultPath();
     void onLoginPageResult();
@@ -74,7 +54,7 @@ private slots:
     void onAccountCharacterItemsResult();
     void onLeaguesResult();
 
-    void onImageResult(const QString &path, const QImage &image);
+    void onImageResult(const QString &path, const QImage &image, const QVariant &data);
 
     void onProfileData();
 protected:
@@ -102,37 +82,10 @@ signals:
 
     void leaguesList(QStringList leagues);
 private:
+    const Session* _session;
     QNetworkAccessManager* _manager;
+
     ImageCache* _cache;
-    QString _accountName;
-    QString _sessionId;
-    QString _accessToken;
-
-    QHash<QString, QString> _badges;
-    QStringList _avatars;
-
-    inline void setAttribute(QNetworkRequest* request, AttributeData attr, const QVariant &data) {
-        request->setAttribute((QNetworkRequest::Attribute)(QNetworkRequest::User + attr), data);
-    }
-
-    inline QVariant getAttribute(QNetworkRequest* request, AttributeData attr) {
-        return request->attribute((QNetworkRequest::Attribute)(QNetworkRequest::User + attr));
-    }
-
-    inline QVariant getAttribute(QNetworkRequest request, AttributeData attr) {
-        return request.attribute((QNetworkRequest::Attribute)(QNetworkRequest::User + attr));
-    }
-
-    inline QNetworkRequest createRequest(const QUrl &url) {
-        auto request = QNetworkRequest(url);
-        if (!_accessToken.isEmpty()) {
-            request.setRawHeader("Authorization", QString("Bearer %1").arg(_accessToken).toUtf8());
-        }
-        return request;
-    }
-
-    friend class ForumRequest;
-    friend class Session;
 };
 Q_DECLARE_METATYPE(Session::Request*)
 

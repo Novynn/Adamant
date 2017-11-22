@@ -245,6 +245,14 @@ void ShopViewer::on_addThreadButton_clicked() {
 }
 
 void ShopViewer::on_updateButton_clicked() {
+}
+
+void ShopViewer::on_previewButton_clicked() {
     if (_currentShop == nullptr) return;
-    _plugin->updateShop(_currentShop);
+    auto result = _plugin->previewShop(_currentShop);
+
+    for (auto threadId : result) {
+        const auto &content = result.value(threadId);
+        qDebug() << threadId << content;
+    }
 }

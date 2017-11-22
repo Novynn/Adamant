@@ -192,7 +192,7 @@ public:
         return _items.uniqueKeys();
     }
 
-    QHash<QString, QString> generateShopContent(const QString &headerInput, const QString &bodyInput, const QString &footerInput,
+    QMap<QString, QString> generateShopContent(const QString &headerInput, const QString &bodyInput, const QString &footerInput,
                                                 const QVariantHash &contextData) const {
         const int MaxThreadSize = 50000;
 
@@ -208,7 +208,7 @@ public:
         renderer.resetPages();
         renderer.render(bodyInput, &context);
 
-        QHash<QString, QString> result;
+        QMap<QString, QString> result;
         QStringList pages = renderer.getPages();
         for (const ShopThread &thread : _threads) {
             const QString content = QString("%1%2%3").arg(header).arg(pages.isEmpty() ? QString() : pages.takeFirst()).arg(footer);

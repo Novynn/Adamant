@@ -3,33 +3,59 @@
 #include "sessionrequest.h"
 #include "forum/forumrequest.h"
 
-Session::Request* Session::_globalRequest = nullptr;
-Session::ForumRequest* Session::_forumRequest = nullptr;
-CoreService* Session::_core = nullptr;
+Session::Session(CoreService *parent)
+    : QObject(parent)
+    , _core(parent)
+    , _loginState (SessionLoginState::Idle) {
+    _manager.reset(new QNetworkAccessManager(parent));
+    _request.reset(new Request(this, _manager.data()));
+    _forumRequest.reset(new ForumRequest(this, _manager.data()));
 
-void Session::SetCoreService(CoreService *core) {
-    _core = core;
+    connect(_request.data(), &Session::Request::loginResult, this, [this](int result, const QString &data){
+        if (result == 0x00) {
+            _sessionId = data;
+            _loginState = SessionLoginState::Success;
+        }
+        else {
+            _loginState = SessionLoginState::Failed;
+        }
+        emit sessionChange();
+    });
+
+    connect(_request.data(), &Session::Request::profileData, this, [this](QString data) {
+        QJsonDocument doc = QJsonDocument::fromJson(data.toLatin1());
+        qDebug() << doc.object().value("name").toString();
+        _accountName = doc.object().value("name").toString();
+        emit sessionChange();
+    });
+
+    connect(_request.data(), &Session::Request::leaguesList, this, [this](QStringList leagues) {
+        _leagues = leagues;
+        emit sessionChange();
+    });
 }
 
-void Session::LogError(const QString &error) {
+Session::~Session() {
+
+}
+
+void Session::logError(const QString &error) const {
     emit _core->message(error, QtMsgType::QtWarningMsg);
 }
 
-Session::Request* Session::Global() {
-    if (_globalRequest == nullptr) {
-        _globalRequest = NewRequest(_core);
-    }
-    return _globalRequest;
+void Session::SetCustomRequestAttribute(QNetworkRequest *request, Session::AttributeData attr, const QVariant &data) {
+    request->setAttribute((QNetworkRequest::Attribute)(QNetworkRequest::User + attr), data);
 }
 
-Session::ForumRequest* Session::Forum() {
-    if (_forumRequest == nullptr) {
-        _forumRequest = new ForumRequest(_core, Global()->_manager);
-    }
-    return _forumRequest;
+const QVariant Session::GetCustomRequestAttribute(const QNetworkRequest *request, Session::AttributeData attr) {
+    return request->attribute((QNetworkRequest::Attribute)(QNetworkRequest::User + attr));
 }
 
-Session::Request *Session::NewRequest(QObject *parent) {
-    auto request = new Request(parent);
+QNetworkRequest Session::createRequest(const QUrl &url) const {
+    auto request = QNetworkRequest(url);
+    const QString token = accessToken();
+    if (!token.isEmpty()) {
+        request.setRawHeader("Authorization", QString("Bearer %1").arg(token).toUtf8());
+    }
     return request;
 }
