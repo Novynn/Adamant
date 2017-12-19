@@ -38,6 +38,6 @@ void LoginSessionIdDialog::on_cancelButton_clicked() {
 
 void LoginSessionIdDialog::on_loginButton_clicked() {
     ui->errorLabel->hide();
-    _core->request()->loginWithSessionId(ui->sessionLineEdit->text());
+    qFatal("Logging in with session id has been disabled");
     setEnabled(false);
 }

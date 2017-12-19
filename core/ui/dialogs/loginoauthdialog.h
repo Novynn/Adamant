@@ -2,6 +2,8 @@
 #define LOGINOAUTHDIALOG_H
 
 #include "ilogindialog.h"
+#include <QSharedPointer>
+#include <QTcpServer>
 
 class CoreService;
 
@@ -23,13 +25,13 @@ public:
 
     void showError(const QString& error);
     int exec();
-private slots:
-    void on_cancelButton_clicked();
-    void on_loginButton_clicked();
-
 private:
     Ui::LoginOAuthDialog *ui;
     CoreService* _core;
+    QSharedPointer<QTcpServer> _server;
+
+    QString state;
+    QString token;
 };
 
 #endif // LOGINOAUTHDIALOG_H

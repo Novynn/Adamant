@@ -16,7 +16,6 @@ SetupDialog::SetupDialog(QWidget *parent, CoreService* core)
     : QDialog(parent)
     , ui(new Ui::SetupDialog)
     , _core(core)
-    , _sessionId()
     , _accountName("Unknown")
     , _poePath()
     , _poeConfigPath()
@@ -51,13 +50,12 @@ void SetupDialog::setPage(SetupDialog::Page p) {
     ui->backButton->setHidden(p <= SetupDialog::AccountPage);
 }
 
-void SetupDialog::loginSuccess(const QString &sessionId) {
+void SetupDialog::loginSuccess(const QString &message) {
     auto dialog = _loginMethods.value(_method);
     if (dialog) {
         dialog->accept();
     }
     setPage(SetupDialog::AccountPage);
-    _sessionId = sessionId;
     _accessToken = _core->session()->accessToken();
 }
 
@@ -76,10 +74,6 @@ void SetupDialog::updateAccountAvatar(QImage image) {
 void SetupDialog::updateAccountName(const QString &name) {
     _accountName = name;
     ui->welcomeLabel->setText(QString("Welcome %1").arg(_accountName));
-}
-
-void SetupDialog::on_sessionIdLoginButton_clicked() {
-    attemptLogin(SetupDialog::LoginSessionId);
 }
 
 void SetupDialog::on_oauthLoginButton_clicked() {

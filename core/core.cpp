@@ -29,23 +29,22 @@ CoreService::~CoreService() {
 
 SetupDialog::LoginMethod CoreService::setup(bool force) {
     sensitiveSettings()->beginGroup("session");
-    QString sessionId = sensitiveSettings()->value("id").toString();
     QString accessToken = sensitiveSettings()->value("access_token").toString();
     sensitiveSettings()->endGroup();
 
-    SetupDialog::LoginMethod method = SetupDialog::LoginSessionId;
     if (!accessToken.isEmpty()) {
-        method = SetupDialog::LoginOAuth;
+        return SetupDialog::LoginOAuth;
     }
 
-    while ((sessionId.isEmpty() && accessToken.isEmpty()) || force) {
-        getInterface()->window()->hide();
+    while (accessToken.isEmpty() || force) {
+        _ui->window()->setLoginProgressMessage("Setup Required");
         int result = getInterface()->showSetup(); // Blocking
         if (result != 0x0) {
             getInterface()->window()->close();
-            return SetupDialog::LoginNone;
+            break;
         }
-        getInterface()->window()->show();
+
+        _ui->window()->setLoginProgressMessage("Setup Finished");
         force = false;
 
         QVariantMap map = getInterface()->getSetupDialog()->getData();
@@ -55,42 +54,27 @@ SetupDialog::LoginMethod CoreService::setup(bool force) {
         for (QString key : map.uniqueKeys()) {
             sensitiveSettings()->setValue(key, map.value(key));
         }
-        sessionId = map.value("id").toString();
         sensitiveSettings()->endGroup();
+        sensitiveSettings()->sync();
 
-        method = (SetupDialog::LoginMethod)map.value("method").toInt();
-        if (method == SetupDialog::LoginOAuth && !map.value("access_token").toString().isEmpty()) {
-            break;
-        }
+        return SetupDialog::LoginOAuth;
     }
 
-    return method;
+    return SetupDialog::LoginNone;
 }
 
 bool CoreService::login(SetupDialog::LoginMethod method) {
+    Q_UNUSED(method);
     connect(session(), &Session::sessionChange, this, &CoreService::sessionChange);
 
     sensitiveSettings()->beginGroup("session");
-    QString sessionId = sensitiveSettings()->value("id").toString();
     QString accessToken = sensitiveSettings()->value("access_token").toString();
     sensitiveSettings()->endGroup();
 
     // Attempt to log in
-    switch (method) {
-        case SetupDialog::LoginSessionId: {
-            request()->loginWithSessionId(sessionId);
-        } break;
-        case SetupDialog::LoginOAuth: {
-            Q_UNUSED(accessToken);
-            qFatal("OAuth not implemented!");
-        } break;
-        case SetupDialog::LoginNone:
-        default: {
-            qFatal("Logging in without a method?");
-        }
-    }
-
     _ui->window()->setLoginProgressMessage("Logging in...");
+
+    request()->loginWithOAuthAccessToken(accessToken);
     return true;
 }
 
@@ -118,28 +102,31 @@ void CoreService::sessionChange() {
     if (session()->loginState() == Session::Success) {
         bool finished = true;
 
-        const QString sessionId = session()->sessionId();
-        if (!sessionId.isEmpty()) {
+        const QString accessToken = session()->accessToken();
+        if (!accessToken.isEmpty()) {
             sensitiveSettings()->beginGroup("session");
-            sensitiveSettings()->setValue("id", sessionId);
+            sensitiveSettings()->setValue("access_token", accessToken);
             sensitiveSettings()->endGroup();
         }
         else {
+            _ui->window()->setLoginProgressMessage("Fetching access token...");
             finished = false;
         }
 
         const QString name = session()->accountName();
         if (!name.isEmpty()) {
             sensitiveSettings()->beginGroup("session");
-            sensitiveSettings()->setValue("name", name);
+            sensitiveSettings()->setValue("account", name);
             sensitiveSettings()->endGroup();
         }
         else {
+            _ui->window()->setLoginProgressMessage("Fetching account name...");
             finished = false;
         }
 
         const QStringList leagues = session()->leagues();
         if (leagues.isEmpty()) {
+            _ui->window()->setLoginProgressMessage("Fetching leagues...");
             finished = false;
         }
 

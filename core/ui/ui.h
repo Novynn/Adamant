@@ -71,7 +71,6 @@ public:
 
     void setup();
 signals:
-    void requestProfileData(QString sessionId);
     void applicationThemeChanged(ApplicationTheme old, ApplicationTheme now);
 private:
     MainWindow* _window;

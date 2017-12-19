@@ -17,16 +17,10 @@ AdamantUI::AdamantUI(CoreService *parent)
     _window = new MainWindow(parent);
     _setupDialog = new SetupDialog(_window, _core);
 
-    connect(_setupDialog, &SetupDialog::loginByIdRequested,
-            _core->request(), &Session::Request::loginWithSessionId);
-    connect(this, &AdamantUI::requestProfileData,
-            _core->request(), &Session::Request::loginWithSessionId);
-
     connect(_core->request(), &Session::Request::loginResult,
             [this] (int result, QString resultString) {
         if (result == 0) {
-            QString sessionId = _core->session()->sessionId();
-            _setupDialog->loginSuccess(sessionId);
+            _setupDialog->loginSuccess(resultString);
         }
         else {
             _setupDialog->loginFailed(resultString);
@@ -36,7 +30,7 @@ AdamantUI::AdamantUI(CoreService *parent)
     connect(_core->request(), &Session::Request::profileBadgeImage, _window, &MainWindow::onProfileBadgeImage);
     connect(_core->request(), &Session::Request::profileAvatarImage, _setupDialog, &SetupDialog::updateAccountAvatar);
     connect(_core->request(), &Session::Request::profileData, [this](QString data) {
-        QJsonDocument doc = QJsonDocument::fromJson(data.toLatin1());
+        QJsonDocument doc = QJsonDocument::fromJson(data.toUtf8());
         if (doc.isObject() && !doc.isEmpty()) {
             _setupDialog->updateAccountName(doc.object().value("name").toString());
             _window->updateAccountMessagesCount(doc.object().value("messages").toInt());

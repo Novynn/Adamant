@@ -32,11 +32,19 @@ public:
     };
 
     static QUrl BaseUrl() {
-        return QUrl("https://www.pathofexile.com");
+        return QUrl("https://webdev2.office.grindinggear.com");
     }
 
     static QUrl APIUrl() {
-        return QUrl("https://www.pathofexile.com/api");
+        return QUrl("https://webdev2.office.grindinggear.com/api");
+    }
+
+    static QUrl OAuthAuthorizeUrl() {
+        return QUrl(BaseUrl().toString() + "/oauth/authorize");
+    }
+
+    static QUrl OAuthTokenUrl() {
+        return QUrl(BaseUrl().toString() + "/oauth/token");
     }
 
     static QUrl LoginUrl() {
@@ -48,7 +56,7 @@ public:
     }
 
     static QUrl ProfileDataUrl() {
-        return QUrl(APIUrl().toString() + "/account");
+        return QUrl(APIUrl().toString() + "/profile");
     }
 
     static QUrl AccountUrl() {
@@ -77,6 +85,17 @@ public:
 
     Session(CoreService* parent);
     ~Session();
+    static QString CookieDomain() {
+        return ".webdev2.office.grindinggear.com";
+    }
+
+    static QString OAuthClientId() {
+        return "adamant";
+    }
+
+    static QString FixRelativeUrl(const QString &url) {
+        return url.startsWith("/") ? Session::BaseUrl().toString() + url : url;
+    }
 
     void resetLoginState() {
         _loginState = SessionLoginState::Idle;
@@ -88,10 +107,6 @@ public:
 
     const QString accessToken() const {
         return _accessToken;
-    }
-
-    const QString sessionId() const {
-        return _sessionId;
     }
 
     const QString accountName() const {
@@ -120,7 +135,6 @@ signals:
 private:
     CoreService* _core;
     SessionLoginState _loginState;
-    QString _sessionId;
     QString _accessToken;
     QString _accountName;
     QStringList _leagues;

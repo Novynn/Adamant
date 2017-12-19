@@ -13,7 +13,7 @@ Session::Session(CoreService *parent)
 
     connect(_request.data(), &Session::Request::loginResult, this, [this](int result, const QString &data){
         if (result == 0x00) {
-            _sessionId = data;
+            _accessToken = data;
             _loginState = SessionLoginState::Success;
         }
         else {
@@ -23,8 +23,7 @@ Session::Session(CoreService *parent)
     });
 
     connect(_request.data(), &Session::Request::profileData, this, [this](QString data) {
-        QJsonDocument doc = QJsonDocument::fromJson(data.toLatin1());
-        qDebug() << doc.object().value("name").toString();
+        QJsonDocument doc = QJsonDocument::fromJson(data.toUtf8());
         _accountName = doc.object().value("name").toString();
         emit sessionChange();
     });

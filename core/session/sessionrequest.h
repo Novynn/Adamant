@@ -15,6 +15,7 @@ class CoreService;
 
 #define CHECK_REPLY \
     QNetworkReply *reply = qobject_cast<QNetworkReply*>(QObject::sender()); \
+    const int code = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt(); \
     if (reply->error() != QNetworkReply::NoError) { \
         _session->logError(QString("Network error in %1: %2").arg(__FUNCTION__).arg(reply->errorString())); \
         reply->deleteLater(); \
@@ -27,11 +28,12 @@ class CORE_EXTERN Session::Request : public QObject
 public:
     Request(Session* parent, QNetworkAccessManager* manager);
 
+    void loginWithOAuthAccessToken(const QString &accessToken);
 public slots:
-    void loginWithSessionId(const QString &sessionId);
     void loginWithOAuth(const QString &authorizationCode);
 
     void fetchProfileData();
+
     void fetchAccountBadge(const QString &badge, const QString &url);
     void fetchImage(const QString &url, const QVariant &variant = QVariant());
 
@@ -47,8 +49,6 @@ public slots:
     void setTimeout(int timeout);
 private slots:
     void onOAuthResultPath();
-    void onLoginPageResult();
-    void onAccountPageResult();
     void onAccountStashTabsResult();
     void onAccountCharactersResult();
     void onAccountCharacterItemsResult();
@@ -86,6 +86,24 @@ private:
     QNetworkAccessManager* _manager;
 
     ImageCache* _cache;
+
+    QHash<QString, QString> _badges;
+    QStringList _avatars;
+
+    inline void setAttribute(QNetworkRequest* request, AttributeData attr, const QVariant &data) {
+        request->setAttribute((QNetworkRequest::Attribute)(QNetworkRequest::User + attr), data);
+    }
+
+    inline QVariant getAttribute(QNetworkRequest* request, AttributeData attr) {
+        return request->attribute((QNetworkRequest::Attribute)(QNetworkRequest::User + attr));
+    }
+
+    inline QVariant getAttribute(QNetworkRequest request, AttributeData attr) {
+        return request.attribute((QNetworkRequest::Attribute)(QNetworkRequest::User + attr));
+    }
+
+    friend class ForumRequest;
+    friend class Session;
 };
 Q_DECLARE_METATYPE(Session::Request*)
 

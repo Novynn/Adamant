@@ -22,6 +22,12 @@ Session::Request::Request(Session *parent, QNetworkAccessManager* manager)
     connect(_manager,  &QNetworkAccessManager::networkAccessibleChanged, this, [this](QNetworkAccessManager::NetworkAccessibility accessible) {
         qDebug() << "Network accessibility changed: " << accessible;
     });
+#if 0
+        QNetworkCookie debugCookie("XDEBUG_SESSION", "XDEBUG_VSCODE");
+        debugCookie.setPath("/");
+        debugCookie.setDomain(Session::CookieDomain());
+        _manager->cookieJar()->insertCookie(debugCookie);
+#endif
 }
 
 void Session::Request::setTimeout(int timeout) {
@@ -29,10 +35,9 @@ void Session::Request::setTimeout(int timeout) {
 }
 
 void Session::Request::loginWithOAuth(const QString &authorizationCode) {
-    QUrl url("https://www.pathofexile.com/oauth/token");
+    QUrl url = Session::OAuthTokenUrl();
     QUrlQuery query;
-    query.addQueryItem("client_id", "test");
-    query.addQueryItem("client_secret", "testpassword");
+    query.addQueryItem("client_id", Session::OAuthClientId());
     query.addQueryItem("code", authorizationCode);
     query.addQueryItem("grant_type", "authorization_code");
     QNetworkRequest request = _session->createRequest(url);
@@ -42,42 +47,32 @@ void Session::Request::loginWithOAuth(const QString &authorizationCode) {
     connect(r, &QNetworkReply::finished, this, &Session::Request::Request::onOAuthResultPath);
 }
 
+void Session::Request::loginWithOAuthAccessToken(const QString &accessToken) {
+    // TODO(rory): Verify this somehow?
+    emit loginResult(0x00, accessToken);
+    fetchProfileData();
+}
+
 void Session::Request::onOAuthResultPath() {
     QNetworkReply *reply = qobject_cast<QNetworkReply*>(QObject::sender());
     if (reply->error()) {
+        qDebug() << __FUNCTION__ << reply->errorString();
+        qDebug() << __FUNCTION__ << reply->readAll();
         emit loginResult(0x01, "A network error occured: " + reply->errorString());
     }
     else {
         QJsonDocument doc = QJsonDocument::fromJson(reply->readAll());
         const QString token = doc.object().value("access_token").toString();
 
-        emit loginResult(-1, token);
+        emit loginResult(0x00, token);
     }
     reply->deleteLater();
 }
 
-void Session::Request::loginWithSessionId(const QString &sessionId) {
-    QNetworkCookie poeCookie(SessionIdCookie().toUtf8(), sessionId.toUtf8());
-    poeCookie.setPath("/");
-    poeCookie.setDomain(".pathofexile.com");
-    _manager->cookieJar()->insertCookie(poeCookie);
-
-    QNetworkCookie sessionStartCookie("session_start", "1");
-    sessionStartCookie.setPath("/");
-    sessionStartCookie.setDomain(".pathofexile.com");
-    _manager->cookieJar()->insertCookie(sessionStartCookie);
-
-    QNetworkRequest request = _session->createRequest(LoginUrl());
-    QNetworkReply *r = _manager->get(request);
-
-    connect(r, &QNetworkReply::finished, this, &Session::Request::Request::onLoginPageResult);
-}
-
 void Session::Request::fetchProfileData() {
-    // NOTE(rory): This isn't implemented on GGG's end
-//    QNetworkRequest request = createRequest(ProfileDataUrl());
-//    QNetworkReply *r = _manager->get(request);
-//    connect(r, &QNetworkReply::finished, this, &Session::Request::Request::onProfileData);
+    QNetworkRequest request = _session->createRequest(ProfileDataUrl());
+    QNetworkReply *r = _manager->get(request);
+    connect(r, &QNetworkReply::finished, this, &Session::Request::Request::onProfileData);
 }
 
 void Session::Request::fetchAccountBadge(const QString &badge, const QString &url) {
@@ -152,92 +147,35 @@ void Session::Request::fetchLeagues() {
     connect(r, &QNetworkReply::finished, this, &Session::Request::Request::onLeaguesResult);
 }
 
-void Session::Request::onLoginPageResult() {
-    QNetworkReply *reply = qobject_cast<QNetworkReply*>(QObject::sender());
-    int status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-    if (status != 302) {
-        emit loginResult(0x01, QString("Failed to log in (invalid password or expired session ID, status: %1)").arg(status));
-    }
-    else {
-        bool success = false;
-        QList<QNetworkCookie> cookies = _manager->cookieJar()->cookiesForUrl(MainUrl());
-        for (auto &cookie : cookies) {
-            if (QString(cookie.name()) == SessionIdCookie()) {
-                emit loginResult(0x00, cookie.value());
-                success = true;
-                break;
-            }
-        }
-
-        if (success) {
-            // NOTE(rory): Proceed to account page
-            QNetworkRequest request = _session->createRequest(AccountUrl());
-            QNetworkReply *r = _manager->get(request);
-
-            connect(r, &QNetworkReply::finished, this, &Session::Request::Request::onAccountPageResult);
-        }
-    }
-    reply->deleteLater();
-}
-
 void Session::Request::onProfileData() {
-//    CHECK_REPLY;
+    CHECK_REPLY;
 
-//    QByteArray response = reply->readAll();
-//    QJsonDocument doc = QJsonDocument::fromJson(response);
-//    // TODO(rory): Implement me!
-//    emit profileData(doc.toJson());
-}
-
-void Session::Request::onAccountPageResult() {
-    QNetworkReply *reply = qobject_cast<QNetworkReply*>(QObject::sender());
-    if (reply->error()) {
-        qDebug() << "Network error in " << __FUNCTION__ << ": " << reply->errorString();
+    QByteArray response = reply->readAll();
+    if (response.isEmpty() || code != 200) {
+        emit loginResult(0x01, "Failed to fetch profile data");
+        return;
     }
-    else {
-        // Regexp for getting last visited, guild, etc
-        // <strong>(?<attr>.+?):<\/strong><br\/>\s+?(<a href=\"(?<url>.+?)\">(?<content1>.+?)<\/a>|\s+(?<content2>[A-Za-z0-9 ]+?)\s+<\/p>)
 
-        const QByteArray data = reply->readAll();
-        const QString avatar = getAccountAvatar(data);
-        const QString name = getAccountName(data);
-        const auto badges = getAccountBadges(data);
-        const int messages = getAccountMessagesUnread(data);
+    QJsonDocument doc = QJsonDocument::fromJson(response);
 
-        if (name.isEmpty()) {
-            qWarning() << "Account name is empty!" << data << reply->errorString();
+    const QString avatar = Session::FixRelativeUrl(doc.object().value("avatar_url").toString());
+    // Request Avatar
+    if (!avatar.isEmpty()) {
+        if (!_avatars.contains(avatar))
+            _avatars.append(avatar);
+        fetchImage(avatar);
+    }
 
-            qWarning() << reply->url().toString();
-            for (auto &cookie : reply->manager()->cookieJar()->cookiesForUrl(MainUrl())) {
-                qDebug() << cookie.name() << cookie.value();
-            }
-
-            for (auto item : reply->rawHeaderPairs()) {
-                qWarning() << item.first << item.second;
-            }
-            QInputDialog::getMultiLineText(nullptr, "", "", data);
-        }
-
-        QJsonObject object;
-        object.insert("name", name);
-        object.insert("avatar_url", avatar);
-        object.insert("messages", messages);
-        object.insert("badges", QJsonArray::fromStringList(badges.keys()));
-        QJsonDocument temp(object);
-        emit profileData(temp.toJson());
-
-        // Request Avatar
-        if (!avatar.isEmpty()) {
-            fetchImage(avatar, QVariantHash{{"type", "avatar"}});
-        }
-        // Request Badges
-        for (const QString &key : badges.uniqueKeys()){
-            const QString url = badges.value(key);
-            if (url.isEmpty()) continue;
-            fetchAccountBadge(key, url);
-        }
+    const QJsonObject badges = doc.object().value("badges").toObject();
+    // Request Badges
+    for (const QString &key : badges.keys()){
+        const QString url = badges.value(key).toString();
+        if (url.isEmpty()) continue;
+        fetchAccountBadge(key, url);
     }
     reply->deleteLater();
+
+    emit profileData(doc.toJson());
 }
 
 void Session::Request::onLeaguesResult() {
@@ -350,7 +288,7 @@ const QString Session::Request::getAccountAvatar(const QByteArray &data) {
     QRegularExpressionMatch match = expr.match(data);
     if (match.isValid() && match.hasMatch()) {
         const QString image = match.captured("image");
-        return image.startsWith("/") ? BaseUrl().toString() + image : image;
+        return Session::FixRelativeUrl(image);
     }
     return QString();
 }

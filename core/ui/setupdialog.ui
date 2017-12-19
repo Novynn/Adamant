@@ -290,26 +290,9 @@
            </spacer>
           </item>
           <item>
-           <widget class="QLabel" name="label_2">
-            <property name="text">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;Choose your Login Method&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-            </property>
-            <property name="textFormat">
-             <enum>Qt::RichText</enum>
-            </property>
-           </widget>
-          </item>
-          <item>
            <widget class="QCommandLinkButton" name="oauthLoginButton">
             <property name="text">
-             <string>OAuth</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCommandLinkButton" name="sessionIdLoginButton">
-            <property name="text">
-             <string>Session ID (Deprecated)</string>
+             <string>Login</string>
             </property>
            </widget>
           </item>
@@ -1000,7 +983,6 @@
   </layout>
  </widget>
  <tabstops>
-  <tabstop>sessionIdLoginButton</tabstop>
   <tabstop>continueNameButton</tabstop>
   <tabstop>poeEdit</tabstop>
   <tabstop>poeBrowseButton</tabstop>
