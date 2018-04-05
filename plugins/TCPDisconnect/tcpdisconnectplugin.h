@@ -42,51 +42,58 @@ public:
         QString result;
 #ifdef Q_OS_WIN32
         HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, pid);
-        {
-            if (hProcess != NULL) {
-                HMODULE hMod;
-                DWORD cbNeeded;
-                if (EnumProcessModules(hProcess, &hMod, sizeof(hMod), &cbNeeded)) {
-                    wchar_t szProcessName[MAX_PATH];
-                    GetModuleBaseName(hProcess, hMod, szProcessName, MAX_PATH);
-                    result = QString::fromWCharArray(szProcessName);
-                }
-            }
+        if (hProcess != NULL) {
+            wchar_t szProcessName[MAX_PATH];
+            GetModuleFileNameEx(hProcess, NULL, szProcessName, MAX_PATH);
+            result = QString::fromWCharArray(szProcessName).section('\\', -1, -1);
+            CloseHandle(hProcess);
         }
-        CloseHandle(hProcess);
 #endif
         return result;
     }
 
     static bool disconnect() {
 #ifdef Q_OS_WIN32
-        static QStringList processes = {"PathOfExile.exe", "PathOfExileSteam.exe"};
+        static QStringList processes = {
+            "PathOfExile.exe",
+            "PathOfExileSteam.exe",
+            "PathOfExile_x64.exe",
+            "PathOfExile_x64Steam.exe",
+        };
         MIB_TCPTABLE_OWNER_PID* table;
         DWORD size;
         DWORD result;
         result = GetExtendedTcpTable(NULL, &size, FALSE, AF_INET, TCP_TABLE_OWNER_PID_ALL , 0);
         table = (MIB_TCPTABLE_OWNER_PID*) malloc(size);
         result = GetExtendedTcpTable(table, &size, FALSE, AF_INET, TCP_TABLE_OWNER_PID_ALL , 0);
+
         if (result == NO_ERROR) {
             result = -1;
             for (DWORD dwLoop = 0; dwLoop < table->dwNumEntries; dwLoop++) {
                 MIB_TCPROW_OWNER_PID *owner = &table->table[dwLoop];
                 if (owner->dwState != MIB_TCP_STATE_ESTAB) continue;
-                bool isPathOfExile = (processes.contains(TcpDisconnectPlugin::getProcessNameByPID(owner->dwOwningPid), Qt::CaseInsensitive));
+                const QString &name = TcpDisconnectPlugin::getProcessNameByPID(owner->dwOwningPid);
+
+                bool isPathOfExile = (!name.isEmpty() && processes.contains(name, Qt::CaseInsensitive));
                 if (isPathOfExile) {
                     owner->dwState = MIB_TCP_STATE_DELETE_TCB;
                     result = SetTcpEntry((MIB_TCPROW*)owner);
                 }
             }
         }
+
+        free(table);
+
         return (result == 0);
 #else
         return false;
 #endif
     }
 
-    static QScriptValue disconnect(QScriptContext *context, QScriptEngine *engine) {
+    static QScriptValue disconnect(QScriptContext *context, QScriptEngine *engine, void* arg) {
+        auto plugin = reinterpret_cast<TcpDisconnectPlugin*>(arg);
         Q_UNUSED(context);
+        Q_UNUSED(plugin);
 #ifdef Q_OS_WIN32
         bool success = TcpDisconnectPlugin::disconnect();
         return engine->toScriptValue(success);
@@ -102,8 +109,8 @@ public:
 
 public slots:
     void setupEngine(QScriptEngine* engine, QScriptValue* plugin) {
-        plugin->setProperty("disconnect", engine->newFunction(TcpDisconnectPlugin::disconnect));
-        plugin->setProperty("elevated", engine->newFunction(TcpDisconnectPlugin::isElevated));
+        plugin->setProperty("disconnect", engine->newFunction(TcpDisconnectPlugin::disconnect, this));
+        plugin->setProperty("isElevated", engine->newFunction(TcpDisconnectPlugin::isElevated));
     }
 };
 
