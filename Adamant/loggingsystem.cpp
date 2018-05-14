@@ -33,7 +33,6 @@ void LoggingSystem::qtMessage(QtMsgType type, const QMessageLogContext &context,
 }
 
 void LoggingSystem::message(const QString &message, QtMsgType type) {
-
     fprintf(stdout, "%s\n", qPrintable(message));
     emit onMessage(message, type);
 }

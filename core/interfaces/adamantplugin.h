@@ -16,7 +16,6 @@ class AdamantPlugin : public QObject
 public:
     virtual ~AdamantPlugin() {}
     Q_PROPERTY(QSettings* Settings MEMBER _settings)
-    Q_PROPERTY(QSettings* SensitiveSettings MEMBER _sensitiveSettings)
     Q_PROPERTY(CoreService* Core MEMBER _core)
 
     void Log(QString m, QtMsgType t = QtDebugMsg) const {
@@ -37,10 +36,6 @@ protected:
         return _settings;
     }
 
-    QSettings* SensitiveSettings() const {
-        return _sensitiveSettings;
-    }
-
     CoreService* Core() const {
         return _core;
     }
@@ -51,7 +46,6 @@ signals:
     void Message(const AdamantPlugin*, QString, QtMsgType) const;
 private:
     QSettings* _settings;
-    QSettings* _sensitiveSettings;
     CoreService* _core;
 };
 

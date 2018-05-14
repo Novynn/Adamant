@@ -8,8 +8,6 @@
 #include <QUuid>
 
 #include <ui/mainwindow.h>
-#include <ui/setupdialog.h>
-
 #include <ui/pages/pluginpage.h>
 
 class AdamantPlugin;
@@ -20,7 +18,6 @@ class CORE_EXTERN AdamantUI : public QObject
 public:
     AdamantUI(CoreService* parent);
     ~AdamantUI();
-    Q_PROPERTY(SetupDialog* SetupDialog MEMBER _setupDialog)
     Q_PROPERTY(MainWindow* MainWindow MEMBER _window)
     Q_PROPERTY(ApplicationTheme Theme MEMBER _theme NOTIFY applicationThemeChanged)
 
@@ -38,14 +35,9 @@ public:
         return _window;
     }
 
-    SetupDialog* getSetupDialog() {
-        return _setupDialog;
-    }
-
     QUuid registerPluginPage(AdamantPlugin* plugin, const QIcon &icon, const QString &title, const QString &description, QWidget *widget);
 
     void start();
-    int showSetup();
     Q_INVOKABLE void setTheme(ApplicationTheme theme = ApplicationTheme::Dark);
 
     void registerPages() {
@@ -74,7 +66,6 @@ signals:
     void applicationThemeChanged(ApplicationTheme old, ApplicationTheme now);
 private:
     MainWindow* _window;
-    SetupDialog* _setupDialog;
     CoreService* _core;
     ApplicationTheme _theme;
     QPalette _lightPalette;

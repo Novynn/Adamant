@@ -17,7 +17,6 @@ class ItemManagerInstance;
 class ItemManager;
 
 struct ItemManagerInstance {
-    QString accountName;
     bool throttled;
     bool error;
     bool sent;
@@ -98,7 +97,7 @@ public slots:
     void updateCharacter(QString characterName){Q_UNUSED(characterName)}
 private slots:
     void onStashTabResult(QString league, QByteArray json, QVariant data);
-    void onCharacterItemsResult(QString character, QByteArray json, QVariant data);
+    void onCharacterItemsResult(QString character, QByteArray json);
 private:
     CoreService* _core;
 

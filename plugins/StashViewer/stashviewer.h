@@ -59,7 +59,6 @@ private slots:
 
 signals:
     void saveStash(const QString &league, const QString &id);
-    void RequestLeaguesList();
     void RequestStashTabList(const QString &league);
     void RequestStashTab(const QString &league, const QString &id);
     void LeagueDetailsChanged(const QString &league);

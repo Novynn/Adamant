@@ -14,95 +14,60 @@
 class CoreService;
 
 #define CHECK_REPLY \
-    QNetworkReply *reply = qobject_cast<QNetworkReply*>(QObject::sender()); \
     const int code = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt(); \
     if (reply->error() != QNetworkReply::NoError) { \
-        _session->logError(QString("Network error in %1: %2").arg(__FUNCTION__).arg(reply->errorString())); \
-        reply->deleteLater(); \
+        session->logError(QString("Network error in %1: %2").arg(__FUNCTION__).arg(reply->errorString())); \
         return; \
     }
 
-class CORE_EXTERN Session::Request : public QObject
+class CORE_EXTERN Session::Request
 {
-    Q_OBJECT
+    Q_GADGET
 public:
-    Request(Session* parent, QNetworkAccessManager* manager);
+    enum RequestMethod {
+        GET,
+        POST,
+    };
 
-    void loginWithOAuthAccessToken(const QString &accessToken);
-public slots:
-    void loginWithOAuth(const QString &authorizationCode);
+    Request(QNetworkRequest request, RequestMethod method, const QByteArray &data, Session::RequestResultFunc callback = nullptr);
+    Request(QNetworkRequest request, RequestMethod method, Session::RequestResultFunc callback = nullptr)
+        : Request(request, method, QByteArray(), callback) {}
+    Request(QNetworkRequest request, Session::RequestResultFunc callback = nullptr)
+        : Request(request, GET, QByteArray(), callback) {}
 
-    void fetchProfileData();
+    static Session::Request* LoginWithOAuth(Session *session, const QString &authorizationCode, Session::RequestResultFunc callback = nullptr);
+    static Session::Request* FetchLeagues(Session* session, Session::LeaguesRequestResultFunc callback = nullptr);
+    static Session::Request* FetchCharacters(Session *session, Session::BasicJsonRequestResultFunc callback = nullptr);
+    static Session::Request* FetchCharacterItems(Session *session, const QString &character, Session::BasicJsonRequestResultFunc callback = nullptr);
+    static Session::Request* FetchStashTabs(Session *session, const QString &league, int tabIndex, bool tabs, Session::BasicJsonRequestResultFunc callback = nullptr);
 
-    void fetchAccountBadge(const QString &badge, const QString &url);
-    void fetchImage(const QString &url, const QVariant &variant = QVariant());
-
-    void fetchAccountStashTabs(const QString &accountName, const QString &league, int tabIndex = 0,
-                                           bool tabs = true, QVariant data = QVariant());
-    void fetchAccountCharacters(const QString &accountName,
-                                            QVariant data = QVariant());
-    void fetchAccountCharacterItems(const QString &accountName, const QString &character,
-                                                QVariant data = QVariant());
-
-    void fetchLeagues();
-
-    void setTimeout(int timeout);
-private slots:
-    void onOAuthResultPath();
-    void onAccountStashTabsResult();
-    void onAccountCharactersResult();
-    void onAccountCharacterItemsResult();
-    void onLeaguesResult();
-
-    void onImageResult(const QString &path, const QImage &image, const QVariant &data);
-
-    void onProfileData();
-protected:
-    static const QString getCSRFToken(const QByteArray& data);
-    static const QString getAccountAvatar(const QByteArray &data);
-    static const QString getAccountName(const QByteArray &data);
-    static int getAccountMessagesUnread(const QByteArray &data);
-    static const QMap<QString,QString> getAccountBadges(const QByteArray &data);
-
-signals:
-    void loginResult(int result, QString resultString);
-    void profileData(QString data);
-    void profileAvatarImage(QImage image);
-    void profileBadgeImage(QString badge, QImage image);
-    void sessionIdChanged(QString newSessionId);
-
-    void accountStashTabs(QString league, QByteArray result, QVariant data);
-    void accountStashTabsJson(QString league, QJsonDocument doc, QVariant data);
-
-    void accountCharacters(QByteArray result, QVariant data);
-    void accountCharactersJson(QJsonDocument doc, QVariant data);
-
-    void accountCharacterItems(QString character, QByteArray result, QVariant data);
-    void accountCharacterItemsJson(QString character, QJsonDocument doc, QVariant data);
-
-    void leaguesList(QStringList leagues);
-private:
-    const Session* _session;
-    QNetworkAccessManager* _manager;
-
-    ImageCache* _cache;
-
-    QHash<QString, QString> _badges;
-    QStringList _avatars;
-
-    inline void setAttribute(QNetworkRequest* request, AttributeData attr, const QVariant &data) {
-        request->setAttribute((QNetworkRequest::Attribute)(QNetworkRequest::User + attr), data);
+    inline void setReply(QNetworkReply* reply) {
+        _reply = reply;
     }
 
-    inline QVariant getAttribute(QNetworkRequest* request, AttributeData attr) {
-        return request->attribute((QNetworkRequest::Attribute)(QNetworkRequest::User + attr));
+    inline void setAttribute(AttributeData attr, const QVariant &data) {
+        _request->setAttribute((QNetworkRequest::Attribute)(QNetworkRequest::User + attr), data);
     }
 
-    inline QVariant getAttribute(QNetworkRequest request, AttributeData attr) {
+    inline static QVariant GetRequestAttribute(QNetworkRequest request, AttributeData attr) {
         return request.attribute((QNetworkRequest::Attribute)(QNetworkRequest::User + attr));
     }
 
-    friend class ForumRequest;
+    inline QVariant getAttribute(AttributeData attr) {
+        return GetRequestAttribute(*_request, attr);
+    }
+public slots:
+    void setTimeoutFromNow(int timeout);
+protected:
+private:
+    RequestMethod _method;
+    QByteArray _data;
+    QNetworkRequest* _request;
+    QNetworkReply* _reply;
+    Session::RequestResultFunc _callback;
+    quint64 _timeout;
+    bool _needsLogin;
+
     friend class Session;
 };
 Q_DECLARE_METATYPE(Session::Request*)

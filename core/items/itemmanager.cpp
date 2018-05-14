@@ -17,8 +17,6 @@ ItemManager::ItemManager(CoreService *parent)
     : QObject(parent)
     , _core(parent)
 {
-    connect(_core->request(), &Session::Request::accountStashTabs, this, &ItemManager::onStashTabResult);
-    connect(_core->request(), &Session::Request::accountCharacterItems, this, &ItemManager::onCharacterItemsResult);
 }
 
 void ItemManager::fetchCharacterItems(const QString& characterName, const QString &classType, int level) {
@@ -27,14 +25,8 @@ void ItemManager::fetchCharacterItems(const QString& characterName, const QStrin
         qDebug() << "Already fetching " << characterName;
         return;
     }
-    const QString accountName = _core->session()->accountName();
-    if (accountName.isEmpty()) {
-        qDebug() << "Account Name is empty!!!";
-        return;
-    }
 
     ItemManagerInstance* instance = new ItemManagerInstance;
-    instance->accountName = accountName;
     instance->manager = this;
     instance->throttled = false;
     instance->sent = false;
@@ -59,16 +51,10 @@ void ItemManager::fetchStashTab(const QString& league, QString id) {
         qDebug() << "Already fetching " << id;
         return;
     }
-    const QString accountName = _core->session()->accountName();
-    if (accountName.isEmpty()) {
-        qDebug() << "Account Name is empty!!!";
-        return;
-    }
 
     ItemManagerInstance* instance = _currentTabInstances.value(id, nullptr);
     if (instance == nullptr) {
         instance = new ItemManagerInstance;
-        instance->accountName = accountName;
         instance->manager = this;
         instance->throttled = false;
         instance->sent = false;
@@ -199,14 +185,25 @@ void ItemManager::fetchStashTab(ItemManagerInstance *instance) {
     if (data.isEmpty()) {
         data = "index_" + instance->tab->league;
     }
-    _core->request()->fetchAccountStashTabs(instance->accountName, instance->tab->league,
-                                            (instance->tab->tabIndex == -1) ? 0 : instance->tab->tabIndex, true,
-                                            data);
+
+    const QString league = instance->tab->league;
+    Session::Request::FetchStashTabs(_core->session(),
+                                     league,
+                                     (instance->tab->tabIndex == -1) ? 0 : instance->tab->tabIndex,
+                                     true,
+                                     [this, league, data](Session* session, const QJsonDocument &doc){
+        Q_UNUSED(session);
+        onStashTabResult(league, doc.toJson(), data);
+    });
     instance->sent = true;
 }
 
 void ItemManager::fetchCharacter(ItemManagerInstance* instance) {
-    _core->request()->fetchAccountCharacterItems(instance->accountName, instance->character->name);
+    const QString character = instance->character->name;
+    Session::Request::FetchCharacterItems(_core->session(), character, [this, character](Session* session, const QJsonDocument &doc){
+        Q_UNUSED(session);
+        onCharacterItemsResult(character, doc.toJson());
+    });
     instance->sent = true;
 }
 
@@ -352,7 +349,6 @@ void ItemManager::onStashTabResult(QString league, QByteArray json, QVariant dat
             else {
                 // Setup new instance
                 currentInstance = new ItemManagerInstance;
-                currentInstance->accountName = instance->accountName;
                 currentInstance->manager = this;
                 currentInstance->throttled = false;
                 currentInstance->location = new StashItemLocation(league, tab);
@@ -461,8 +457,7 @@ void ItemManager::onStashTabResult(QString league, QByteArray json, QVariant dat
     }
 }
 
-void ItemManager::onCharacterItemsResult(QString character, QByteArray json, QVariant data) {
-    Q_UNUSED(data)
+void ItemManager::onCharacterItemsResult(QString character, QByteArray json) {
     const QString key = "CHARACTER_" + character;
     ItemManagerInstance* instance = _fetchingCharacterInstances.value(key, nullptr);
     if (!instance) {

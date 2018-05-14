@@ -15,27 +15,15 @@ AdamantUI::AdamantUI(CoreService *parent)
     , _theme(ApplicationTheme::Light) {
     setup();
     _window = new MainWindow(parent);
-    _setupDialog = new SetupDialog(_window, _core);
 
-    connect(_core->request(), &Session::Request::loginResult,
-            [this] (int result, QString resultString) {
-        if (result == 0) {
-            _setupDialog->loginSuccess(resultString);
-        }
-        else {
-            _setupDialog->loginFailed(resultString);
-        }
-    });
-
-    connect(_core->request(), &Session::Request::profileBadgeImage, _window, &MainWindow::onProfileBadgeImage);
-    connect(_core->request(), &Session::Request::profileAvatarImage, _setupDialog, &SetupDialog::updateAccountAvatar);
-    connect(_core->request(), &Session::Request::profileData, [this](QString data) {
-        QJsonDocument doc = QJsonDocument::fromJson(data.toUtf8());
-        if (doc.isObject() && !doc.isEmpty()) {
-            _setupDialog->updateAccountName(doc.object().value("name").toString());
-            _window->updateAccountMessagesCount(doc.object().value("messages").toInt());
-        }
-    });
+//    connect(_core->request(), &Session::Request::profileBadgeImage, _window, &MainWindow::onProfileBadgeImage);
+//    connect(_core->request(), &Session::Request::profileData, [this](QString data) {
+//        QJsonDocument doc = QJsonDocument::fromJson(data.toUtf8());
+//        if (doc.isObject() && !doc.isEmpty()) {
+//            _window->updateAccountName(doc.object().value("name").toString());
+//            _window->updateAccountMessagesCount(doc.object().value("messages").toInt());
+//        }
+//    });
 }
 
 void AdamantUI::setup() {
@@ -63,7 +51,6 @@ void AdamantUI::setup() {
 
 AdamantUI::~AdamantUI() {
     _window->deleteLater();
-    _setupDialog->deleteLater();
 }
 
 QUuid AdamantUI::registerPluginPage(AdamantPlugin* plugin, const QIcon& icon, const QString& title, const QString& description, QWidget* widget) {
@@ -91,13 +78,6 @@ void AdamantUI::setTheme(ApplicationTheme theme) {
         foreach (QWidget* w, widgets)
             w->setPalette(p);
     }
-
-    getSetupDialog()->setPalette(p);
-    {
-        QList<QWidget*> widgets = getSetupDialog()->findChildren<QWidget*>();
-        foreach (QWidget* w, widgets)
-            w->setPalette(p);
-    }
     qApp->setPalette(p);
 
     emit applicationThemeChanged(old, _theme);
@@ -105,8 +85,4 @@ void AdamantUI::setTheme(ApplicationTheme theme) {
 
 void AdamantUI::start() {
     _window->show();
-}
-
-int AdamantUI::showSetup() {
-    return _setupDialog->exec();
 }

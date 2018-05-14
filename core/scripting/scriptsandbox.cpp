@@ -96,6 +96,7 @@ ScriptSandbox::ScriptSandbox(const PluginManager *parent, const QString &file, c
     _program = QScriptProgram(_script, file);
 
     // Register MetaTypes, sometimes Q_DECL doesn't seem to cut it...
+    qRegisterMetaType<Session*>("Session");
     qRegisterMetaType<Session::Request*>("Session::Request");
     qRegisterMetaType<AdamantUI*>("AdamantUI");
     qRegisterMetaType<ItemManager*>("ItemManager");

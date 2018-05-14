@@ -12,7 +12,6 @@ HEADERS += \
     interfaces/adamantplugin.h \
     ui/commandbutton.h \
     ui/mainwindow.h \
-    ui/setupdialog.h \
     ui/ui.h \
     session/session.h \
     scripting/scriptsandbox.h \
@@ -29,16 +28,13 @@ HEADERS += \
     ui/widgets/pluginitemdelegate.h \
     session/sessionrequest.h \
     items/characteritemlocation.h \
-    ui/dialogs/ilogindialog.h \
     ui/widgets/custompage.h \
     session/forum/forumrequest.h \
-    ui/dialogs/loginoauthdialog.h \
-    ui/dialogs/loginsessioniddialog.h
+    oauthhandler.h
 
 SOURCES += \
     core.cpp \
     ui/mainwindow.cpp \
-    ui/setupdialog.cpp \
     ui/ui.cpp \
     session/session.cpp \
     scripting/scriptsandbox.cpp \
@@ -54,16 +50,12 @@ SOURCES += \
     items/characteritemlocation.cpp \
     ui/widgets/custompage.cpp \
     session/forum/forumrequest.cpp \
-    ui/dialogs/loginoauthdialog.cpp \
-    ui/dialogs/loginsessioniddialog.cpp
+    oauthhandler.cpp
 
 RESOURCES += \
     ui/res/res.qrc
 
 FORMS += \
     ui/mainwindow.ui \
-    ui/setupdialog.ui \
     ui/pages/pluginpage.ui \
-    ui/widgets/pluginitem.ui \
-    ui/dialogs/loginoauthdialog.ui \
-    ui/dialogs/loginsessioniddialog.ui
+    ui/widgets/pluginitem.ui

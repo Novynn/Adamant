@@ -6,6 +6,8 @@
 #include <QUrl>
 #include <QScopedPointer>
 #include <QPointer>
+#include <QQueue>
+#include <QUuid>
 
 class CoreService;
 
@@ -13,11 +15,15 @@ class CORE_EXTERN Session : public QObject
 {
     Q_OBJECT
 public:
+    typedef std::function<void(Session*, QNetworkReply*)> RequestResultFunc;
+    typedef std::function<void(Session*, const QStringList &)> LeaguesRequestResultFunc;
+    typedef std::function<void(Session*, const QJsonDocument &)> BasicJsonRequestResultFunc;
     class Request;
     class ForumRequest;
 
     enum AttributeData {
-        LoginSessionId = 0x01,
+        RequestId = 0x01,
+        LoginSessionId,
         Badge,
         UserData,
         League,
@@ -32,11 +38,11 @@ public:
     };
 
     static QUrl BaseUrl() {
-        return QUrl("https://webdev2.office.grindinggear.com");
+        return QUrl("https://www.pathofexile.com");
     }
 
     static QUrl APIUrl() {
-        return QUrl("https://webdev2.office.grindinggear.com/api");
+        return QUrl("https://www.pathofexile.com/api");
     }
 
     static QUrl OAuthAuthorizeUrl() {
@@ -86,7 +92,7 @@ public:
     Session(CoreService* parent);
     ~Session();
     static QString CookieDomain() {
-        return ".webdev2.office.grindinggear.com";
+        return ".pathofexile.com";
     }
 
     static QString OAuthClientId() {
@@ -105,43 +111,47 @@ public:
         return _loginState;
     }
 
-    const QString accessToken() const {
+    Q_INVOKABLE const QString accessToken() const {
         return _accessToken;
     }
 
-    const QString accountName() const {
+    Q_INVOKABLE const QString accountName() const {
         return _accountName;
     }
 
-    const QStringList leagues() const {
+    Q_INVOKABLE const QStringList leagues() const {
         return _leagues;
-    }
-
-    Request* request() const {
-        return _request.data();
-    }
-
-    ForumRequest* forum() const {
-        return _forumRequest.data();
     }
 
     void logError(const QString &error) const;
 
+    static Session::Request* LoginWithOAuth(Session *session, const QString &authorizationCode);
+    static Session::Request *LoginWithOAuthAccessToken(Session *session, const QString &accessToken);
+    static Session::Request* UpdateProfile(Session *session);
+
     static void SetCustomRequestAttribute(QNetworkRequest* request, AttributeData attr, const QVariant &data);
     static const QVariant GetCustomRequestAttribute(const QNetworkRequest *request, AttributeData attr);
     QNetworkRequest createRequest(const QUrl &url) const;
+    bool enqueueRequest(Request *request);
+    bool processRequestQueue();
+
+    void updateLeagues(const QStringList &leagues);
+    void updateAccessToken(const QString &token);
 signals:
     void sessionChange();
+    void loginStateChange(Session::SessionLoginState state);
+protected:
+    void updateLoginState(SessionLoginState state);
 private:
     CoreService* _core;
     SessionLoginState _loginState;
     QString _accessToken;
     QString _accountName;
     QStringList _leagues;
+    QQueue<Session::Request*> _queue;
+    QMap<QUuid, Session::Request*> _responses;
 
     QScopedPointer<QNetworkAccessManager> _manager;
-    QScopedPointer<Request> _request;
-    QScopedPointer<ForumRequest> _forumRequest;
 };
 
 #endif // SESSION_H

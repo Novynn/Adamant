@@ -9,8 +9,8 @@
 #include <QSettings>
 #include <QDebug>
 
-#include "ui/setupdialog.h"
 #include "session/session.h"
+#include "oauthhandler.h"
 class AdamantUI;
 class Adamant;
 class PluginManager;
@@ -66,20 +66,8 @@ public:
         return _session;
     }
 
-    Q_INVOKABLE Session::Request* request() {
-        return _session->request();
-    }
-
-    Q_INVOKABLE Session::ForumRequest* forum() {
-        return _session->forum();
-    }
-
     Q_INVOKABLE QSettings* settings() {
         return &_settings;
-    }
-
-    Q_INVOKABLE QSettings* sensitiveSettings() {
-        return &_sensitiveSettings;
     }
 
     Q_INVOKABLE PluginManager* getPluginManager() {
@@ -89,24 +77,28 @@ public:
     Q_INVOKABLE ItemManager* getItemManager() {
         return _itemManager;
     }
+    void newLogin();
 protected:
-    bool login(SetupDialog::LoginMethod method);
-    SetupDialog::LoginMethod setup(bool force);
+    bool login(const QString &accessToken);
+    bool setup(bool force);
 signals:
     void message(const QString &message, QtMsgType type);
 private slots:
     void ready();
 public slots:
     void loggedMessage(const QString &message, QtMsgType type);
-    void sessionChange();
+    void loginStateChange(Session::SessionLoginState state);
+    void reset();
 private:
     PluginManager* _pluginManager;
+    OAuthHandler _oauthHandler;
     QSettings _settings;
-    QSettings _sensitiveSettings;
     Session* _session;
     ItemManager* _itemManager;
     ScriptSandbox* _script;
     AdamantUI* _ui;
+
+    bool _ready;
 };
 
 Q_DECLARE_METATYPE(CoreService*)

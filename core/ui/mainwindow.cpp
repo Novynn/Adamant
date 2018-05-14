@@ -14,14 +14,14 @@ MainWindow::MainWindow(CoreService *core, QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
     , _core(core)
-    , _mode(InvalidMode)
+    , _mode(SignInMode)
     , _loadingImage(new QMovie(":/images/loading_dark.gif"))
 {
     ui->setupUi(this);
     ui->loadingLabel->setMovie(_loadingImage);
     ui->consoleButton->click();
 
-    setMode(LoadingMode);
+    setMode(SignInMode);
 
     connect(_core->script(), &ScriptSandbox::scriptOutput, [this] (const QString &message) {
         appendScriptOutput(message, "===");
@@ -111,6 +111,15 @@ MainWindow::~MainWindow() {
     delete ui;
 }
 
+void MainWindow::switchToLoadingFromSignIn() {
+    if (_mode != MainWindow::SignInMode) return;
+    setMode(MainWindow::LoadingMode);
+}
+
+void MainWindow::switchToSignIn() {
+    setMode(MainWindow::SignInMode);
+}
+
 void MainWindow::appendScriptOutput(const QString &output, const QString &type) {
     const QString chopped = QString("%1").arg(type, 3, QChar('-'));
     QString pre = output.toHtmlEscaped();
@@ -149,6 +158,10 @@ void MainWindow::onProfileBadgeImage(const QString &badge, QImage image) {
         ui->badgeWidget->layout()->addWidget(label);
         _badgeMap.insert(badge, label);
     }
+}
+
+void MainWindow::updateAccountName(const QString &name) {
+    Q_UNUSED(name);
 }
 
 void MainWindow::updateAccountMessagesCount(int messages) {
@@ -267,22 +280,21 @@ void MainWindow::setMode(MainWindow::Mode mode) {
         _mode = mode;
 
         switch (_mode) {
+            case LoadingMode: {
+                ui->pagesWidget->setCurrentIndex(2);
+                _loadingImage->start();
+            } break;
             case HomeMode:
             case ElsewhereMode: {
                 ui->pagesWidget->setCurrentIndex(0);
                 _loadingImage->stop();
             } break;
-            case LoadingMode: {
+            case SignInMode:
+            default: {
                 ui->pagesWidget->setCurrentIndex(1);
-                _loadingImage->start();
-            } break;
-            case InvalidMode: {
-                // Do nothing?
+                _loadingImage->stop();
             } break;
         }
-        updateGeometry();
-        repaint();
-        qApp->processEvents();
     }
 }
 
@@ -316,4 +328,9 @@ bool MainWindow::eventFilter(QObject* obj, QEvent* event) {
         }
     }
     return false;
+}
+
+void MainWindow::on_oauthLoginButton_clicked() {
+    setMode(MainWindow::LoadingMode);
+    _core->newLogin();
 }

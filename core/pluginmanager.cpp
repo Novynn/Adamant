@@ -300,15 +300,9 @@ bool PluginManager::injectPluginData(AdamantPluginInfo* plugin) {
     // Objects added here will be injected as long as they exist in AdamantPlugin.
     const QMetaObject* metaObject = plugin->instance->metaObject();
 
-    QSettings* pluginSettings
-            = new QSettings(pluginsPath().absoluteFilePath(plugin->file.completeBaseName() + ".ini"),
-                            QSettings::IniFormat, this);
-    QSettings* sensitivePluginSettings
-            = new QSettings(pluginsPath().absoluteFilePath(plugin->file.completeBaseName() + ".sensitive.ini"),
-                            QSettings::IniFormat, this);
+    QSettings* pluginSettings = new QSettings(pluginsPath().absoluteFilePath(plugin->file.completeBaseName() + ".ini"), QSettings::IniFormat, this);
 
     PLUGIN_INJECT_OBJECT(Settings, QSettings*, pluginSettings)
-    PLUGIN_INJECT_OBJECT(SensitiveSettings, QSettings*, sensitivePluginSettings)
     PLUGIN_INJECT_OBJECT(Core, CoreService*, _parent)
 
     // Setup connections

@@ -22,7 +22,7 @@ class CORE_EXTERN MainWindow : public QMainWindow
     Q_OBJECT
 
     enum Mode {
-        InvalidMode,
+        SignInMode,
         LoadingMode,
         HomeMode,
         ElsewhereMode
@@ -32,6 +32,8 @@ public:
     explicit MainWindow(CoreService *core, QWidget *parent = 0);
     ~MainWindow();
 
+    void switchToLoadingFromSignIn();
+    void switchToSignIn();
     void setPageIndex(int index);
 
     Q_INVOKABLE QUuid registerPage(const QIcon &icon, const QString &title, const QString &description,
@@ -42,6 +44,7 @@ public:
     void setLoginProgressMessage(const QString &message);
 public slots:
     void onProfileBadgeImage(const QString &badge, QImage image);
+    void updateAccountName(const QString &name);
     void updateAccountMessagesCount(int messages);
     void appendScriptOutput(const QString &output, const QString &type = "LOG");
     void setPageByUuid(QUuid id);
@@ -52,6 +55,8 @@ private slots:
     void on_reloadScriptsButton_clicked();
     void on_homeButton_clicked();
     void on_toggleButton_toggled(bool checked);
+    void on_oauthLoginButton_clicked();
+
 protected:
     bool eventFilter(QObject *obj, QEvent *event);
 signals:
