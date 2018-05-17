@@ -1,5 +1,5 @@
 # Adamant
-Premier Path of Exile Desktop Tool.
+Path of Exile Desktop Tool.
 
 This is very much a work in progress. It aims to provide a base platform for many Path of Exile related tools and services. Currently I am working on getting stash/shop management implemented and tidying up the plugin system before release.
 
