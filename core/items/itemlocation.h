@@ -47,7 +47,7 @@ public:
         return QSizeF(item.data("w").toInt(), item.data("h").toInt());
     }
 
-    virtual void setItems(ItemList items, const QJsonObject &layout = QJsonObject()) {
+    virtual void setItems(ItemList items, const QJsonValue &layout = QJsonValue()) {
         Q_UNUSED(layout);
         _items.clear();
         _items.append(items);

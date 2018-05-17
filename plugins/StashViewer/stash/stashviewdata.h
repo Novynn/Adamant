@@ -48,6 +48,11 @@ public:
     void setLoaded(bool loaded=true, bool throttled=false) {
         const QString colorHint = (getTab()->tabColor().lightnessF() > 0.5) ? "light" : "dark";
         QString icon = "";
+
+        static QPixmap currencyGrid(":/images/tabs/StashPanelCurrency.png");
+        static QPixmap fragmentGrid(":/images/tabs/StashPanelFragment.png");
+        static QPixmap essenceGrid (":/images/tabs/StashPanelEssence.png");
+        static QPixmap quadGrid    (":/images/tabs/StashPanelQuad.png");
         if (loaded) {
             if (getTab()->state() == StashItemLocation::LoadedFromDisk) {
                 icon = "database";
@@ -60,9 +65,19 @@ public:
             _gridRequirement->hide();
 
             const StashItemLocation* tab = dynamic_cast<const StashItemLocation*>(_tab);
-            if (tab && tab->type() == StashItemLocation::Currency) {
-                static QPixmap currencyGrid(":/images/tabs/StashPanelCurrency.png");
-                _grid->setPixmap(currencyGrid);
+            if (tab) {
+                if (tab->type() == StashItemLocation::Currency) {
+                    _grid->setPixmap(currencyGrid);
+                }
+                else if (tab->type() == StashItemLocation::Fragment) {
+                    _grid->setPixmap(fragmentGrid);
+                }
+                else if (tab->type() == StashItemLocation::Essence) {
+                    _grid->setPixmap(essenceGrid);
+                }
+                else if (tab->type() == StashItemLocation::Quad) {
+                    _grid->setPixmap(quadGrid);
+                }
             }
         }
         else {

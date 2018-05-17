@@ -4,6 +4,9 @@
         <file>images/inventory_item_background.png</file>
         <file>images/item_bg_unidentified.png</file>
         <file>images/tabs/StashPanelCurrency.png</file>
+        <file>images/tabs/StashPanelFragment.png</file>
+        <file>images/tabs/StashPanelEssence.png</file>
+        <file>images/tabs/StashPanelQuad.png</file>
     </qresource>
     <qresource prefix="/sockets">
         <file alias="D.png">images/Socket_D.png</file>

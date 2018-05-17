@@ -69,37 +69,55 @@ bool StashItemLocation::operator==(const ItemLocation &other) const {
     return _tabId == dynamic_cast<const StashItemLocation&>(other)._tabId;
 }
 
-void StashItemLocation::setItems(ItemList items, const QJsonObject &layout) {
-    _layout = layout;
+void StashItemLocation::setItems(ItemList items, const QJsonValue &layout) {
+    switch (_type) {
+        case Currency:
+        case Fragment: {
+            _layout = layout.toObject();
+        } break;
+        case Essence: {
+            if (layout.isArray()) {
+                _layout = QJsonObject();
+                auto arr = layout.toArray();
+                for (int i = 0; i < arr.size(); i++) {
+                    _layout.insert(QString::number(i), arr[i].toObject());
+                }
+            }
+            else {
+                _layout = layout.toObject();
+            }
+        } break;
+    }
+
     ItemLocation::setItems(items, layout);
+}
+
+double StashItemLocation::scale() const {
+    switch (_type) {
+        case Currency:  return 63.6f/80.0f;
+        case Essence:   return 63.6f/80.0f;
+        case Quad:      return 0.5f;
+        case Map:       return 71.0f/80.0f;
+        case Fragment:
+        default:        return 1.0f;
+    }
 }
 
 QPointF StashItemLocation::itemPos(const Item &item) const {
     QPointF pos = ItemLocation::itemPos(item);
     switch (_type) {
-        case Currency: {
+        case Currency:
+        case Fragment:
+        case Essence: {
             if (!_layout.isEmpty()) {
                 const QString key = QString::number((int)pos.x());
                 const QJsonObject object = _layout.value(key).toObject();
-                const double scale = object.value("scale").toDouble(1);
-                pos.setX((object.value("x").toDouble() / 47.4645) * scale);
-                pos.setY((object.value("y").toDouble() / 47.4645) * scale);
-            }
-        } break;
-        case Essence: {
-            if (!_layout.isEmpty()) {
-                int key = (int)pos.x();
-                const QJsonArray layout = _layout.value("essences").toArray();
-                const QJsonObject object = layout.at(key).toObject();
-                const double scale = _layout.value("scale").toDouble(1);
-
-                pos.setX((object.value("x").toDouble() / 47.4645) * scale);
-                pos.setY((object.value("y").toDouble() / 47.4645) * scale);
+                pos.setX(object.value("x").toDouble() / 47.4645);
+                pos.setY(object.value("y").toDouble() / 47.4645);
             }
         } break;
         case Quad: {
-            pos.setX(pos.x() * 0.5);
-            pos.setY(pos.y() * 0.5);
+            pos *= 0.5;
         } break;
     }
     return pos;
@@ -108,31 +126,20 @@ QPointF StashItemLocation::itemPos(const Item &item) const {
 QSizeF StashItemLocation::itemSize(const Item &item) const {
     QPointF pos = ItemLocation::itemPos(item);
     QSizeF size = ItemLocation::itemSize(item);
+    const double s = scale();
     switch (_type) {
-        case Currency: {
+        case Currency:
+        case Fragment:
+        case Essence: {
             if (!_layout.isEmpty()) {
                 const QString key = QString::number((int)pos.x());
                 const QJsonObject object = _layout.value(key).toObject();
-                size.setWidth(object.value("w").toInt());
-                size.setHeight(object.value("h").toInt());
+                size.setWidth((double)object.value("w").toInt());
+                size.setHeight((double)object.value("h").toInt());
             }
-        } break;
-        case Essence: {
-            if (!_layout.isEmpty()) {
-                int key = (int)pos.x();
-                const QJsonArray layout = _layout.value("essences").toArray();
-                const QJsonObject object = layout.at(key).toObject();
-
-                const double scale = _layout.value("scale").toDouble(1);
-                size.setWidth(object.value("w").toInt() * scale);
-                size.setHeight(object.value("h").toInt() * scale);
-            }
-        } break;
-        case Quad: {
-            size.setWidth(size.width() * 0.5);
-            size.setHeight(size.height() * 0.5);
         } break;
     }
+    size *= s;
     return size;
 }
 

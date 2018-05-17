@@ -407,14 +407,11 @@ void ItemManager::onStashTabResult(QString league, QByteArray json, QVariant dat
                 "quadLayout",
                 "mapLayout",
             };
-            QJsonObject layout;
 
+            QJsonValue layout;
             for (const QString &type : Types) {
                 if (doc.object().contains(type)) {
-                    const QJsonValue val = doc.object().value(type);
-                    if (!val.isObject()) continue;
-                    layout = val.toObject();
-                    break;
+                    layout = doc.object().value(type);
                 }
             }
 

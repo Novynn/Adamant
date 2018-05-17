@@ -21,13 +21,12 @@ public:
     enum Type {
         Normal,
         Premium,
-        UNKNOWN_0,
         Currency,
-        UNKNOWN_1,
         Map,
         Divination,
-        Essence,
         Quad,
+        Essence,
+        Fragment,
     };
     Q_ENUM(Type)
 
@@ -46,7 +45,7 @@ public:
     bool operator<(const ItemLocation &other) const;
     bool operator==(const ItemLocation &other) const;
 
-    void setItems(ItemList items, const QJsonObject &layout);
+    void setItems(ItemList items, const QJsonValue &layout);
     QJsonObject toJson();
     bool fromJson(const QJsonObject& object);
     QPointF itemPos(const Item &item) const;
@@ -61,6 +60,7 @@ public:
         _updateInterval = interval;
     }
 
+    double scale() const;
 private:
     int _tabIndex;
     QString _tabId;
