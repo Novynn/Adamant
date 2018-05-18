@@ -5,6 +5,7 @@
 #include <QPainter>
 #include <QPixmap>
 #include <QRegularExpression>
+#include <QTextBlock>
 #include <ui/itemtooltip.h>
 
 enum class FrameType {
@@ -187,13 +188,15 @@ public:
             "Rare",
             "Unique",
             "Gem",
-            "",
+            "Currency",
+            "Card",
             "Quest",
             "Prophecy",
             "Foil",
         };
 
         if (typeIndex >= FrameToKey.count()) typeIndex = 0;
+        if (type == FrameType::Card) typeIndex = 5; // Card -> Currency
 
         QString key = FrameToKey.at(typeIndex);
 
@@ -223,9 +226,9 @@ public:
         tooltip.ui->itemNameFirstLine->setStyleSheet(css);
         tooltip.ui->itemNameSecondLine->setStyleSheet(css);
 
-        tooltip.ui->propertiesEdit->setStyleSheet("font-size: 15px;");
+        tooltip.ui->propertiesEdit->setStyleSheet("font-size: 14px;");
 
-        const QString separator = "<img src=':/tooltip/ItemsSeparator" + key + ".png'>";;
+        const QString separator = "<img src=':/tooltip/ItemsSeparator" + key + ".png'>";
 
         bool firstPrinted = true;
         for (const QVariant property : properties) {
@@ -276,11 +279,13 @@ public:
         if (!implicitMods.isEmpty() && !firstPrinted) resultText += (separator) + "<br>";
         for (const QString mod : implicitMods) {
             resultText += ItemRenderer::formatProperty(mod, {}, -1, true) + "<br>";
+            firstPrinted = false;
         }
 
         if (!explicitMods.isEmpty() && !firstPrinted) resultText += (separator) + "<br>";
         for (const QString mod : explicitMods) {
             resultText += ItemRenderer::formatProperty(mod, {}, -1, true) + "<br>";
+            firstPrinted = false;
         }
 
         if (!identified) {
@@ -297,7 +302,7 @@ public:
 
         if (!descrText.isEmpty()) {
            if (!firstPrinted) resultText += (separator) + "<br>";
-            resultText += ItemRenderer::formatProperty(descrText, {}, -4, true) + "<br>";
+            resultText += "<i>" + ItemRenderer::formatProperty(descrText, {}, -4, true) + "</i><br>";
             firstPrinted = false;
         }
 
@@ -307,7 +312,7 @@ public:
         }
         for (const QString text : flavourText) {
             if (text.isEmpty()) continue;
-            resultText += ItemRenderer::formatProperty(text, {}, -5, true) + "<br>";
+            resultText += "<i>" + ItemRenderer::formatProperty(text, {}, -5, true) + "</i><br>";
         }
 
         resultText = QString("<center>%1</center>").arg(resultText);
@@ -315,7 +320,20 @@ public:
         tooltip.setAttribute(Qt::WA_DontShowOnScreen);
         tooltip.show();
 
-        qreal height = tooltip.ui->propertiesEdit->document()->size().height();
+        static qreal LineHeight = 14;
+        QTextDocument* doc = tooltip.ui->propertiesEdit->document();
+
+        for(QTextBlock it = doc->begin(); it != doc->end(); it = it.next()) {
+                QTextBlockFormat textBlockFormat = it.blockFormat();
+                textBlockFormat.setLineHeight(LineHeight, QTextBlockFormat::FixedHeight);
+                QTextCursor textCursor(it);
+                textCursor.setBlockFormat(textBlockFormat);
+                tooltip.ui->propertiesEdit->setTextCursor(textCursor);
+        }
+
+        tooltip.ui->propertiesEdit->updateGeometry();
+
+        qreal height = doc->size().height();
         tooltip.ui->propertiesEdit->setFixedHeight(height);
         tooltip.updateGeometry();
 

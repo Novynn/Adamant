@@ -76,8 +76,6 @@ Session::Request* Session::Request::FetchCharacterItems(Session* session, const 
     QNetworkRequest request = session->createRequest(url);
 
     auto result = new Session::Request(request, [callback](Session* session, QNetworkReply* reply){
-        CHECK_REPLY;
-
         QByteArray response = reply->readAll();
         QJsonDocument doc = QJsonDocument::fromJson(response);
 
@@ -102,8 +100,6 @@ Session::Request* Session::Request::FetchStashTabs(Session* session, const QStri
     QNetworkRequest request = session->createRequest(url);
 
     auto result = new Session::Request(request, [callback](Session* session, QNetworkReply* reply){
-        CHECK_REPLY;
-
         QByteArray response = reply->readAll();
         QJsonDocument doc = QJsonDocument::fromJson(response);
 
