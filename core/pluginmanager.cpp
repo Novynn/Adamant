@@ -186,7 +186,7 @@ void PluginManager::onScriptFinished(ScriptSandbox* s) {
 
 void PluginManager::preparePlugins() {
     // Ordered by load priority
-    QStringList knownRoles = {"core", "service", "widget", "window"};
+    QStringList knownRoles = {"core", "service", "widget", "window", "utility"};
 
     QQueue<AdamantPluginInfo*> plugins;
 

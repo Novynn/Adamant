@@ -23,7 +23,7 @@ QScriptValue ScriptSandbox::runFunc(QScriptContext *context , QScriptEngine *eng
             temp->setParent(0);
             temp->moveToThread(qApp->thread());
         }
-        QMetaObject::invokeMethod(temp, "Execute", type);
+        QMetaObject::invokeMethod(temp, "execute", type);
         return engine->undefinedValue();
     }
     return context->throwError(QScriptContext::ReferenceError, "could not find script object");
