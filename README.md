@@ -5,7 +5,7 @@ This is very much a work in progress. It aims to provide a base platform for man
 
 # Required Features for Release
 * Plugin System (with repository for Windows)
-* Scripting (using EMCAScript, what JavaScript is based off)
+* Scripting (using ECMAScript, what JavaScript is based off)
 * Dynamic Console
 * Notifications and Alerts (pathofexile.com mail etc)
 * Automatic Updates
