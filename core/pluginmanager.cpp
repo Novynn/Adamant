@@ -217,7 +217,7 @@ void PluginManager::preparePlugins() {
                 // Now we inject the PluginManager
                 injectPluginData(data);
 
-                // The plugin has been created successfully, so we can execute it's script (if it exists).
+                // The plugin has been created successfully, so we can execute its script (if it exists).
                 const QDir dir = data->file.absoluteDir();
                 QFile scriptFile(dir.filePath(data->file.fileName() + ".qs"));
                 if (scriptFile.exists() && scriptFile.open(QFile::ReadOnly)) {
@@ -246,7 +246,7 @@ void PluginManager::preparePlugins() {
 void PluginManager::loadPlugins() {
     qInfo() << qPrintable(QString("Loading %1 plugin%2...").arg(_plugins.count()).arg(_plugins.count() == 1 ? "" : "s"));
     for (const AdamantPluginInfo* data : _plugins) {
-        // Invoke so we can finish triggered all loads then bail.
+        // Invoke so we can finish all triggered loads then bail.
         QMetaObject::invokeMethod(data->instance, "OnLoad", Qt::QueuedConnection);
         qInfo() << qPrintable("Loaded " + data->name);
         emit pluginLoadStarted(data->name);
@@ -296,7 +296,7 @@ void PluginManager::onScriptOutput(const QString &output) {
 }
 
 bool PluginManager::injectPluginData(AdamantPluginInfo* plugin) {
-    // Setup Injection
+    // Setup injection
     // Objects added here will be injected as long as they exist in AdamantPlugin.
     const QMetaObject* metaObject = plugin->instance->metaObject();
 
