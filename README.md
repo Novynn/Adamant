@@ -12,7 +12,7 @@ This is very much a work in progress. It aims to provide a base platform for man
 * Extensible Login System (email/pw, session, steam, oauth (future))
 * Access to GGG's exposed APIs
 
-# Required Plugins or Release
+# Required Plugins for Release
 * Stash / Inventory Viewer (multiple view modes)
 * Shop Manager (forum thread based)
 * Template Manager (using Mustache, for shop threads)
